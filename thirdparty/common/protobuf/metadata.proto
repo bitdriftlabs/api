@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+
+package common;
+
+extend google.protobuf.MessageOptions {
+  optional bool unwrapped = 321321;
+}

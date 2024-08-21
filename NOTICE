@@ -1,0 +1,5 @@
+proto
+Copyright Bitdrift, Inc.
+
+The contents of src/ are licensed under PolyForm Shield. See LICENSE for terms.
+Everything else is vendored third party protos which are licensed under their respective terms.

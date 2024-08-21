@@ -1,0 +1,101 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.matcher.v1;
+
+import "validate/validate.proto";
+
+// A LogMatcher is used to declare a boolean expression which evaluates a log on various facets for matching.
+// The most basic version of a matcher will just contain a single base matcher which could be used to
+// evaluate if a log message matches a given string or a field comforms to a predicate. A more advanced
+// matcher could declare AND/OR expressions which can be nested but ultimately require BaseMatchers at the leaves.
+message LogMatcher {
+
+  // A base log matcher evaluates a log a specified facet using "oneof" the sub matcher types (String, Int, SemVer, etc).
+  // These are required at a leaf level. A LogMatcher could consist of just a single BaseLogMatcher.
+  message BaseLogMatcher {
+
+    // Used to compare values both numeric and string (lexicographically).
+    enum Operator {
+      reserved 8, 9;
+      OPERATOR_UNSPECIFIED = 0;
+      OPERATOR_LESS_THAN = 1;
+      OPERATOR_LESS_THAN_OR_EQUAL = 2;
+      OPERATOR_EQUALS = 3;
+      OPERATOR_GREATER_THAN = 4;
+      OPERATOR_GREATER_THAN_OR_EQUAL = 5;
+      OPERATOR_NOT_EQUALS = 6;
+      // Only supported for values of type string, otherwise uses EQUALS.
+      OPERATOR_REGEX = 7;
+    }
+
+    // Used to define a match rule for a string value.
+    message StringValueMatch {
+      Operator operator = 1 [(validate.rules).enum.defined_only = true];
+      string match_value = 2 [(validate.rules).string = {min_len: 1}];
+    }
+
+    // Used to define a match rule for a numeric value of type int32.
+    message IntValueMatch {
+      Operator operator = 1 [(validate.rules).enum.defined_only = true];
+      int32 match_value = 2 [(validate.rules).message = {required: true}];
+    }
+
+    // Used to define a match rule for semantic versioning (e.g. 1.02.43).
+    message SemVerValueMatch {
+      Operator operator = 1 [(validate.rules).enum.defined_only = true];
+      string match_value = 2 [(validate.rules).string = {min_len: 1}];
+    }
+
+    // Base matcher for evaluating the value of a log message.
+    // Currently it only supports String matching but that could be extended in the future.
+    message MessageMatch {
+      StringValueMatch string_value_match = 1;
+    }
+
+    // Matcher to evaluate whether a value is set.
+    message IsSetMatch {
+    }
+
+    // Base matcher for evaluating the value in a tag _value_ on a specified key.
+    message TagMatch {
+      string tag_key = 1 [(validate.rules).string = {min_len: 1, max_len: 64}];
+      oneof value_match {
+        option (validate.required) = true;
+        StringValueMatch string_value_match = 2;
+        IntValueMatch int_value_match = 3;
+        SemVerValueMatch sem_ver_value_match = 4;
+        IsSetMatch is_set_match = 5;
+      }
+    }
+
+    oneof match_type {
+      option (validate.required) = true;
+      MessageMatch message_match = 1;
+      TagMatch tag_match = 2;
+    }
+  }
+
+  // A list of two or more matchers. Used to allow using a list within a oneof for and/or matching.
+  message MatcherList {
+    repeated LogMatcher log_matchers = 1 [(validate.rules).repeated = {min_items: 2}];
+  }
+
+  oneof matcher {
+    option (validate.required) = true;
+    // A single predicate to evaluate.
+    BaseLogMatcher base_matcher = 1;
+    // A list of predicates to be OR-ed together.
+    MatcherList or_matcher = 2;
+    // A list of predicates to be AND-ed together.
+    MatcherList and_matcher = 3;
+    // An inversion of a predicate.
+    LogMatcher not_matcher = 4;
+  }
+}

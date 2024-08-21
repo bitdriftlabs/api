@@ -1,0 +1,40 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.bdtail.v1;
+
+import "validate/validate.proto";
+
+message TailLogsRequest {
+  // A DSL expression that is used to target clients and filter logs. This is parsed and validated by the server.
+  string dsl_expression = 1;
+}
+
+message Logs {
+  // A single batch of logs tailed via the tail API. Encoded as flatbuffer `Log`s.
+  repeated bytes logs = 1 [(validate.rules).repeated = {min_items: 1}];
+}
+
+message InvalidRequest {
+  string error_message = 1 [(validate.rules).string.min_len = 1];
+}
+
+message TailLogsResponse {
+  oneof response {
+    // Logs are streamed based on the most recently seen request.
+    Logs logs = 1;
+
+    // The most recently seen request was invalid. This will be followed by a stream close.
+    InvalidRequest invalid_request = 2;
+  }
+}
+
+service BDTail {
+  rpc TailLogs(TailLogsRequest) returns (stream TailLogsResponse);
+}

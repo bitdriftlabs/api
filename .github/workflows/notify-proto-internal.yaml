@@ -1,0 +1,26 @@
+name: Notify proto-internal about proto update
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  notify:
+    name: Notify proto-internal
+    runs-on: ubuntu-latest
+    steps:
+      - name: org-write-install token
+        id: org-write
+        uses: getsentry/action-github-app-token@v2
+        with:
+          app_id: ${{ secrets.ORG_PROTO_SYNC_APP_ID }}
+          private_key: ${{ secrets.ORG_PROTO_SYNC_APP_KEY }}
+      - name: Trigger CI Job in proto-internal Repo
+        run: |
+          gh workflow run $WORKFLOW_ID \
+          --repo bitdriftlabs/proto-internal \
+        env:
+          GH_TOKEN: ${{ steps.org-write.outputs.token }}
+          # `proto-submodule-update` CI job
+          WORKFLOW_ID: 93191253
+          

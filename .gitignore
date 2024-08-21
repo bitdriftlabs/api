@@ -1,0 +1,19 @@
+# Don't need any local builds :)
+build/
+
+# Python artifacts
+*.pyc
+*.egg-info
+
+# vim generated
+*.swp
+
+# OS X's Finder creates these for state about opened windows/etc.
+**/.DS_Store
+
+# Visual Studio Code
+/.vscode/
+
+# IntelliJ
+.idea
+*.iml

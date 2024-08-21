@@ -1,0 +1,99 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+namespace bitdrift_public.fbs.logging.v1;
+
+// Table wrapper for UTF-8 data.
+table StringData {
+  data:string (id: 0, required);
+}
+
+// Table wrapper for binary data.
+table BinaryData {
+  data_type:string (id: 0);
+  data:[ubyte] (id: 1, required);
+}
+
+// Flatbuffer representation of a google.protobuf.Timestamp
+// The first attempt of this tried to make this a struct for a smaller wire size, but the
+// generated Rust code has the wrong alignment. Using a table fixes this.
+table Timestamp {
+  seconds:int64 (id: 0);
+  nanos:int32 (id: 1);
+}
+
+// Union of different data types.
+union Data {
+  string_data:StringData,
+  binary_data:BinaryData
+}
+
+table Field {
+  // Field key. Required to be a UTF-8 string.
+  key:string (id: 0, required);
+
+  // Field value. (Union uses 2 ID slots)
+  value:Data (id: 2, required);
+}
+
+enum LogType: uint32 {
+  // Normal logs, from application code.
+  Normal = 0,
+
+  // Session replay logs.
+  Replay = 1,
+
+  // Application lifecycle logs.
+  Lifecycle = 2,
+
+  // Resource monitoring logs, such as memory, CPU, and battery consumption.
+  Resource = 3,
+
+  // Internal SDK logs.
+  InternalSDK = 4,
+
+  // View lifecycle.
+  View = 5, // Not used yet.
+
+  // Device state.
+  Device = 6, // Not used yet.
+
+  // UX interaction.
+  UX = 7, // Not used yet.
+
+  // Span start/end pairs.
+  Span = 8,
+}
+
+table Log {
+  // The log level.
+  log_level:uint32 (id: 0);
+
+  // The message associated with the log. (Union uses 2 ID slots)
+  message:Data (id: 2, required);
+
+  // An optional list of high cardinality fields.
+  fields:[Field] (id: 3);
+
+  // The ID of the session associated with this log.
+  session_id:string (id: 4);
+
+  // The timestamp (in UTC) indicating when this log was recorded.
+  timestamp:Timestamp (id: 5);
+
+  // The list of action IDs that were triggered by this log line.
+  workflow_action_ids:[string] (id: 6);
+
+  // The type of log.
+  log_type:LogType (id: 7);
+
+  // The list of stream IDs that were associated with this streaming log.
+  // This should only be set when the log has been streamed.
+  stream_ids:[string] (id: 8);
+}
+
+root_type Log;

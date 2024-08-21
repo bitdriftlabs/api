@@ -1,0 +1,45 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.client.v1;
+
+import "bitdrift_public/protobuf/client/v1/matcher.proto";
+import "validate/validate.proto";
+
+// A set of runtimes. This set is used to describe all possible runtimes and the matching that
+// will be used to associate a runtime with a particular client.
+message RuntimeSet {
+  // Contains both the runtimes and the match conditions used to select it.
+  message RuntimeAndMatcher {
+    // The match conditions that if matched will select the runtime.
+    Matcher matcher = 1 [(validate.rules).message = {required: true}];
+
+    // The runtime to deliver if match conditions are satisfied.
+    Runtime runtime = 2 [(validate.rules).message = {required: true}];
+  }
+
+  // A list of runtimes and associated match predicates. The first runtime that matches wins.
+  repeated RuntimeAndMatcher runtimes = 1;
+}
+
+// An individual runtime snapshot, including bool, uint, and string values.
+message Runtime {
+  message Value {
+    oneof type {
+      option (validate.required) = true;
+
+      bool bool_value = 1;
+      uint32 uint_value = 2;
+      string string_value = 3;
+    }
+  }
+
+  // A map of string key to value.
+  map<string, Value> values = 1;
+}

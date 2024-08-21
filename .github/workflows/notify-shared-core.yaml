@@ -1,0 +1,26 @@
+name: Notify shared-core about proto update
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  notify:
+    name: Notify shared-core
+    runs-on: ubuntu-latest
+    steps:
+      - name: org-write-install token
+        id: org-write
+        uses: getsentry/action-github-app-token@v2
+        with:
+          app_id: ${{ secrets.ORG_PROTO_SYNC_APP_ID }}
+          private_key: ${{ secrets.ORG_PROTO_SYNC_APP_KEY }}
+      - name: Trigger CI Job in shared-core Repo
+        run: |
+          gh workflow run $WORKFLOW_ID \
+          --repo bitdriftlabs/shared-core \
+        env:
+          GH_TOKEN: ${{ steps.org-write.outputs.token }}
+          # `proto-submodule-update` CI job
+          WORKFLOW_ID: 78561085
+          

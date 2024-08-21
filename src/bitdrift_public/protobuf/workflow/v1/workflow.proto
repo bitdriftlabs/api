@@ -1,0 +1,260 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+import "validate/validate.proto";
+import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
+
+package bitdrift_public.protobuf.workflow.v1;
+
+// The wrapper for the list of workflows. Top-level item used to send information
+// about workflows from server to all connected clients.
+message WorkflowsConfiguration {
+  // An optional list of workflows.
+  repeated Workflow workflows = 1;
+}
+
+// A complete workflow configuration. Each traversal of the state machine defined
+// by the configuration is called a *workflow run*. There can be multiple runs
+// for a given workflow configuration active at a given time on a given device.
+message Workflow {
+  // String that describes this workflow uniquely. This is is guaranteed to be unique.
+  string id = 1 [(validate.rules).string = {min_len: 1}];
+
+  // A list of states the workflow may transition through.
+  // Notes:
+  //  * The initial state is the first state in the list.
+  //  * The final state(s) is identified by not having any transitions.
+  repeated State states = 2 [(validate.rules).repeated = {min_items: 1}];
+
+  // The execution type. Affects the number of workflow *runs* created
+  // for a given workflow.
+  Execution execution = 3;
+
+  // A matched logs count limit that's tracked for each of the workflow *runs* separately.
+  // The run is removed if it reaches the match limit.
+  LimitMatchedLogsCount limit_matched_logs_count = 4;
+
+  // A duration limit that's tracked for each of the workflow *runs* separately.
+  // The run is removed if the time spent on it reaches the duration.
+  LimitDuration limit_duration = 5;
+
+  // Represents a single step in a given workflow.
+  message State {
+    // An identifier that's unique within given workflow' state identifiers.
+    string id = 1 [(validate.rules).string = {min_len: 1}];
+    // An optional array of transitions that can be taken from a given state.
+    // No array or empty array of transitions means that the state is a final state.
+    repeated Transition transitions = 2;
+  }
+
+  // A transition used to describe the connection between two states. Specifies
+  // a rule for the change of state and provides actions that to be performed
+  // upon executing the transition.
+  //
+  // Provided rule is evaluated on the arrival of a log message.
+  message Transition {
+    // The identifier of the state to transition to.
+    string target_state_id = 1 [(validate.rules).string = {min_len: 1}];
+    // The guard that must be satisfied for this transition to be executed.
+    Rule rule = 2 [(validate.rules).message = {required: true}];
+    // An optional array of actions to be executed upon performing this transition.
+    repeated Action actions = 3;
+  }
+
+  // A predicate that must be satisfied for a transition to happen.
+  message Rule {
+    oneof rule_type {
+      option (validate.required) = true;
+      RuleLogMatch rule_log_match = 1;
+      RuleTimeout rule_timeout = 2;
+    }
+  }
+
+  // Rule used to transition based on a log.
+  message RuleLogMatch {
+    // The condition that a log must satisfy.
+    matcher.v1.LogMatcher log_matcher = 1 [(validate.rules).message = {required: true}];
+    // The number of times the condition needs to be met, default is 1.
+    uint32 count = 2 [(validate.rules).uint32.gt = 0];
+  }
+
+  // Rule used to transition based on the amount of time that passed between
+  // when workflow run arrived at transition's "from" state and the time of
+  // of processing the current log.
+  //
+  // It can be used as a safety hatch to exit a workflow.
+  message RuleTimeout {
+    uint64 duration_ms = 1 [(validate.rules).uint64.gte = 0];
+  }
+
+  // An action to be taken when moving to a new state.
+  message Action {
+    oneof action_type {
+      option (validate.required) = true;
+      ActionFlushBuffers action_flush_buffers = 1;
+      ActionEmitMetric action_emit_metric = 2;
+    }
+
+    // Flush the content of specified buffer(s) to bitdrift control plane with an option to continue to stream
+    // logs coming into the buffer(s) to remote services until one of the specified termination conditions
+    // is reached.
+    message ActionFlushBuffers {
+      // A streaming configuration to apply for when buffers flushing occurs.
+      // The streaming is active from the time the flush of the content of specified buffers occurs up until
+      // whichever of the following happens first:
+      //   * [required] the session ID changes
+      //   * [optional, configurable] the configured max duration is reached
+      //   * [optional, configurable] the max number of logs is reached
+      message Streaming {
+        // The criteria that can be used to terminate the streaming.
+        message TerminationCriterion {
+          message LogsCount {
+            // The maximum number of logs that can be streamed.
+            uint64 max_logs_count = 1 [(validate.rules).uint64.gt = 0];
+          }
+
+          oneof type {
+            option (validate.required) = true;
+
+            LogsCount logs_count = 1;
+          }
+        }
+
+        // The IDs of a *streaming* buffers that logs should be redirected to.
+        // If a given specified buffer doesn't exist or isn't of a *streaming* type logs are not redirected
+        // and end up in the buffer(s) they were originally supposed to land in. Otherwise, they go to all
+        // specified existing destination streaming buffers.
+        // Starting with client configuration 11 and up: If no destination streaming buffers are specified,
+        // the logs are redirected to one of the existing continuous streaming buffers if such exists.
+        repeated string destination_streaming_buffer_ids = 1;
+
+        // The extra termination criteria used to stop the streaming. Other than the criteria specified here,
+        // the change of session ID also stops the streaming.
+        repeated TerminationCriterion termination_criteria = 2;
+      }
+
+      // An optional array indicating what buffers should be flushed. An empty array or no array
+      // flushes all buffers.
+      repeated string buffer_ids = 1;
+
+      // An identifier that's used to match this action up against a specific workflow rule. This should
+      // be included as the associated listener_ids on the matching log.
+      string id = 2 [(validate.rules).string = {min_len: 1}];
+
+      // The streaming configuration to apply when buffers flushing occurs. If not specified no consequent
+      // logs streaming occurs when specified buffers are flushed.
+      Streaming streaming = 3;
+    }
+
+    // Emit a synthetic metric.
+    message ActionEmitMetric {
+      // The ID of a metric. If multiple actions have them same ID and are performed
+      // as the result of processing the same event (i.e. log) a client performs only one
+      // of the actions. The client emit a stat with a name that follows
+      // the following format "workflow_actions::<ID>".
+      // As the identifier becomes a part of metric's name it must meet the requirements
+      // of prometheus metric name. In other words it needs to match
+      // regex "[a-zA-Z_][a-zA-Z0-9_]*".
+      string id = 1 [(validate.rules).string = {min_len: 1}];
+
+      // The type of metric. Currently only counters are supported. In the future histograms could
+      // be supported as well.
+      oneof metric_type {
+        option (validate.required) = true;
+
+        // A counter.
+        Counter counter = 2;
+
+        // A histogram.
+        Histogram histogram = 5;
+      }
+
+      message FieldExtracted {
+        string field_name = 1 [(validate.rules).string = {min_len: 1}];
+
+        message Exact {
+        };
+
+        // For now we only support exact match, but in the future we might support more complex extraction logic like regex captures.
+        oneof extraction_type {
+          option (validate.required) = true;
+
+          Exact exact = 2;
+        }
+      }
+
+      // The value that is added to the metric. For a counter the value is added to the counter, while for a histogram the value is recorded as a sample.
+      oneof value_extractor_type {
+        option (validate.required) = true;
+
+        // A fixed value.
+        uint32 fixed = 3;
+
+        // The value to add to the metric is extracted from a field in the log. If the field is not present or not convertible to a number, no metric is emitted.
+        FieldExtracted field_extracted = 6;
+      }
+
+      // The tags for the metric.
+      repeated Tag tags = 4;
+
+      // Wraps a tag that is associated with the metric.
+      message Tag {
+        // The name of the tag.
+        string name = 1 [(validate.rules).string = {min_len: 1}];
+
+        oneof tag_type {
+          option (validate.required) = true;
+
+          // A fixed tag value.
+          string fixed_value = 2 [(validate.rules).string = {min_len: 1}];
+
+          // The tag value is extracted from a field in the log. If the field is not present, no tag is added.
+          FieldExtracted field_extracted = 3;
+        }
+      }
+
+      // A synthetic counter.
+      message Counter {
+      }
+
+      // A synthetic histogram.
+      message Histogram {
+      }
+    }
+  }
+
+  message Execution {
+    // An execution mode where a new workflow *run* starting from an initial
+    // state can be started only if there are no other active runs of a given workflow.
+    message ExecutionExclusive {
+    }
+
+    // An execution mode where a new workflow *run* starting from an initial
+    // state can be always started as long as the number of active runs of a given workflow
+    // is below the specified limit.
+    message ExecutionParallel {
+    }
+
+    oneof execution_type {
+      ExecutionExclusive execution_exclusive = 1;
+      ExecutionParallel execution_parallel = 2;
+    };
+  }
+
+  // A limit for the number of logs that a workflow run can match.
+  message LimitMatchedLogsCount {
+    uint32 count = 1 [(validate.rules).uint32.gt = 0];
+  }
+
+  // A limit for the duration of time a given workflow run can stay active for.
+  // The time starts ticking when a given workflow run leaves its initial state.
+  message LimitDuration {
+    uint64 duration_ms = 2 [(validate.rules).uint64.gt = 0];
+  }
+}
