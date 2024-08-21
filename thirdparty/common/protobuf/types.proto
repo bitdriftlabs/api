@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+import "common/protobuf/metadata.proto";
+
+package common;
+
+message UUID {
+  option (common.unwrapped) = true;
+  string value = 1;
+}

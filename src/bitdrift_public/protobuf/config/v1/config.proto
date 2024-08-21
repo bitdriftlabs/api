@@ -1,0 +1,178 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+import "bitdrift_public/protobuf/client/v1/matcher.proto";
+import "validate/validate.proto";
+
+package bitdrift_public.protobuf.config.v1;
+
+// A LogMatcher is used to declare a boolean expression which evaluates a log on various facets as either matching or
+// not matching. The most basic version of a matcher will just contain a single base matcher which could be used to
+// evaluate if a log message matches a given string or is at a particular log level (eg "error"). A more advanced
+// matcher could declare AND/OR/NOT expressions which can be nested but ultimately require BaseMatchers at the leaves.
+message LogMatcher {
+
+  // A base log matcher evaluates a log a specified facet using "oneof" the sub matcher types (Message, LogLevel etc).
+  // These are required at a leaf level. A LogMatcher could consist of just a single BaseLogMatcher.
+  message BaseLogMatcher {
+
+    // This type of base matcher is used to evaluate a log level (ie. info, error etc)
+    message LogLevelMatch {
+      // Used to evaluate a LogLevel, see below for an ordered list
+      enum ComparisonOperator {
+        LESS_THAN = 0;
+        LESS_THAN_OR_EQUAL = 1;
+        EQUALS = 2;
+        GREATER_THAN = 3;
+        GREATER_THAN_OR_EQUAL = 4;
+      }
+
+      // Log levels which correspond with the log levels on envoymobile. Used in the match value below.
+      // https://github.com/envoyproxy/envoy-mobile/blob/main/library/kotlin/io/envoyproxy/envoymobile/LogLevel.kt
+      enum LogLevel {
+        TRACE = 0;
+        DEBUG = 1;
+        INFO = 2;
+        WARN = 3;
+        ERROR = 4;
+        CRITICAL = 5;
+      }
+
+      ComparisonOperator operator = 1 [(validate.rules).enum.defined_only = true];
+      LogLevel log_level = 2 [(validate.rules).enum.defined_only = true];
+    }
+
+    // The type of string evaluation to use if we're performing a string match on a MESSAGE or TAG
+    enum StringMatchType {
+      EXACT = 0;
+      PREFIX = 1;
+      REGEX = 2;
+    }
+
+    // Base matcher for evaluating a log message string
+    message MessageMatch {
+      StringMatchType match_type = 1 [(validate.rules).enum.defined_only = true];
+      string match_value = 2 [(validate.rules).string = {min_len: 1}];
+    }
+
+    // Base matcher for evaluating the string in a tag _value_ on a specified key
+    message TagMatch {
+      StringMatchType match_type = 1 [(validate.rules).enum.defined_only = true];
+      string tag_key = 2 [(validate.rules).string = {min_len: 1, max_len: 64}];
+      string match_value = 3 [(validate.rules).string = {min_len: 1}];
+    }
+
+    // This base matcher is "true" for any log it evaluates
+    message AnyMatch {
+    }
+
+    // Base matcher for evaluating a log type. Unlike log levels, log types are not ordered which
+    // simplifies the the matcher.
+    message TypeMatch {
+      uint32 type = 1;
+    }
+
+    oneof match_type {
+      option (validate.required) = true;
+      LogLevelMatch log_level_match = 1;
+      MessageMatch message_match = 2;
+      TagMatch tag_match = 3;
+      TypeMatch type_match = 5;
+      AnyMatch any_match = 4;
+    }
+  }
+
+  // A list of two or more matchers. Used to allow using a list within a oneof for and/or matching.
+  message MatcherList {
+    repeated LogMatcher matcher = 1 [(validate.rules).repeated = {min_items: 2}];
+  }
+
+  oneof match_type {
+    option (validate.required) = true;
+
+    // A single predicate to evaluate.
+    BaseLogMatcher base_matcher = 1;
+
+    // A list of predicates to be OR-ed together.
+    MatcherList or_matcher = 2;
+
+    // A list of predicates to be AND-ed together.
+    MatcherList and_matcher = 3;
+
+    // The invert of a predicate
+    LogMatcher not_matcher = 4;
+  }
+}
+
+// Configuration for a user-defined buffer on a mobile device which will store logs.
+// Which logs will be stored in a given buffer are configured by the BufferFilter matcher.
+// These buffers are referenced by mobile log listeners to flush pertinent logs when a condition is met.
+message BufferConfig {
+  // Human readable name for the buffer config. Will be used on the web when managing buffers and selecting which buffer
+  // to read from in mobile log listener configuration. Will not be sent to mobile devices.
+  string name = 1 [(validate.rules).string = {min_len: 1}];
+
+  // For v0 this is an arbitrary string used to reference buffers in the mobile log listener config below.
+  // For v1+ it will be auto-generated server side as a UUID represented in bytes.
+  string id = 2 [(validate.rules).string = {min_len: 1}];
+
+  // Defines a filter which will cause matching logs to be stored in this buffer
+  message BufferFilter {
+    // Human readable name to make managing buffer filters easier. Will not be sent to mobile devices.
+    string name = 1 [(validate.rules).string = {min_len: 1}];
+    // Used to tag which filter caused a log to be stored in a buffer. We'll eventually use these to provide filter
+    // metrics to users on the web.
+    string id = 2 [(validate.rules).string = {min_len: 1}];
+    LogMatcher filter = 3 [(validate.rules).message = {required: true}];
+  }
+
+  // A list of buffer filters which represent an OR matcher set to decide which logs will be stored in this buffer.
+  // While technically optional, if no filters are specified the buffer will never have messages sent to it.
+  repeated BufferFilter filters = 3;
+
+  enum Type {
+    // This buffer is intended for trigger uploads. When set, the buffer will only be uploaded should
+    // there be a mobile log listener which specifies that the buffer should be uploaded in responses
+    // to a trigger.
+    TRIGGER = 0;
+
+    // This buffer is intended for continuous uploads. When set, the buffer will be continuously uploaded.
+    CONTINUOUS = 1;
+  }
+
+  // What kind of buffer is being described.
+  Type type = 4;
+
+  message BufferSizes {
+    // The size of the volatile ring buffer (aka RAM buffer).
+    uint32 volatile_buffer_size_bytes = 1 [(validate.rules).uint32.gt = 0];
+
+    // The size of the non-volatile ring buffer (aka disk/flash buffer). This buffer must be
+    // greater than the volatile buffer.
+    uint32 non_volatile_buffer_size_bytes = 2 [(validate.rules).uint32.gt = 0];
+  }
+
+  // The buffer sizes to use for this buffer. If unset, some default value will be used.
+  BufferSizes buffer_sizes = 5;
+
+  // Optional matcher that allows targeting the buffer to individual client contexts.
+  // Currently buffers are a fixed, ordered list. The following is the approximate matching
+  // algorithm:
+  // 1) Iterate over each buffer in the list.
+  // 2) See if the buffer matches.
+  // 3) If a buffer with the same name has not already been sent to the client, it will be sent.
+  // This means that buffers are effectively ordered by name, with the first match winning within
+  // that name.
+  bitdrift_public.protobuf.client.v1.RootMatcher context_matcher = 6;
+}
+
+// List of buffer configs. This proto is used to store multiple buffer configs on S3 in a single file.
+message BufferConfigList {
+  repeated BufferConfig buffer_config = 1;
+}

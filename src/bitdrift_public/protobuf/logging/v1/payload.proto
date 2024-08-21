@@ -1,0 +1,24 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.logging.v1;
+
+message BinaryData {
+  // Optional type identifier for binary data.
+  optional string type = 1;
+  bytes payload = 2;
+}
+
+// One-of for a canonical string data field
+message Data {
+  oneof data_type {
+    string string_data = 1;
+    BinaryData binary_data = 2;
+  }
+};

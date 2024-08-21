@@ -1,0 +1,204 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.mme.v1;
+
+import "common/protobuf/http.proto";
+
+// MetricsDiscoveryEngine is a service for metric discovery and aggregation.
+service MetricsDiscoveryEngine {
+  option (common.http_server_options).protocol = GRPC;
+  rpc GetBlocklist(GetBlocklistRequest) returns (GetBlocklistResponse) {
+  }
+  rpc AllowMetrics(AllowMetricsRequest) returns (AllowMetricsResponse) {
+  }
+  rpc BlockMetrics(BlockMetricsRequest) returns (BlockMetricsResponse) {
+  }
+  rpc GetAllowlist(GetAllowlistRequest) returns (GetAllowlistResponse) {
+  }
+  rpc AllowMetricsByQuery(AllowMetricsByQueryRequest) returns (AllowMetricsByQueryResponse) {
+  }
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse) {
+  }
+  rpc BulkUpdateLastRead(BulkUpdateLastReadRequest) returns (BulkUpdateLastReadResponse) {
+  }
+  rpc BulkUpdateQueriesMetadata(BulkUpdateQueriesMetadataRequest)
+      returns (BulkUpdateQueriesMetadataResponse) {
+  }
+  rpc GetTypeaheadSuggestions(TypeaheadRequest) returns (TypeaheadResponse) {
+  }
+}
+
+// Metric resembles a Prometheus metric.
+message Metric {
+  string name = 1;
+  repeated Annotation annotations = 2;
+  reserved 3;
+  reserved 4;
+  reserved 5;
+  reserved 6;
+  reserved 7;
+  repeated string allowlist_rules = 8;
+  optional int64 first_read_s = 9;
+  optional int64 last_read_s = 10;
+  int64 first_written_s = 11;
+  int64 last_written_s = 12;
+  optional int64 blocklisted_at_s = 13;
+}
+
+// Annotation is the map of key values for a particular Metric. For example,
+// "asg"="dispatchglobalmatchingworkers", "success"="True"
+message Annotation {
+  string key = 1;
+  string value = 2;
+}
+
+// LabelMatcher resembles a filter on a metric label.
+message LabelMatcher {
+  string label = 1;
+  string value = 2;
+  MatchType match_type = 3;
+
+  enum MatchType {
+    MATCH_TYPE_UNKNOWN = 0;
+    MATCH_TYPE_EQUAL = 1;
+    MATCH_TYPE_NOT_EQUAL = 2;
+    MATCH_TYPE_REGEX = 3;
+    MATCH_TYPE_NOT_REGEX = 4;
+  }
+}
+
+// Matcher is a list of label matchers when searching for metrics.
+message Matcher {
+  repeated LabelMatcher label_matchers = 1;
+}
+
+// MatcherList is a list of matchers used to serialize the allowlist.
+message MatcherList {
+  repeated Matcher matchers = 1;
+}
+
+message GetBlocklistRequest {
+  Matcher matcher = 1;
+  uint64 page_size = 2;
+  uint64 page_offset = 3;
+
+  // Whether to include metric source or provide unique metric names.
+  bool include_source = 4;
+}
+
+message GetBlocklistResponse {
+  repeated Metric metrics = 1;
+}
+
+message AllowMetricsRequest {
+  Matcher matcher = 1;
+  bool allow_regex = 2;
+}
+
+message AllowMetricsResponse {
+}
+
+message BlockMetricsRequest {
+  Matcher matcher = 1;
+}
+
+message BlockMetricsResponse {
+}
+
+message GetAllowlistRequest {
+}
+
+message GetAllowlistResponse {
+  repeated Matcher matcher = 1;
+}
+
+message AllowMetricsByQueryRequest {
+  string query = 1;
+}
+
+message AllowMetricsByQueryResponse {
+}
+
+// Next field: 7
+message GetMetricsRequest {
+  Matcher matcher = 1;
+  string query = 6;
+
+  uint64 page_size = 2;
+  uint64 page_offset = 3;
+  BlocklistFilter blocklist_filter = 4;
+  SearchType search_type = 5;
+
+  enum BlocklistFilter {
+    BLOCKLIST_FILTER_UNKNOWN = 0;
+    BLOCKLIST_FILTER_ALL = 1;
+    BLOCKLIST_FILTER_BLOCKED_ONLY = 2;
+    BLOCKLIST_FILTER_ALLOWED_ONLY = 3;
+  }
+
+  /*
+    ANALYZED: requests like production count:sum alerts
+    REGEX: requests using the matcher object
+    PROMQL: requests with promQL query string
+    ANALYZED & PROMQL requests will use the query string. REGEX requests will use the matcher object.
+    */
+  enum SearchType {
+    SEARCH_TYPE_UNKNOWN = 0;
+    SEARCH_TYPE_ANALYZED = 1;
+    SEARCH_TYPE_REGEX = 2;
+    SEARCH_TYPE_PROMQL = 3;
+  }
+}
+
+message GetMetricsResponse {
+  repeated Metric metrics = 1;
+  uint64 total_num_metrics = 2;
+}
+
+// Request to retrieve the typeahead suggestions, the metric_prefix is a partial metric name("production:infra:<service_name>")
+// The metric_prefix's number of separators is used to determine the namespace level,
+// the response will be a list of suggestions on that namespace level
+message TypeaheadRequest {
+  string prefix = 1;
+  optional uint64 page_size = 2;
+}
+
+message TypeaheadResponse {
+  string namespace_query = 1;
+  repeated string suggestions = 2;
+}
+
+// QueryMetadata help store the metadata of the queries
+message QueryMetadata {
+  string query = 1;
+  string source_type = 2;
+  string source = 3;
+  float latency = 4;
+  bool returns_data = 5;
+  bool time_out = 6;
+  bool is_error = 7;
+  int64 query_start = 8;
+  int64 query_end = 9;
+  int32 num_data_points = 10;
+  int64 timestamp = 11;
+}
+
+message BulkUpdateLastReadRequest {
+  repeated string queries = 1;
+}
+message BulkUpdateLastReadResponse {
+}
+
+message BulkUpdateQueriesMetadataRequest {
+  repeated QueryMetadata queries_metadata = 1;
+}
+
+message BulkUpdateQueriesMetadataResponse {
+}

@@ -1,0 +1,33 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+import "validate/validate.proto";
+
+package bitdrift_public.protobuf.insight.v1;
+
+// An insights configuration.
+message InsightsConfiguration {
+  // An optional list of insights that should be collected for each workflow action.
+  repeated Insight insights = 1;
+}
+
+// An insight. Usually collected as part of a workflow.
+message Insight {
+  // An insight based on a log field. It is collected for a given workflow action only if the specified
+  // log field is present in the log that triggered the action.
+  message LogField {
+    // The name of the log field.
+    string name = 1 [(validate.rules).string = {min_len: 1}];
+  }
+
+  oneof insight_type {
+    option (validate.required) = true;
+    LogField log_field = 1;
+  }
+}

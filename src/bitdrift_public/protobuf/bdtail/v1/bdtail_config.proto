@@ -1,0 +1,25 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+import "validate/validate.proto";
+import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
+
+package bitdrift_public.protobuf.bdtail.v1;
+
+message BdTailStream {
+  // The name of the bdtail stream. Logs that match the matcher below should be annotated with this stream ID to allow the SaaS to associate the log with the bdtail stream.
+  string stream_id = 1 [(validate.rules).string = {min_len: 1}];
+
+  // The match criteria for logs that should be forwarded to this bdtail stream. If empty, all logs will be forwarded to this stream.
+  matcher.v1.LogMatcher matcher = 2;
+}
+
+message BdTailConfigurations {
+  repeated BdTailStream active_streams = 1;
+}

@@ -1,0 +1,136 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.client.v1;
+
+import "validate/validate.proto";
+
+// Describes a match condition to use for selecting configuration that is sent to a client.
+message Matcher {
+  // Describes a match key.
+  message Key {
+    oneof type {
+      option (validate.required) = true;
+
+      // Reads a key from the handshake's static_device_metadata map. If the key is not present,
+      // no value will be returned and no match will occur. Said another way, a missing key will
+      // not yield the empty string, but no string at all.
+      string static_device_metadata = 1 [(validate.rules).string.min_len = 1];
+    }
+  }
+
+  // A list of matchers, required for embedding inside a oneof.
+  message MatcherList {
+    repeated Matcher matchers = 1 [(validate.rules).repeated .min_items = 2];
+  }
+
+  // Describes a string match.
+  message StringMatch {
+    enum Type {
+      // Exact match.
+      EQUALS = 0;
+    }
+
+    // The lookup key that will derive the value to match against. If the key produces no value,
+    // no match will occur.
+    Key key = 1 [(validate.rules).message = {required: true}];
+
+    // The value to match against. Empty string is an acceptible match value.
+    string value = 2;
+
+    // The type of string match to perform.
+    Type match_type = 3;
+  }
+
+  // Describes an integer match.
+  message IntMatch {
+    enum Type {
+      // Exact match.
+      EQUALS = 0;
+
+      // The extracted integer is greater than the provided value.
+      GREATER_THAN = 1;
+
+      // The extracted integer is greater than or equal the provided value.
+      GREATER_THAN_OR_EQUAL = 2;
+    }
+
+    // The lookup key that will derive the value to match against. If the key produces no value,
+    // or is not an integer, no match will occur.
+    Key key = 1 [(validate.rules).message = {required: true}];
+
+    // The value to match against.
+    int64 value = 2;
+
+    // The type of int match to perform.
+    Type match_type = 3;
+  }
+
+  // Matches the string against a consistent hash computation. Allow computing a percentage based
+  // on hashing the key value using the formula (hash(seed, key_value) % denominator) \in [0, numerator).
+  //
+  // For example, with denominator = 1000, numerator = 10 we produce a value between 0 and 1000
+  // via hash(seed, key_value) % denominator, and consider all values less than 10 as a match.
+  message ConsistentHashMatch {
+    // The lookup key that will derive the value to match against. If the key produces no value,
+    // no match will occur.
+    Key key = 1 [(validate.rules).message = {required: true}];
+
+    uint64 seed = 2;
+
+    uint64 numerator = 3;
+
+    uint64 denominator = 4;
+  }
+
+  oneof type {
+    option (validate.required) = true;
+
+    // This condition will always match and is useful as a catch-all.
+    bool always = 1 [(validate.rules).bool.const = true];
+
+    // A list of matchers that produce a match when all match.
+    MatcherList and = 2;
+
+    // A list of matchers that produice a match when any match.
+    MatcherList or = 3;
+
+    // A string match.
+    StringMatch string = 4;
+
+    // An integer match.
+    IntMatch integer = 5;
+
+    // A matcher that uses consistent hashing.
+    ConsistentHashMatch consistent = 6;
+  }
+}
+
+// A root matcher with associated metadata that applies to the entire matcher structure.
+message RootMatcher {
+  // A matcher that when matched, should have its associated payload executed on
+  // the client.
+  message ClientTarget {
+  }
+
+  // A matcher that when matched, should have its associated payload executed on
+  // the server.
+  message ServerTarget {
+  }
+
+  oneof target_type {
+    option (validate.required) = true;
+
+    ClientTarget client_target = 1;
+    ServerTarget server_target = 2;
+  }
+
+  // The recursive matching structure for doing the actual matching.
+  Matcher matcher = 3 [(validate.rules).message = {required: true}];
+}

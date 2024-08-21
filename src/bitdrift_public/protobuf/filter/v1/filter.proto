@@ -1,0 +1,70 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+import "validate/validate.proto";
+import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
+
+package bitdrift_public.protobuf.filter.v1;
+
+// The configuration of filters that apply transforms to selected logs.
+message FiltersConfiguration {
+  repeated Filter filters = 1;
+}
+
+// Applies configured transform to selected logs.
+message Filter {
+  // The matcher responsible for selecting logs to apply the filter's transforms to.
+  matcher.v1.LogMatcher matcher = 1 [(validate.rules).message = {required: true}];
+
+  // Represents a single interceptor that can be applied to a log message.
+  message Transform {
+    oneof transform_type {
+      option (validate.required) = true;
+      CaptureFields capture_fields = 1;
+      SetField set_field = 2;
+    }
+
+    // Captures specified matching field(s). Capturing a field means storing it in a buffer and potentially uploading
+    // it to bitdrift remote services. The final decision on whether a field is stored and uploaded depends
+    // on various factors, such as buffer and workflow configurations.
+    // * If the specified matching field doesn't exist, nothing happens.
+    // * If the field exists and has already been captured, nothing happens.
+    message CaptureFields {
+      // The fields to capture.
+      message Fields {
+        // A single field.
+        message SingleField {
+          // The name of the field.
+          string name = 1 [(validate.rules).string = {min_len: 1}];
+        }
+
+        oneof fields_type {
+          option (validate.required) = true;
+          SingleField single = 1;
+        }
+      }
+
+      // The fields to capture.
+      Fields fields = 2;
+    }
+
+    // Sets the value of a field with a specified name to a given value.
+    // * If a field with the specified key exists and is a captured field, it will be overwritten.
+    // * If a field with the specified key exists and is a matching field, it will be overwritten.
+    // * If the specified key doesn't exist, a new matching field will be created.
+    message SetField {
+      string name = 1 [(validate.rules).string = {min_len: 1}];
+      string value = 2 [(validate.rules).string = {min_len: 1}];
+    }
+  }
+
+  // The list of transforms to apply to a selected log.
+  // Transforms are applied in the specified order.
+  repeated Transform transforms = 2 [(validate.rules).repeated = {min_items: 1}];
+}

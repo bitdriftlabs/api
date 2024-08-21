@@ -1,0 +1,388 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/any.proto";
+import "bitdrift_public/protobuf/client/v1/runtime.proto";
+import "bitdrift_public/protobuf/client/v1/metric.proto";
+import "bitdrift_public/protobuf/filter/v1/filter.proto";
+import "bitdrift_public/protobuf/insight/v1/insight.proto";
+import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
+import "bitdrift_public/protobuf/bdtail/v1/bdtail_config.proto";
+import "bitdrift_public/protobuf/config/v1/config.proto";
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "validate/validate.proto";
+
+package bitdrift_public.protobuf.client.v1;
+
+// The initial request sent over the stream.
+message HandshakeRequest {
+  // A set of opaque metadata that identifies the connecting device. These will
+  // remain static for the duration of this stream.
+  // TODO(snowp): Support updating these throughout the session.
+  // TODO(snowp): Improve the story for this when parameters change during a
+  // logging period, e.g. if we capture multiple process restarts that may span
+  // versions.
+  map<string, bitdrift_public.protobuf.logging.v1.Data> static_device_metadata = 1;
+
+  // This was never used by the client. Reserve it for now to avoid implementing it. We can bring
+  // it back later if needed.
+  reserved "fields_for_all_logs";
+  reserved 2;
+
+  // If the client has an active configuration, previously obtained via a ConfigurationUpdate
+  // message, it should indicate it in the handshake. This will allow the server to not have to
+  // send out a redundant configuration update. If there is no active configuration this should
+  // be empty.
+  string configuration_version_nonce = 3;
+
+  // If the client has an active runtime, previously obtained via a RuntimeUpdate
+  // message, it should indicate it in the handshake. This will allow the server to not have to
+  // send out a redundant runtime update. If there is no active runtime this should
+  // be empty.
+  string runtime_version_nonce = 4;
+
+  // Active version nonces to be used with OpaqueConfigurationUpdate. The client will populate this map
+  // with all the opaque types it cares about (keyed by its type url) along side the active version nonce
+  // or empty string if there is no active configuration.
+  map<string, string> opqaue_version_nonces = 5;
+}
+
+// A configuration update using a opaque configuration type. This wraps an Any, allowing us to send
+// down any piece of the configuration that the client might want without the transport protocol
+// needing to be made aware of it. The client is expected to indicate which version of this configuration
+// it is at by including the version nonce in the `extra_version_nonces` field on the handshake when it
+// connects to the API server.
+message OpaqueConfigurationUpdate {
+  // The version nonce of the updated configuration.
+  string version_nonce = 1;
+
+  // The actual configuration wrapped up in an Any.
+  google.protobuf.Any configuration = 2;
+}
+
+message OpaqueConfigurationUpdateAck {
+  // The url of the resource being acked. This allows the server to differentiate between multiple
+  // in flight opaque configuration updates.
+  string type_url = 1;
+
+  ConfigurationUpdateAck ack = 2;
+}
+
+// Notifies the server about the intent to upload one or more batchs of logs. The client is expected (but
+// not required, for backwards compatibility) to notify the server about the intent to upload
+// before uploading. The server is thusly able to influence whether the client
+// actually uploads (e.g. the backend no longer wants more of these kind of logs)
+// or delay the upload (e.g. we are hitting rate limits and are applying backpressure).
+message LogUploadIntentRequest {
+  // The number of logs that the client wants to upload. Note that for a ListenerUpload this is
+  // an approximation of all logs across all batches.
+  uint32 log_count = 1;
+
+  // The size of the intended upload, in bytes. Note that for a ListenerUpload this is
+  // an approximation of the size of all logs across all batches.
+  uint32 byte_count = 2;
+
+  // The buffer these logs are uploaded from.
+  string buffer_id = 3;
+
+  // The client generated UUID for this intent. This allows the server to enforce idempotence
+  // during intent negotiation as well as allowing for parallel intent requests to be responded
+  // to out of order.
+  string intent_uuid = 4;
+
+  message WorkflowActionUpload {
+    // The listener(s) which triggered this upload.
+    repeated string workflow_action_ids = 1;
+  }
+
+  oneof intent_type {
+    WorkflowActionUpload workflow_action_upload = 5;
+  }
+}
+
+message LogUploadIntentResponse {
+  // The UUID of the intent being negotiated.
+  string intent_uuid = 1;
+
+  message UploadImmediately {
+  }
+
+  message Drop {
+    // If the upload intent was a ListenerUpload the entire upload should be canceled.
+  }
+
+  oneof decision {
+    // The log should be uploaded immediatly.
+    UploadImmediately upload_immediately = 2;
+
+    // The candidate batch should be dropped.
+    Drop drop = 3;
+  }
+}
+
+// A single log upload payload.
+message LogUploadRequest {
+  // A UUID (v4) associated with this upload. This should be generated by the
+  // client. Retries should use the same upload_id.
+  string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  // A repeated set of flatbuffer encoding of a number of log lines. Each log line is of type
+  // Log defined in buffer_log.fbs.
+  repeated bytes logs = 2 [(validate.rules).repeated = {min_items: 1}];
+
+  // The UUID (v4) of the buffer that is producing the logs.
+  string buffer_uuid = 3 [(validate.rules).string = {min_len: 1}];
+}
+
+// Empty message to maintain a application layer keep alive mechanism.
+message PingRequest {
+}
+
+// Configuration update response from client to server.
+message ConfigurationUpdateAck {
+  message Nack {
+    // The version nonce of the configuration update that failed.
+    string version_nonce = 1;
+
+    // Error details of the failure.
+    string error_details = 2;
+  }
+
+  // The version nonce that the client is actually using. This version nonce was sent in a
+  // ConfigurationUpdate message. If no configuration has been applied (NACK only) this will be
+  // empty.
+  string last_applied_version_nonce = 1;
+
+  // If a configuration update failed, the client should respond to the server and let it know.
+  // It should continue to use the last good config. This message is empty on success, and the
+  // client should respond with last_applied_version_nonce being equal to the update that was
+  // applied.
+  Nack nack = 2;
+}
+
+// A multiplexed request sent over the bitdrift API. Upon stream creation, the
+// client will issue a single handshake request, then await a handshake
+// response. Once the handshake has completed, the client may issue any number
+// of non-handshake requests; corresponding responses may come in any order.
+message ApiRequest {
+  oneof request_type {
+    option (validate.required) = true;
+
+    HandshakeRequest handshake = 1;
+    LogUploadIntentRequest log_upload_intent = 7;
+    LogUploadRequest log_upload = 2;
+    StatsUploadRequest stats_upload = 6;
+    PingRequest ping = 3;
+    ConfigurationUpdateAck configuration_update_ack = 4;
+    ConfigurationUpdateAck runtime_update_ack = 5;
+    OpaqueConfigurationUpdateAck opaque_configuration_update_ack = 8;
+    OpaqueRequest opaque_upload = 9;
+  }
+}
+
+// The response sent as part of stream establishment.
+message HandshakeResponse {
+  message StreamSettings {
+    // How often the client should ping the server. This informs the client how
+    // often a ping request should be issued over the newly created stream.
+    //
+    // If this is not set, the client should not issue ping requests.
+    google.protobuf.Duration ping_interval = 1;
+  }
+
+  StreamSettings stream_settings = 1;
+}
+
+// A general indication of rate limiting from server to client. Further configuration of what to do
+// when limited can be added later.
+message RateLimited {
+}
+
+// A response to an upload request, intended to ack or nack the success of the
+// upload. Upon failure, the client might choose to retry this upload.
+message LogUploadResponse {
+  // The upload UUID provided in the upload request corresponding to this
+  // response.
+  string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  // If set, indicates that the log upload failed. This will be set to a value
+  // helpful for debugging the failure.
+  string error = 2;
+
+  // If any logs were dropped due to validation errors, the count will be supplied here. This does
+  // not count as a total failure and 'error' will not be populated. Debugging information will be
+  // available on the server.
+  uint32 logs_dropped = 3;
+
+  // If set the log upload was blocked due to rate limiting. Further information is available in
+  // the `error` field.
+  RateLimited rate_limited = 4;
+}
+
+message StatsUploadRequest {
+  // Upload UUID used to provide idempotence and to correlate a response with this request.
+  string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  message Snapshot {
+    oneof snapshot_type {
+      option (validate.required) = true;
+
+      MetricsList metrics = 1;
+    }
+
+    message Aggregated {
+      // The point in time where the first set of stats in this aggregation period was aggregated.
+      // This allows the server to get some understanding how old the stats being uploaded are.
+      google.protobuf.Timestamp period_start = 4 [(validate.rules).message = {required: true}];
+    }
+
+    // To support different kinds of snapshots, we support providing information about when the data was
+    // collected.
+    oneof occurred_at {
+      option (validate.required) = true;
+
+      // The snapshot data is aggregated over an indefinite period. This supports metrics where we
+      // care more about the total data (e.g. counts) than understanding precisecly when the data was
+      // recorded.
+      Aggregated aggregated = 2;
+    }
+  }
+
+  // A collection of stats snapshots to be recorded by the backend.
+  repeated Snapshot snapshot = 2 [(validate.rules).repeated = {min_items: 1}];
+
+  // The point in time when the client initialized the process of uploading collected snapshots.
+  // Used by the server to detect clients with skewed clocks.
+  // The idea is that upon receiving the stats payload, the server's current time should be close to this
+  // value.
+  google.protobuf.Timestamp sent_at = 3 [(validate.rules).message = {required: true}];
+}
+
+message StatsUploadResponse {
+  // The UUID corresponding to the upload request.
+  string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  // Optional error message which indicates that stats upload failed and/or some metrics were
+  // dropped.
+  string error = 2;
+
+  // If any metrics were dropped due to validation errors, the count will be supplied here. Error
+  // will be populated with debugging information to help understand the error.
+  uint32 metrics_dropped = 3;
+}
+
+message OpaqueRequest {
+  // An optional UUID corresponding to the request. This can be used to provide idempotence or to correlate a response to a request.
+  string uuid = 1;
+
+  google.protobuf.Any request = 2 [(validate.rules).message = {required: true}];
+}
+
+message OpaqueResponse {
+  // An optional UUID corresponding to the request. This is used to in conjunction with a request uuid to correlate the response to a request.
+  string uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  // Optional error message which indicates that the request failed.
+  optional string error = 2;
+}
+
+// Response to a client ping.
+message PongResponse {
+}
+
+// Configuration update from server to client.
+message ConfigurationUpdate {
+  // A complete configuration snapshot. The client should reconfigure to match the supplied
+  // configuration.
+  message StateOfTheWorld {
+    // Replaced with `workflow_list` and not available for clients with config_version 6+.
+    reserved "mll_list";
+    reserved 2;
+
+    // The list of buffers.
+    bitdrift_public.protobuf.config.v1.BufferConfigList buffer_config_list = 3;
+
+    // The workflows configuration.
+    bitdrift_public.protobuf.workflow.v1.WorkflowsConfiguration workflows_configuration = 4;
+
+    // The list of active bdtail sessions.
+    bitdrift_public.protobuf.bdtail.v1.BdTailConfigurations bdtail_configuration = 6;
+
+    // The insights configuration.
+    bitdrift_public.protobuf.insight.v1.InsightsConfiguration insights_configuration = 7;
+
+    // The filters configuration.
+    bitdrift_public.protobuf.filter.v1.FiltersConfiguration filters_configuration = 8;
+  }
+
+  // A version nonce that can be used for both tracking the last applied update as well as for
+  // responding with a NACK message.
+  string version_nonce = 1;
+
+  oneof update_type {
+    // SoTW is the only currently supported configuration type.
+    StateOfTheWorld state_of_the_world = 2;
+  }
+}
+
+// Runtime update from server to client.
+message RuntimeUpdate {
+  // A version nonce that can be used for both tracking the last applied update as well as for
+  // responding with a NACK message.
+  string version_nonce = 1;
+
+  // The runtime instance to use.
+  Runtime runtime = 2;
+}
+
+// In order to support clients that can't easily implement gRPC (e.g., iOS URLSession), instead of
+// closing a stream with trailers, this frame will be sent followed by stream closure. This allows
+// an easier way for the client to debug and handle errors.
+message ErrorShutdown {
+  // The status that would have been sent in trailers.
+  int32 grpc_status = 1;
+
+  // The message that would have been sent in trailers.
+  string grpc_message = 2;
+}
+
+// Called by the server to tell the client to flush a set of owned buffers. When this command is
+// received by the client it should proceed with normal behavior as if it had decided to flush
+// the buffers locally (e.g., rate limiting, intents, etc.).
+message FlushBuffers {
+  // The list of buffers to flush. If the list is empty, all buffers should be flushed. In the case
+  // of a server side listener trigger, every occurence of ActionFlushBuffer in the trigger_actions
+  // field will populate a buffer in this list.
+  repeated string buffer_id_list = 1;
+}
+
+// A multiplexed response sent over the bitdrift API.
+message ApiResponse {
+  oneof response_type {
+    option (validate.required) = true;
+
+    HandshakeResponse handshake = 1;
+    LogUploadResponse log_upload = 2;
+    LogUploadIntentResponse log_upload_intent = 8;
+    StatsUploadResponse stats_upload = 7;
+    PongResponse pong = 3;
+    ConfigurationUpdate configuration_update = 4;
+    RuntimeUpdate runtime_update = 5;
+    ErrorShutdown error_shutdown = 6;
+    FlushBuffers flush_buffers = 9;
+    OpaqueConfigurationUpdate opaque_configuration_update = 10;
+    OpaqueResponse opaque_upload = 11;
+  }
+}
+
+service ApiService {
+  rpc Mux(stream ApiRequest) returns (stream ApiResponse);
+}

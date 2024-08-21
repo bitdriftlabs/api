@@ -1,0 +1,188 @@
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+
+package common;
+
+extend google.protobuf.ServiceOptions {
+    HttpServerOptions http_server_options = 50002;
+}
+
+extend google.protobuf.MethodOptions {
+    HttpOptions http_options = 50001;
+}
+
+extend google.protobuf.MessageOptions {
+    ProxyOptions proxy_options = 50003 [deprecated = true];
+}
+
+message HttpServerOptions {
+    // Is this an http server
+    bool isHttpServer = 1 [deprecated = true];
+
+    // Overrides the service name when generating Python Flask clients
+    // The default behavior is to use the proto file's package name as
+    // the host.
+    string name = 2;
+
+    // If isHttpServer is true, a Python gRPC client will not be generated for
+    // the service. Setting this to true will result in a gRPC client being
+    // generated.
+    bool generate_grpc_client = 3;
+
+    // Legacy protos-over-REST (PoR) server stubs will only be generated if this
+    // annotation is set to true. PoR code generation is deprecated in favor of
+    // Flask-Protobuf and being actively removed. Do not add this annotation
+    // for any new services.
+    bool generate_legacy_server_stubs = 4 [deprecated = true];
+
+    // Legacy protos-over-REST (PoR) clients will only be generated if this
+    // annotation is set to true. PoR code generation is deprecated in favor of
+    // Flask-Protobuf and being actively removed. Do not add this annotation
+    // for any new services.
+    bool generate_legacy_http_client = 5 [deprecated = true];
+
+    // Primary protocol used by the implementing service
+    Protocol protocol = 6;
+
+    // Secondary protocol used by the implementing service
+    Protocol secondary_protocol = 7;
+}
+
+// Protocol explicitly defines the protocol of the implementing service
+enum Protocol {
+    PROTOCOL_UNKNOWN = 0;
+    PROTORPC = 1;
+    GRPC = 2;
+    LEGACYPOR = 3; // Legacy Protos-Over-REST
+}
+
+// Represents the protobuf message type of an error that may be returned for
+// a given HTTP status code.
+message HttpStatusError {
+    // The status code for which this error is valid.
+    int32 code = 1;
+
+    // Fully qualified protobuf name of the error message that may be used with
+    // the status code.
+    // If protobuf supported generics, this would essentially be a
+    // T: Message.Type & Error.
+    // Consumers will deserialize based on the type name (i.e., foo.bar.Error).
+    string type = 2;
+}
+
+// Indicates a priority tier for a given HTTP request.
+enum HttpRequestPriority {
+    // Default request priority.
+    NORMAL = 0;
+    // Low priority, which can result in the request being deferred.
+    LOW = 1;
+}
+
+// Controls the retry policy of a given HTTP request.
+enum HttpRequestRetryPolicy {
+    // Perform an original request and up to 3 retries with exponential backoff and jittering.
+    DEFAULT = 0;
+    // Perform an original request and keep retrying with exponential backoff and jittering until the
+    // requests succeeds or fails with a non retryable status error returned from a server. Store the
+    // information about a request on a disk so that all on the flight deferred requests can be restarted
+    // when the app is relaunched.
+    DEFER_ON_DISK = 1;
+    // Perform an original request and keep retrying with exponential backoff and jittering until the
+    // requests fails with a non-retryable status code, or is unsubscribed. The request is not persisted to disk.
+    INFINITELY_RETRY_RECOVERABLE_ERRORS = 2;
+}
+
+message HttpOptions {
+    // URL path to the HTTP endpoint.
+    string path = 1;
+
+    // The HTTP verb/action, (i.e., GET, POST etc.).
+    string method = 2;
+
+    // The application code that implements the endpoint.
+    string impl = 3;
+
+    // List of errors by status code that may be returned by the endpoint.
+    repeated HttpStatusError error_overrides = 4;
+
+    // Single error that may be returned by the endpoint (not specific to
+    // status code).
+    string error_type = 5;
+
+    // When `true`, `client_poll_ms` or `push_async_only` must also be specified.
+    // To enable polling from the Pusher service (versus pub-sub),
+    // see `server_poll_ms`.
+    bool push_enabled = 6;
+
+    // The polling rate (in milliseconds) at which mobile clients should
+    // request this resource.
+    uint64 client_poll_ms = 7;
+
+    // The polling rate (in milliseconds) at which the Pusher service should
+    // request this resource. If not specified and `push_enabled = true`,
+    // only pub-sub will be used.
+    uint64 server_poll_ms = 8;
+
+    // Specifies that an events response should be cached by Pusher. This
+    // setting is used in the case that an event has many subscribers that
+    // would receive the same pushed response and prevents a thundering herd to
+    // the upstream service.
+    bool push_cache_enabled = 9;
+
+    // push_cache_ttl_ms specifies the cache TTL for pushed responses when `cached` is enabled.
+    int64 push_cache_ttl_ms = 10;
+
+    // Specifies which topic an event will be published onto by Pusher. String
+    // substitution is used to format each topic using the event field definitions.
+    // Example:
+    // "pb.push.v1.events.:event_id" will replace `:event_id` with the value found in the
+    // `event_id` field defined on the event. An error is thrown if the replacement
+    // field is not defined.
+    string push_topic = 11;
+
+    // The registered upstream from pusher containing the pushed route.
+    string push_service_name = 12;
+
+    // Internal path implemented by the service. If this is a public route,
+    // envoy will rewrite the url rule to point to the internal path on the service
+    string internal_path = 13;
+
+    // Priority of the HTTP request being made. Lower priority requests may be
+    // deferred (i.e., in conditions of degraded network).
+    HttpRequestPriority request_priority = 14;
+
+    // Defines a retry policy for a given request.
+    HttpRequestRetryPolicy request_retry_policy = 15;
+
+    // If true, pusher will not make an initial request, and will not poll.
+    // server_poll_ms must be 0/omitted if true.
+    // client_poll_ms must be 0/omitted if true.
+    bool push_async_only = 16;
+
+    // Defines a retry group for a given request. Used only when `request_retry_policy` is equal
+    // to `DEFER_ON_DISK`, ignored otherwise. Requests which belong to the same retry group
+    // are retried one at a time in the FIFO order. This allows a caller to specify the
+    // chain of network requests which are guaranteed to be performed one after another.
+    // For example, if requests 1 and 2 are part of retry group SOME_GROUP, request 2 will only
+    // be performed after request 1 finishes with a success. If request 1 fails request 2
+    // is canceled. A request without a specified `request_retry_group` is always performed
+    // immediately after it's started by a caller.
+    string request_retry_group = 17;
+
+    // If true, Pusher will ALWAYS use the target event specified in the client subscription
+    // as the body of ALL upstream requests it sends to the specified path
+    bool push_always_use_subscription_event = 18;
+}
+
+// ProxyOptions capture the options related to the legacy proxies. Proxies are
+// deprecated and should no longer be used.
+message ProxyOptions {
+    option deprecated = true;
+
+    // Legacy python proxies will only be generated if this annotation is set
+    // to true. Proxies are deprecated in favor of using the official messages
+    // and are being actively removed. Do not add this annotation for any new
+    // messages.
+    bool generate_legacy_proxies = 1 [deprecated = true];
+}

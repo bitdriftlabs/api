@@ -1,0 +1,112 @@
+// proto - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+import "validate/validate.proto";
+
+package bitdrift_public.protobuf.pulse.v1;
+
+message Kubelet {
+}
+message PodName {
+}
+message Namespace {
+}
+message Service {
+}
+message Deployment {
+}
+message UserProvided {
+  string name = 1;
+}
+
+message EntityType {
+  oneof entity_type {
+    option (validate.required) = true;
+
+    Kubelet kubelet = 1;
+    Deployment deployment = 2;
+    PodName pod_name = 3;
+    Namespace namespace = 4;
+    Service service = 5;
+    UserProvided user_provided = 6;
+  }
+}
+
+message ExtraMetadata {
+  repeated Metadata items = 1;
+}
+
+message Metadata {
+  message Annotation {
+    string key = 1;
+    string value = 2;
+  }
+
+  string value = 2;
+  EntityType metadata_type = 3;
+  repeated Annotation annotations = 4;
+}
+
+message LoggingObservations {
+  repeated LoggingObservation observations = 1;
+}
+
+// A set of logging observations that are associated with a specific entity. Pulse will periodically report the logging usage per entity.
+// The entities are hierarchical, allowing for the server to aggregate usage at different levels of the system.
+message LoggingObservation {
+  // The number of logs seen since the last observation was sent for this entity.
+  uint64 delta_count = 1;
+
+  // The total number of number of log bytes seen since the last observation was sent for this entity.
+  uint64 delta_byte_count = 2;
+
+  // The metadata associated with entity. By reporting a number of different metadata for the entity, the control plane is able to place
+  // the entity within the topology, allowing for aggregation of usage at different levels of the system.
+  //
+  // For example:
+  // Given
+  // - The pod PodA that belongs to a ServivceA, and ServiceB
+  // - The service ServiceA has a team annotation InfraTeam
+  // - The service ServiceB has a team annotation NetworkingTeam
+  // - PodA is namespaced with Infra
+  // - PodA is deployed to a kubelet node1
+  //
+  // The reported metadata will then look like:
+  //
+  // metadata: ExtraMetadata {
+  //   items: [
+  //     Metadata { value: "PodA", entity_type: PodName, annotations: [] },
+  //     Metadata { value: "ServiceA", entity_type: Service,
+  //       annotations: [ Annotation { key: "team", value: "InfraTeam" }]
+  //     },
+  //     Metadata { value: "ServiceB", entity_type: Service,
+  //       annotations: [ Annotation { key: "team", value: "NetworkingTeam" }]
+  //     },
+  //     Metadata { value: "Infra", entity_type: Namespace, annotations: [] },
+  //     Metadata { value: "node1", entity_type: Kubelet, annotations: [] },
+  //   ]
+  // }
+  //
+  // The control plane will be able to build following hierarchies:
+  //
+  // Team(infra) -> Service(service_a) -> Pod(pod_a)
+  // Team(networking) -> Service(service_b) -> Pod(pod_a)
+  // Namespace(infra) -> Pod(pod_a)
+  // Kubelet(node_1) -> Pod(pod_a)
+  //
+  // TODO(snowp): This would be better expressed via a notion of sub-streams, where we initiate
+  //              a stream of data associated with extra metadata. This avoids the repetition of all this data
+  //              and makes it easier to explicitly notify the backend about changes to the system. To support
+  //              this we need extra work to have the client observe the system to know when to drop the sub-streams.
+  oneof additional_metadata {
+    option (validate.required) = true;
+
+    ExtraMetadata metadata = 3;
+  }
+}
