@@ -263,7 +263,7 @@ message StatsUploadRequest {
   // Used by the server to detect clients with skewed clocks.
   // The idea is that upon receiving the stats payload, the server's current time should be close to this
   // value.
-  google.protobuf.Timestamp sent_at = 3 [(validate.rules).message = {required: true}];
+  google.protobuf.Timestamp sent_at = 3;
 }
 
 message StatsUploadResponse {
