@@ -26,4 +26,4 @@ jobs:
           branch: 'main'
           remote-organization-name: 'bitdriftlabs'
           remote-repository-name: 'bitdrift-cla'
-          custom-notsigned-prcomment: '<br/>Thank you for your submission, we really appreciate it. We require that $you sign our [Contributor License Agreement](https://github.com/bitdriftlabs/proto/blob/main/CLA.md) before we can accept your contribution. You can sign the CLA by posting a pull request comment in the below format.<br/>'
+          custom-notsigned-prcomment: '<br/>Thank you for your submission, we really appreciate it. We require that $you sign our [Contributor License Agreement](https://github.com/bitdriftlabs/api/blob/main/CLA.md) before we can accept your contribution. You can sign the CLA by posting a pull request comment in the below format.<br/>'
