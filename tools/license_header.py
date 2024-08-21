@@ -2,7 +2,7 @@ import os
 
 # Define the header you want to check for and insert
 rust_header = """
-// proto - bitdrift's client/server API definitions
+// api - bitdrift's client/server API definitions
 // Copyright Bitdrift, Inc. All rights reserved.
 //
 // Use of this source code and APIs are governed by a source available license that can be found in
