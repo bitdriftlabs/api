@@ -64,7 +64,7 @@ message Filter {
 
       string name = 1 [(validate.rules).string = {min_len: 1}];
       string value = 2 [(validate.rules).string = {min_len: 1}];
-      FieldType field_type = 3 [(validate.rules).enum = = {defined_only : true not_in : 0}];
+      FieldType field_type = 3 [(validate.rules).enum = {defined_only : true not_in : 0}];
     }
   }
 
