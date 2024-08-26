@@ -55,12 +55,16 @@ message Filter {
     }
 
     // Sets the value of a field with a specified name to a given value.
-    // * If a field with the specified key exists and is a captured field, it will be overwritten.
-    // * If a field with the specified key exists and is a matching field, it will be overwritten.
-    // * If the specified key doesn't exist, a new matching field will be created.
     message SetField {
+      enum FieldType {
+        UNKNOWN = 0;
+        MATCHING_ONLY = 1;
+        CAPTRURED = 2;
+      }
+
       string name = 1 [(validate.rules).string = {min_len: 1}];
       string value = 2 [(validate.rules).string = {min_len: 1}];
+      FieldType field_type = 3 [(validate.rules).enum.defined_only = true];
     }
   }
 
