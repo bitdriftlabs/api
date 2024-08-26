@@ -58,8 +58,8 @@ message Filter {
     message SetField {
       enum FieldType {
         UNKNOWN = 0;
-        MATCHING_ONLY = 1;
-        CAPTRURED = 2;
+        CAPTURED = 1;
+        MATCHING_ONLY = 2;
       }
 
       string name = 1 [(validate.rules).string = {min_len: 1}];
