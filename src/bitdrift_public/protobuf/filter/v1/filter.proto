@@ -29,7 +29,7 @@ message Filter {
       CaptureFields capture_fields = 1;
       SetField set_field = 2;
       RemoveFields remove_fields = 3;
-      ReduceCardinality reduce_cardinality = 4;
+      ScrubField scrub_field = 4;
     }
 
     // Captures specified matching field(s). Capturing a field means storing it in a buffer and potentially uploading
@@ -110,25 +110,16 @@ message Filter {
     }
   }
 
-  // Replaces high cardinality portion of a given input with `<id>` placeholder.
-  message ReduceCardinality {
-    message Fields {
-      // A single field.
-      message SingleField {
-        // The name of the field to remove. If the field doesn't exist, nothing happens. If the field
-        // occurs multiple times in the list of log's field - both in captured fields and matching fields -
-        // all occurrences of the field are removed.
-        string name = 1 [(validate.rules).string = {min_len: 1}];
-      }
-
-      oneof fields_type {
-        option (validate.required) = true;
-        SingleField single = 1;
-      }
-    }
-
-    // The fields to remove high cardinality from.
-    Fields fields = 2;
+  // Scrubs the content of a given field, replaces substring(s) matching a given regex with a provided 
+  // replacement.
+  message ScrubField {
+    // The name of the field to scrub. If the field doesn't exist, nothing happens.
+    string name = 1 [(validate.rules).string = {min_len: 1}];
+    // The regex pattern to match.
+    // TODO(Augustyniak): Add more detailed documentation.
+    string pattern = 2 [(validate.rules).string = {min_len: 1}];
+    // The replacement string.
+    string replacement = 3 [(validate.rules).string = {min_len: 1}];
   }
 
   // The list of transforms to apply to a selected log.
