@@ -26,6 +26,7 @@ message Filter {
   message Transform {
     oneof transform_type {
       option (validate.required) = true;
+
       CaptureFields capture_fields = 1;
       SetField set_field = 2;
       RemoveFields remove_fields = 3;
@@ -48,12 +49,13 @@ message Filter {
 
         oneof fields_type {
           option (validate.required) = true;
+
           SingleField single = 1;
         }
       }
 
       // The fields to capture.
-      Fields fields = 2;
+      Fields fields = 2 [(validate.rules).message.required = true];
     }
 
     // Sets the value of a field with a specified name to a given value.
@@ -71,6 +73,8 @@ message Filter {
         }
 
         oneof value {
+          option (validate.required) = true;
+
           // The constant string value.
           string string_value = 1;
           // The value of an existing field.
@@ -80,12 +84,12 @@ message Filter {
 
       string name = 1 [(validate.rules).string = {min_len: 1}];
       // The value to set the field to.
-      SetFieldValue value = 2;
+      SetFieldValue value = 2 [(validate.rules).message.required = true];
       // The type of the field to set.
       FieldType field_type = 3 [(validate.rules).enum = {defined_only: true not_in: 0}];
       // Whether a transform is allowed to override an existing field. If no and the field already exists,
       // the transform is a no-op.
-      bool allow_overriding = 4;
+      bool allow_override = 4;
     }
 
     // Removes a specified field(s).
@@ -101,12 +105,13 @@ message Filter {
 
         oneof fields_type {
           option (validate.required) = true;
+
           SingleField single = 1;
         }
       }
 
       // The fields to remove.
-      Fields fields = 2;
+      Fields fields = 2 [(validate.rules).message.required = true];
     }
   }
 
