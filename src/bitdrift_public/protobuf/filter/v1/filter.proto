@@ -28,7 +28,7 @@ message Filter {
       option (validate.required) = true;
       CaptureFields capture_fields = 1;
       SetField set_field = 2;
-      RemoveField remove_field = 3;
+      RemoveFields remove_fields = 3;
       ReduceCardinality reduce_cardinality = 4;
     }
 
