@@ -85,7 +85,7 @@ message Filter {
   }
 
   // Scrubs the content of a given field, replaces substring(s) matching a given regex with a provided
-  // replacement.
+  // substitution string.
   message ScrubField {
     // The name of the field to scrub. If the field doesn't exist, nothing happens.
     string name = 1 [(validate.rules).string = {min_len: 1}];
