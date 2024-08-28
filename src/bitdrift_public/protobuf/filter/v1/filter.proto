@@ -22,12 +22,14 @@ message Filter {
   // The matcher responsible for selecting logs to apply the filter's transforms to.
   matcher.v1.LogMatcher matcher = 1 [(validate.rules).message = {required: true}];
 
-  // Represents a single interceptor that can be applied to a log message.
+  // Represents a transform that can be applied to a log in order to modify it.
   message Transform {
     oneof transform_type {
       option (validate.required) = true;
       CaptureFields capture_fields = 1;
       SetField set_field = 2;
+      RemoveField remove_field = 3;
+      ReduceCardinality reduce_cardinality = 4;
     }
 
     // Captures specified matching field(s). Capturing a field means storing it in a buffer and potentially uploading
@@ -62,10 +64,71 @@ message Filter {
         MATCHING_ONLY = 2;
       }
 
+      message SetFieldValue {
+        message ExistingField {
+          // The name of an existing field.
+          string name = 1 [(validate.rules).string = {min_len: 1}];
+        }
+
+        oneof value {
+          // The constant string value.
+          string string_value = 1;
+          // The value of an existing field.
+          ExistingField existing_field = 2;
+        }
+      }
+
       string name = 1 [(validate.rules).string = {min_len: 1}];
-      string value = 2 [(validate.rules).string = {min_len: 1}];
+      // The value to set the field to.
+      SetFieldValue value = 2;
+      // The type of the field to set.
       FieldType field_type = 3 [(validate.rules).enum = {defined_only: true not_in: 0}];
+      // Whether a transform is allowed to override an existing field. If no and the field already exists,
+      // the transform is a no-op.
+      bool allow_overriding = 4;
     }
+
+    // Removes a specified field(s).
+    message RemoveFields {
+      message Fields {
+        // A single field.
+        message SingleField {
+          // The name of the field to remove. If the field doesn't exist, nothing happens. If the field
+          // occurs multiple times in the list of log's field - both in captured fields and matching fields -
+          // all occurrences of the field are removed.
+          string name = 1 [(validate.rules).string = {min_len: 1}];
+        }
+
+        oneof fields_type {
+          option (validate.required) = true;
+          SingleField single = 1;
+        }
+      }
+
+      // The fields to remove.
+      Fields fields = 2;
+    }
+  }
+
+  // Replaces high cardinality portion of a given input with `<id>` placeholder.
+  message ReduceCardinality {
+    message Fields {
+      // A single field.
+      message SingleField {
+        // The name of the field to remove. If the field doesn't exist, nothing happens. If the field
+        // occurs multiple times in the list of log's field - both in captured fields and matching fields -
+        // all occurrences of the field are removed.
+        string name = 1 [(validate.rules).string = {min_len: 1}];
+      }
+
+      oneof fields_type {
+        option (validate.required) = true;
+        SingleField single = 1;
+      }
+    }
+
+    // The fields to remove high cardinality from.
+    Fields fields = 2;
   }
 
   // The list of transforms to apply to a selected log.
