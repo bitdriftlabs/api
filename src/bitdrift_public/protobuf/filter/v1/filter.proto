@@ -89,11 +89,12 @@ message Filter {
   message ScrubField {
     // The name of the field to scrub. If the field doesn't exist, nothing happens.
     string name = 1 [(validate.rules).string = {min_len: 1}];
-    // The regex pattern to match.
-    // TODO(Augustyniak): Add more detailed documentation.
+    // The regex used to find portions of a string that should be replaced. Capture groups can be used to
+    // extract portions of the input string and regerence them later in a `substition` string.
     string pattern = 2 [(validate.rules).string = {min_len: 1}];
-    // The replacement string.
-    string replacement = 3 [(validate.rules).string = {min_len: 1}];
+    // The string that matching portion of the subject string should be replated with. Allows for referencing
+    // capture groups from the `pattern` regex.
+    string substitution = 3 [(validate.rules).string = {min_len: 1}];
   }
 
   // The list of transforms to apply to a selected log.
