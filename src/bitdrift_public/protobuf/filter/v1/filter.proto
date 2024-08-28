@@ -89,11 +89,14 @@ message Filter {
   message ScrubField {
     // The name of the field to scrub. If the field doesn't exist, nothing happens.
     string name = 1 [(validate.rules).string = {min_len: 1}];
-    // The regex used to find portions of a string that should be replaced. Capture groups can be used to
-    // extract portions of the input string and reference them later in a `substitution` string.
+    // The regular expression used to find portions of a string that should be replaced.
+    // It follows Rust's regular expression syntax. Capture groups can be used to extract portions
+    // of the input string and reference them later in a `substitution` string.
     string pattern = 2 [(validate.rules).string = {min_len: 1}];
-    // The string that matching portions of the subject string should be replaced with. Allows for referencing
-    // capture groups from the `pattern` regex.
+    // The string that will replace the matching portions of the subject string.
+    // Capture groups from the `pattern` regular expression can be referenced in this string using Rust's
+    // regex syntax. For example, `${1}` refers to the first capture group from the `pattern` regular
+    // expression.
     string substitution = 3 [(validate.rules).string = {min_len: 1}];
   }
 
