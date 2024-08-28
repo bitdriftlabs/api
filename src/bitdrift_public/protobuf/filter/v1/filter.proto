@@ -27,9 +27,9 @@ message Filter {
     oneof transform_type {
       option (validate.required) = true;
 
-      CaptureFields capture_fields = 1;
+      CaptureField capture_field = 1;
       SetField set_field = 2;
-      RemoveFields remove_fields = 3;
+      RemoveField remove_field = 3;
       ScrubField scrub_field = 4;
     }
 
