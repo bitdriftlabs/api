@@ -92,7 +92,7 @@ message Filter {
     // The regex used to find portions of a string that should be replaced. Capture groups can be used to
     // extract portions of the input string and reference them later in a `substitution` string.
     string pattern = 2 [(validate.rules).string = {min_len: 1}];
-    // The string that matching portion of the subject string should be replated with. Allows for referencing
+    // The string that matching portions of the subject string should be replaced with. Allows for referencing
     // capture groups from the `pattern` regex.
     string substitution = 3 [(validate.rules).string = {min_len: 1}];
   }
