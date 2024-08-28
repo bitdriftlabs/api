@@ -38,24 +38,9 @@ message Filter {
     // on various factors, such as buffer and workflow configurations.
     // * If the specified matching field doesn't exist, nothing happens.
     // * If the field exists and has already been captured, nothing happens.
-    message CaptureFields {
-      // The fields to capture.
-      message Fields {
-        // A single field.
-        message SingleField {
-          // The name of the field.
-          string name = 1 [(validate.rules).string = {min_len: 1}];
-        }
-
-        oneof fields_type {
-          option (validate.required) = true;
-
-          SingleField single = 1;
-        }
-      }
-
-      // The fields to capture.
-      Fields fields = 2 [(validate.rules).message.required = true];
+    message CaptureField {
+      // The name of the field to capture.
+      string name = 1 [(validate.rules).string = {min_len: 1}];
     }
 
     // Sets the value of a field with a specified name to a given value.
@@ -92,26 +77,10 @@ message Filter {
       bool allow_override = 4;
     }
 
-    // Removes a specified field(s).
-    message RemoveFields {
-      message Fields {
-        // A single field.
-        message SingleField {
-          // The name of the field to remove. If the field doesn't exist, nothing happens. If the field
-          // occurs multiple times in the list of log's field - both in captured fields and matching fields -
-          // all occurrences of the field are removed.
-          string name = 1 [(validate.rules).string = {min_len: 1}];
-        }
-
-        oneof fields_type {
-          option (validate.required) = true;
-
-          SingleField single = 1;
-        }
-      }
-
-      // The fields to remove.
-      Fields fields = 2 [(validate.rules).message.required = true];
+    // Removes a specified field.
+    message RemoveField {
+      // The name of the field to remove.
+      string name = 1 [(validate.rules).string = {min_len: 1}];
     }
   }
 
