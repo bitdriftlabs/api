@@ -79,7 +79,7 @@ message Filter {
       bool allow_override = 4;
     }
 
-    // Removes a field with the specified name from the list of captured or matching fields. 
+    // Removes a field with the specified name from the list of captured or matching fields.
     // If the field doesn't exist, no action is taken.
     message RemoveField {
       // The name of the field to remove.
