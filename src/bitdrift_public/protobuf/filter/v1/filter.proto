@@ -30,7 +30,7 @@ message Filter {
       CaptureField capture_field = 1;
       SetField set_field = 2;
       RemoveField remove_field = 3;
-      RegexMatchAndSubstitute regex_match_and_substitute = 4;
+      RegexMatchAndSubstituteField regex_match_and_substitute_field = 4;
     }
 
     // Captures specified matching field(s). Capturing a field means storing it in a buffer and potentially uploading
@@ -88,7 +88,7 @@ message Filter {
 
     // Matches the processed field and specifies how to generate a new string using a given regular
     // expression and substitution string.
-    message RegexMatchAndSubstitute {
+    message RegexMatchAndSubstituteField {
       // The name of the field to scrub. If the field doesn't exist, nothing happens.
       string name = 1 [(validate.rules).string = {min_len: 1}];
       // The regular expression used to find portions of a string that should be replaced.
