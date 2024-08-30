@@ -8,6 +8,7 @@
 syntax = "proto3";
 
 import "validate/validate.proto";
+import "bitdrift_public/protobuf/client/v1/matcher.proto";
 import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
 
 package bitdrift_public.protobuf.filter.v1;
@@ -21,6 +22,10 @@ message FiltersConfiguration {
 message Filter {
   // The matcher responsible for selecting logs to apply the filter's transforms to.
   matcher.v1.LogMatcher matcher = 1 [(validate.rules).message = {required: true}];
+
+  // Optional matcher that allows targeting the filter to a given client context. If not present, the filter
+  // is sent to all clients.
+  bitdrift_public.protobuf.client.v1.RootMatcher context_matcher = 5;
 
   // Represents a transform that can be applied to a log in order to modify it.
   message Transform {
