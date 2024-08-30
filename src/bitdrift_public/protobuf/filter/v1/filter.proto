@@ -27,6 +27,9 @@ message Filter {
   // is sent to all clients.
   bitdrift_public.protobuf.client.v1.RootMatcher context_matcher = 5;
 
+  // The unique identifier of the filter.
+  string id = 6 [(validate.rules).string = {min_len: 1}];
+
   // Represents a transform that can be applied to a log in order to modify it.
   message Transform {
     oneof transform_type {
