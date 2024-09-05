@@ -73,7 +73,10 @@ message Filter {
       // The value to set the field to.
       SetFieldValue value = 2 [(validate.rules).message.required = true];
       // The type of the field to set.
-      FieldType field_type = 3 [(validate.rules).enum = {defined_only: true not_in: [0]}];
+      FieldType field_type = 3 [(validate.rules).enum = {
+        defined_only: true
+        not_in: [0]
+      }];
       // Whether a transform is allowed to override an existing field. If no and the field already exists,
       // the transform is a no-op.
       bool allow_override = 4;
