@@ -101,18 +101,17 @@ message Workflow {
       ActionEmitMetric action_emit_metric = 2;
     }
 
-    // Flush the content of specified buffer(s) to bitdrift control plane with an option to continue to stream
-    // logs coming into the buffer(s) to remote services until one of the specified termination conditions
-    // is reached.
+    // Flush the content of the specified buffer(s) to the bitdrift control plane, with the option to continue
+    // streaming logs incoming to the buffer(s) to remote services, until one of the specified termination
+    // conditions is met.
     message ActionFlushBuffers {
-      // A streaming configuration to apply for when buffers flushing occurs.
-      // The streaming is active from the time the flush of the content of specified buffers occurs up until
-      // whichever of the following happens first:
-      //   * [required] the session ID changes
-      //   * [optional, configurable] the configured max duration is reached
-      //   * [optional, configurable] the max number of logs is reached
+      // A streaming configuration to apply when buffer flushing occurs.
+      // Streaming is active from the time the flush of the specified buffers begins until whichever of
+      // the following happens first:
+      //   * [required] The session ID changes
+      //   * [optional, configurable] The maximum number of logs is reached
       message Streaming {
-        // The criteria that can be used to terminate the streaming.
+        // The criteria that can be used to terminate streaming.
         message TerminationCriterion {
           message LogsCount {
             // The maximum number of logs that can be streamed.
@@ -126,29 +125,30 @@ message Workflow {
           }
         }
 
-        // The IDs of a *streaming* buffers that logs should be redirected to.
-        // If a given specified buffer doesn't exist or isn't of a *streaming* type logs are not redirected
-        // and end up in the buffer(s) they were originally supposed to land in. Otherwise, they go to all
-        // specified existing destination streaming buffers.
+        // The IDs of *streaming* buffers to which logs should be redirected.
+        // If a specified buffer doesn't exist or isn't of a *streaming* type, logs are not redirected
+        // and will end up in the buffer(s) they were originally supposed to land in. Otherwise, they are
+        // redirected to all specified, existing destination streaming buffers.
         // Starting with client configuration 11 and up: If no destination streaming buffers are specified,
-        // the logs are redirected to one of the existing continuous streaming buffers if such exists.
+        // the logs are redirected to one of the existing continuous streaming buffers, if such a buffer
+        // exists.
         repeated string destination_streaming_buffer_ids = 1;
 
-        // The extra termination criteria used to stop the streaming. Other than the criteria specified here,
-        // the change of session ID also stops the streaming.
+        // Additional termination criteria used to stop streaming. Apart from the criteria specified here,
+        // a change in session ID will also stop streaming.
         repeated TerminationCriterion termination_criteria = 2;
       }
 
-      // An optional array indicating what buffers should be flushed. An empty array or no array
-      // flushes all buffers.
+      // An optional array indicating which buffers should be flushed. An empty array or no array
+      // will flush all buffers.
       repeated string buffer_ids = 1;
 
-      // An identifier that's used to match this action up against a specific workflow rule. This should
-      // be included as the associated listener_ids on the matching log.
+      // An identifier used to match this action with a specific workflow rule. This should
+      // be included as the associated listener_ids in the matching log.
       string id = 2 [(validate.rules).string = {min_len: 1}];
 
-      // The streaming configuration to apply when buffers flushing occurs. If not specified no consequent
-      // logs streaming occurs when specified buffers are flushed.
+      // The streaming configuration to apply when buffer flushing occurs. If not specified, no subsequent
+      // log streaming will occur when the specified buffers are flushed.
       Streaming streaming = 3;
     }
 
