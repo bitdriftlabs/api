@@ -101,7 +101,7 @@ message Workflow {
       ActionEmitMetric action_emit_metric = 2;
     }
 
-    // Flush the content of the specified buffer(s) to the Bitdrift control plane, with the option to continue
+    // Flush the content of the specified buffer(s) to the bitdrift control plane, with the option to continue
     // streaming logs incoming to the buffer(s) to remote services, until one of the specified termination
     // conditions is met.
     message ActionFlushBuffers {
