@@ -22,6 +22,19 @@ import "validate/validate.proto";
 
 package bitdrift_public.protobuf.client.v1;
 
+// File written to disk if the client has been placed in the "killed" state and told not to
+// contact the server for some period of time.
+message ClientKillFile {
+  // This is the hash of the API key. If the API key hash changes, we will always ignore the
+  // kill_until timestamp. This is to ease local development/onboarding when folks might be
+  // confused about what API key to use.
+  bytes api_key_hash = 1;
+
+  // The time the client will be killed until. After this time it will try to contact the server
+  // again.
+  google.protobuf.Timestamp kill_until = 2;
+}
+
 // The initial request sent over the stream.
 message HandshakeRequest {
   // A set of opaque metadata that identifies the connecting device. These will
