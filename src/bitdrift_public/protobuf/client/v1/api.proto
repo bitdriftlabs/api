@@ -13,7 +13,6 @@ import "google/protobuf/any.proto";
 import "bitdrift_public/protobuf/client/v1/runtime.proto";
 import "bitdrift_public/protobuf/client/v1/metric.proto";
 import "bitdrift_public/protobuf/filter/v1/filter.proto";
-import "bitdrift_public/protobuf/insight/v1/insight.proto";
 import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
 import "bitdrift_public/protobuf/bdtail/v1/bdtail_config.proto";
 import "bitdrift_public/protobuf/config/v1/config.proto";
@@ -329,8 +328,8 @@ message ConfigurationUpdate {
     // The list of active bdtail sessions.
     bitdrift_public.protobuf.bdtail.v1.BdTailConfigurations bdtail_configuration = 6;
 
-    // The insights configuration.
-    bitdrift_public.protobuf.insight.v1.InsightsConfiguration insights_configuration = 7;
+    reserved "insights_configuration";
+    reserved 7;
 
     // The filters configuration.
     bitdrift_public.protobuf.filter.v1.FiltersConfiguration filters_configuration = 8;
