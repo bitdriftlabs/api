@@ -231,7 +231,13 @@ message Workflow {
 
     // Emit data for Sankey diagram.
     message ActionSankeyDiagram {
-      // Action ID.
+      // The ID of a Sankey diagram. If multiple diagrams have them same ID and are performed
+      // as the result of processing the same event (i.e. log) a client performs only one
+      // of the actions. The client emit a stat with a name that follows
+      // the following format "workflow_actions::<ID>".
+      // As the identifier becomes a part of metric's name it must meet the requirements
+      // of prometheus metric name. In other words it needs to match
+      // regex "[a-zA-Z_][a-zA-Z0-9_]*".
       string id = 1 [(validate.rules).string = {min_len: 1}];
 
       // A state step provides the configuration used to provide a name for Sankey chart states.
