@@ -99,6 +99,7 @@ message Workflow {
       option (validate.required) = true;
       ActionFlushBuffers action_flush_buffers = 1;
       ActionEmitMetric action_emit_metric = 2;
+      ActionSankeyChart action_sankey_chart = 3;
     }
 
     // Flush the content of the specified buffer(s) to the bitdrift control plane, with the option to continue
@@ -228,11 +229,13 @@ message Workflow {
       }
     }
 
-    message ActionSankeyJourney {
-      // A step provides the configuration used to extract the value displayed as a node in a Sankey chart
-      // when a workflow changes its state. Each step in the journey corresponds to a transition from one
-      // state to another.
-      message Step {
+    // Emit data for Sankey chart.
+    message ActionSankeyChart {
+      // Action ID.
+      string id = 1 [(validate.rules).string = {min_len: 1}];
+
+      // A step provides the configuration used to provide a name for Sankey chart states.
+      message State {
         // The Sankey chart value that should be displayed for a given transition.
         oneof value_type {
           option (validate.required) = true;
@@ -261,11 +264,11 @@ message Workflow {
         }
       }
 
-      // The sequence of steps that make up the journey. Each step corresponds to a matching node.
-      // The step is associated with a corresponding matcher node via the index of the array, e.g. the nth
+      // The sequence of states that make up the journey. Each state corresponds to a matching node.
+      // The state is associated with a corresponding matcher node via the index of the array, e.g. the nth
       // element in this array corresponds to the nth matcher node as measured from the start of the workflow
       // till the `ActionSankeyJourney` action (with any loops being ignored).
-      repeated Step steps = 1 [(validate.rules).repeated = {min_items: 1}];
+      repeated State states = 2 [(validate.rules).repeated = {min_items: 1}];
     }
   }
 
