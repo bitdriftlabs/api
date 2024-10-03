@@ -242,9 +242,6 @@ message Workflow {
 
           // The value extracted from a field.
           FieldExtracted field_extracted = 2;
-
-          // No value.
-          NoValue no_value = 3;
         }
 
         // Extracts the value from a field.
@@ -261,8 +258,6 @@ message Workflow {
 
           message Exact {}
         }
-
-        message NoValue {}
       }
   
       // The sequence of steps that make up the journey. Each step corresponds to a matching node.
