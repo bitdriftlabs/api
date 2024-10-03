@@ -243,13 +243,11 @@ message Workflow {
           // The value extracted from a field.
           FieldExtracted field_extracted = 2;
 
-          // Ignore
-          Ignored ignored = 3;
+          // No value.
+          NoValue no_value = 3;
         }
 
-        // Do not add any 
-        message Ignored {}
-
+        // Extracts the value from a field.
         message FieldExtracted {
           // The name of the field to extract the value from.
           string field_name = 1 [(validate.rules).string = {min_len: 1}];
@@ -263,6 +261,8 @@ message Workflow {
 
           message Exact {}
         }
+
+        message NoValue {}
       }
   
       // The sequence of steps that make up the journey. Each step corresponds to a matching node.
