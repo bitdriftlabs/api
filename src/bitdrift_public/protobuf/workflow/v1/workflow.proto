@@ -99,7 +99,7 @@ message Workflow {
       option (validate.required) = true;
       ActionFlushBuffers action_flush_buffers = 1;
       ActionEmitMetric action_emit_metric = 2;
-      ActionSankeyChart action_sankey_chart = 3;
+      ActionSankeyDiagram action_sankey_diagram = 3;
     }
 
     // Flush the content of the specified buffer(s) to the bitdrift control plane, with the option to continue
