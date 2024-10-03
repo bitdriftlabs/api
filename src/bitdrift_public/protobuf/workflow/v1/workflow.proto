@@ -233,22 +233,18 @@ message Workflow {
       // when a workflow changes its state. Each step in the journey corresponds to a transition from one 
       // state to another.
       message Step {
-        string original_state_id = 1 [(validate.rules).string = {min_len: 1}];
-
-        string target_state_id = 2 [(validate.rules).string = {min_len: 1}];
-
         // The Sankey chart value that should be displayed for a given transition.
         oneof value_type {
           option (validate.required) = true;
 
           // A fixed value.
-          string fixed = 3 [(validate.rules).string = {min_len: 1}];
+          string fixed = 1 [(validate.rules).string = {min_len: 1}];
 
           // The value extracted from a field.
-          FieldExtracted field_extracted = 4;
+          FieldExtracted field_extracted = 2;
 
           // Ignore
-          Ignored ignored = 5;
+          Ignored ignored = 3;
         }
 
         // Do not add any 
@@ -270,6 +266,9 @@ message Workflow {
       }
   
       // The sequence of steps that make up the journey. Each step corresponds to a matching node.
+      // The step is associated with a corresponding matcher node via the index of the array, e.g. the nth
+      // element in this array corresponds to the nth matcher node as measured from the start of the workflow
+      // till the `ActionSankeyJourney` action (with any loops being ignored).
       repeated Step steps = 1 [(validate.rules).repeated = {min_items: 1}];
     }
   }
