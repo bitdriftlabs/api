@@ -227,6 +227,51 @@ message Workflow {
       message Histogram {
       }
     }
+
+    message ActionSankeyJourney {
+      // A step provides the configuration used to extract the value displayed as a node in a Sankey chart
+      // when a workflow changes its state. Each step in the journey corresponds to a transition from one 
+      // state to another.
+      message Step {
+        string original_state_id = 1 [(validate.rules).string = {min_len: 1}];
+
+        string target_state_id = 2 [(validate.rules).string = {min_len: 1}];
+
+        // The Sankey chart value that should be displayed for a given transition.
+        oneof value_type {
+          option (validate.required) = true;
+
+          // A fixed value.
+          string fixed = 3 [(validate.rules).string = {min_len: 1}];
+
+          // The value extracted from a field.
+          FieldExtracted field_extracted = 4;
+
+          // Ignore
+          Ignored ignored = 5;
+        }
+
+        // Do not add any 
+        message Ignored {}
+
+        message FieldExtracted {
+          // The name of the field to extract the value from.
+          string field_name = 1 [(validate.rules).string = {min_len: 1}];
+
+          oneof extraction_type {
+            option (validate.required) = true;
+
+            // An exact value of a field.
+            Exact exact = 2;
+          }
+
+          message Exact {}
+        }
+      }
+  
+      // The sequence of steps that make up the journey. Each step corresponds to a matching node.
+      repeated Step steps = 1 [(validate.rules).repeated = {min_items: 1}];
+    }
   }
 
   message Execution {
