@@ -229,8 +229,8 @@ message Workflow {
       }
     }
 
-    // Emit data for Sankey chart.
-    message ActionSankeyChart {
+    // Emit data for Sankey diagram.
+    message ActionSankeyDiagram {
       // Action ID.
       string id = 1 [(validate.rules).string = {min_len: 1}];
 
@@ -267,7 +267,7 @@ message Workflow {
       // The sequence of states that make up the journey. Each state corresponds to a matching node.
       // The state is associated with a corresponding matcher node via the index of the array, e.g. the nth
       // element in this array corresponds to the nth matcher node as measured from the start of the workflow
-      // till the `ActionSankeyJourney` action (with any loops being ignored).
+      // till a  given Sankey diagram action (with any loops being ignored).
       repeated State states = 2 [(validate.rules).repeated = {min_items: 1}];
     }
   }
