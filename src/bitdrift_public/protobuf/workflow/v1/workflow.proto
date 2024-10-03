@@ -230,7 +230,7 @@ message Workflow {
 
     message ActionSankeyJourney {
       // A step provides the configuration used to extract the value displayed as a node in a Sankey chart
-      // when a workflow changes its state. Each step in the journey corresponds to a transition from one 
+      // when a workflow changes its state. Each step in the journey corresponds to a transition from one
       // state to another.
       message Step {
         // The Sankey chart value that should be displayed for a given transition.
@@ -256,10 +256,11 @@ message Workflow {
             Exact exact = 2;
           }
 
-          message Exact {}
+          message Exact {
+          }
         }
       }
-  
+
       // The sequence of steps that make up the journey. Each step corresponds to a matching node.
       // The step is associated with a corresponding matcher node via the index of the array, e.g. the nth
       // element in this array corresponds to the nth matcher node as measured from the start of the workflow
