@@ -307,6 +307,10 @@ message ConfigurationUpdate {
     reserved "mll_list";
     reserved 2;
 
+    // Replaced with tags extraction using `ActionEmitMetric` workflow actions.
+    reserved "insights_configuration";
+    reserved 7;
+
     // The list of buffers.
     bitdrift_public.protobuf.config.v1.BufferConfigList buffer_config_list = 3;
 
@@ -315,9 +319,6 @@ message ConfigurationUpdate {
 
     // The list of active bdtail sessions.
     bitdrift_public.protobuf.bdtail.v1.BdTailConfigurations bdtail_configuration = 6;
-
-    // The insights configuration.
-    bitdrift_public.protobuf.insight.v1.InsightsConfiguration insights_configuration = 7;
 
     // The filters configuration.
     bitdrift_public.protobuf.filter.v1.FiltersConfiguration filters_configuration = 8;
