@@ -203,6 +203,7 @@ message ApiRequest {
 
 // A request to upload a Sankey diagram.
 message SankeyDiagramUploadRequest {
+  // A single state in the Sankey diagram.
   message State {
     // The name of the state.
     string name = 1 [(validate.rules).string = {min_len: 1}];
@@ -210,7 +211,7 @@ message SankeyDiagramUploadRequest {
 
   // Sankey diagram ID.
   string id = 1 [(validate.rules).string = {min_len: 1}];
-  // The list of traversed states.
+  // The list of traversed diagram states.
   repeated State states = 2 [(validate.rules).repeated = {min_items: 1}];
 }
 
