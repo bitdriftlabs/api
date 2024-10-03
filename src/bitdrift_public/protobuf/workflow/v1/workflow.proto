@@ -253,6 +253,12 @@ message Workflow {
           FieldExtracted field_extracted = 2;
         }
 
+        // The maximum number of steps that can be remembered for a given state step. States are kept in FIFO
+        // order, and as soon as the limit is exceeded, the oldest ones are dropped to make space for new
+        // ones. A limit of 0 means this feature is effectively disabled, and all states for a given state
+        // step are retained.
+        uint32 limit = 3;
+
         // Extracts the value from a field.
         message FieldExtracted {
           // The name of the field to extract the value from.
