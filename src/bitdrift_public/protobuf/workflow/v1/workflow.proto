@@ -240,17 +240,23 @@ message Workflow {
       // regex "[a-zA-Z_][a-zA-Z0-9_]*".
       string id = 1 [(validate.rules).string = {min_len: 1}];
 
-      // A state step provides the configuration used to provide a name for Sankey chart states.
+      // A state step provides the configuration used to name Sankey chart states. Each state step corresponds
+      // to a single transition between two states in the workflow.
       message StateStep {
+        // The ID of the origin state.
+        string origin_workflow_state_id = 1 [(validate.rules).string = {min_len: 1}];
+        // The ID of the target state.
+        string target_workflow_state_id = 2 [(validate.rules).string = {min_len: 1}];
+
         // The name of the Sankey diagram state.
         oneof value_type {
           option (validate.required) = true;
 
           // A fixed value.
-          string fixed = 1 [(validate.rules).string = {min_len: 1}];
+          string fixed = 3 [(validate.rules).string = {min_len: 1}];
 
           // The value extracted from a field.
-          FieldExtracted field_extracted = 2;
+          FieldExtracted field_extracted = 4;
         }
 
         // Extracts the value from a field.
@@ -273,15 +279,16 @@ message Workflow {
         // order, and as soon as the limit is exceeded, the oldest ones are dropped to make space for new
         // ones. A limit of 0 means this feature is effectively disabled, and all states for a given state
         // step are retained.
-        uint32 limit = 3;
+        uint32 limit = 5;
       }
 
-      // The sequence of state steps that make up the journey. Each state step corresponds to a matching node
-      // and each state step may translate to multiple Sankey diagram steps.
-      // The state step is associated with a corresponding matcher node via the index of the array, e.g.
-      // the nth element in this array corresponds to the nth matcher node as measured from the start of
-      // the workflow till a given Sankey diagram action (with any loops being ignored).
-      repeated StateStep states = 2 [(validate.rules).repeated = {min_items: 1}];
+      // The sequence of state steps that make up the journey. Each state step corresponds to a
+      // single transition in a workflow and may translate to multiple Sankey diagram states.
+      // It's an error to provide multiple state steps for the same workflow state 
+      // transition (origin -> target state ID pair).
+      // If there is no state step configuration for a given workflow state transition, no value
+      // is extracted for display as a Sankey diagram state.
+      repeated StateStep state_steps = 2 [(validate.rules).repeated = {min_items: 1}];
     }
   }
 

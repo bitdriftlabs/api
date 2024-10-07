@@ -203,10 +203,15 @@ message ApiRequest {
 
 // A request to upload a Sankey diagram.
 message SankeyDiagramUploadRequest {
-  // A single state in the Sankey diagram.
+  // A single state in the Sankey diagram. This differs from workflow states. Each Sankey diagram state
+  // corresponds a single transition from a workflow origin state to a workflow target state.
   message State {
-    // The name of the state.
-    string name = 1 [(validate.rules).string = {min_len: 1}];
+    // The ID of the origin state.
+    string origin_workflow_state_id = 1 [(validate.rules).string = {min_len: 1}];
+    // The ID of the target state.
+    string target_workflow_state_id = 2 [(validate.rules).string = {min_len: 1}];
+    // The value extracted from the matched log.
+    string extracted_value = 3 [(validate.rules).string = {min_len: 1}];
   }
 
   // Sankey diagram ID.
@@ -395,6 +400,10 @@ message FlushBuffers {
   repeated string buffer_id_list = 1;
 }
 
+// The response to Sankey diagram upload request.
+message SankeyDiagramUploadResponse {
+}
+
 // A multiplexed response sent over the bitdrift API.
 message ApiResponse {
   oneof response_type {
@@ -411,6 +420,7 @@ message ApiResponse {
     FlushBuffers flush_buffers = 9;
     OpaqueConfigurationUpdate opaque_configuration_update = 10;
     OpaqueResponse opaque_upload = 11;
+    SankeyDiagramUploadResponse sankey_diagram_upload = 12;
   }
 }
 
