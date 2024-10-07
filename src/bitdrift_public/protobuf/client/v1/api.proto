@@ -203,9 +203,9 @@ message ApiRequest {
 
 // A request to upload a Sankey diagram.
 message SankeyDiagramUploadRequest {
-  // A single state in the Sankey diagram. This differs from workflow states. Each Sankey diagram state
-  // corresponds a single transition from a workflow origin state to a workflow target state.
-  message State {
+  // A single node in the Sankey diagram. This differs from workflow states. Each node corresponds
+  // to a single transition from a workflow origin state to a workflow target state.
+  message Node {
     // The ID of the origin state.
     string origin_workflow_state_id = 1 [(validate.rules).string = {min_len: 1}];
     // The ID of the target state.
@@ -217,11 +217,11 @@ message SankeyDiagramUploadRequest {
   // Sankey diagram ID.
   string id = 1 [(validate.rules).string = {min_len: 1}];
   // The identifier that represents a traversed state's path registered for a diagram. Two diagram paths
-  // within the same diagram can have the same ID only if their states are identical.
+  // within the same diagram can have the same ID only if their nodes are identical.
   // Conflicts in diagram path IDs between different diagrams are possible.
   string path_id = 2 [(validate.rules).string = {min_len: 1}];
-  // The list of traversed diagram states.
-  repeated State states = 3 [(validate.rules).repeated = {min_items: 1}];
+  // The list of traversed diagram nodes.
+  repeated Node nodes = 3 [(validate.rules).repeated = {min_items: 1}];
 }
 
 // The response sent as part of stream establishment.

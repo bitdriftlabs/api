@@ -242,7 +242,7 @@ message Workflow {
 
       // A state step provides the configuration used to name Sankey chart states. Each state step corresponds
       // to a single transition between two states in the workflow.
-      message StateStep {
+      message NodeStep {
         // The ID of the origin state.
         string origin_workflow_state_id = 1 [(validate.rules).string = {min_len: 1}];
         // The ID of the target state.
@@ -282,13 +282,13 @@ message Workflow {
         uint32 limit = 5;
       }
 
-      // The sequence of state steps that make up the journey. Each state step corresponds to a
-      // single transition in a workflow and may translate to multiple Sankey diagram states.
-      // It's an error to provide multiple state steps for the same workflow state 
-      // transition (origin -> target state ID pair).
-      // If there is no state step configuration for a given workflow state transition, no value
-      // is extracted for display as a Sankey diagram state.
-      repeated StateStep state_steps = 2 [(validate.rules).repeated = {min_items: 1}];
+      // The sequence of node steps that make up the journey. Each node step corresponds to a
+      // single transition in a workflow and may translate to multiple Sankey diagram nodes.
+      // It's an error to provide multiple node steps for the same workflow state transition
+      // (origin -> target state ID pair).
+      // If there is no node step configuration for a given workflow state transition, the transition
+      // is omitted in the Sankey diagram.
+      repeated NodeStep node_steps = 2 [(validate.rules).repeated = {min_items: 1}];
     }
   }
 
