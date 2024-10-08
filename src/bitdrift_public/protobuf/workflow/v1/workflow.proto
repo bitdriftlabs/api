@@ -107,22 +107,6 @@ message Workflow {
         // The value extracted from a field.
         FieldExtracted field_extracted = 4;
       }
-
-      // Extracts the value from a field.
-      message FieldExtracted {
-        // The name of the field to extract the value from.
-        string field_name = 1 [(validate.rules).string = {min_len: 1}];
-
-        oneof extraction_type {
-          option (validate.required) = true;
-
-          // An exact value of a field.
-          Exact exact = 2;
-        }
-
-        message Exact {
-        }
-      }
     }
   }
 
@@ -226,20 +210,6 @@ message Workflow {
         Histogram histogram = 5;
       }
 
-      message FieldExtracted {
-        string field_name = 1 [(validate.rules).string = {min_len: 1}];
-
-        message Exact {
-        };
-
-        // For now we only support exact match, but in the future we might support more complex extraction logic like regex captures.
-        oneof extraction_type {
-          option (validate.required) = true;
-
-          Exact exact = 2;
-        }
-      }
-
       // The value that is added to the metric. For a counter the value is added to the counter, while for a histogram the value is recorded as a sample.
       oneof value_extractor_type {
         option (validate.required) = true;
@@ -323,5 +293,20 @@ message Workflow {
   // The time starts ticking when a given workflow run leaves its initial state.
   message LimitDuration {
     uint64 duration_ms = 2 [(validate.rules).uint64.gt = 0];
+  }
+}
+
+// A value extracted from log's field.
+message FieldExtracted {
+  string field_name = 1 [(validate.rules).string = {min_len: 1}];
+
+  message Exact {
+  };
+
+  // For now we only support exact match, but in the future we might support more complex extraction logic like regex captures.
+  oneof extraction_type {
+    option (validate.required) = true;
+
+    Exact exact = 2;
   }
 }
