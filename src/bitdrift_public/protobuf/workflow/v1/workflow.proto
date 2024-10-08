@@ -280,8 +280,10 @@ message Workflow {
     }
 
     // Emit data for Sankey diagram.
-    // Refer to the `annotations` field in the `Rule` to learn more about how the values for the
-    // Sankey diagram nodes are extracted.
+    // The action requires at least one transition on the path to the action to have
+    // `SankeyDiagramValueExtraction` extension.
+    // Refer to `SankeyDiagramValueExtraction` to learn more about how the values
+    // for the Sankey diagram nodes are extracted.
     message ActionSankeyDiagram {
       // The ID of a Sankey diagram. If multiple diagrams have them same ID and are performed
       // as the result of processing the same event (i.e. log) a client performs only one

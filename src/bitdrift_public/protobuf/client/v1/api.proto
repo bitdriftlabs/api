@@ -206,12 +206,8 @@ message SankeyDiagramUploadRequest {
   // A single node in the Sankey diagram. This differs from workflow states. Each node corresponds
   // to a single transition from a workflow origin state to a workflow target state.
   message Node {
-    // The ID of the origin state.
-    string origin_workflow_state_id = 1 [(validate.rules).string = {min_len: 1}];
-    // The ID of the target state.
-    string target_workflow_state_id = 2 [(validate.rules).string = {min_len: 1}];
     // The value extracted from the matched log.
-    string extracted_value = 3 [(validate.rules).string = {min_len: 1}];
+    string extracted_value = 1 [(validate.rules).string = {min_len: 1}];
   }
 
   // Sankey diagram ID.
