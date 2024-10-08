@@ -243,20 +243,15 @@ message Workflow {
       // A state step provides the configuration used to name Sankey chart states. Each state step corresponds
       // to a single transition between two states in the workflow.
       message NodeStep {
-        // The ID of the origin state.
-        string origin_workflow_state_id = 1 [(validate.rules).string = {min_len: 1}];
-        // The ID of the target state.
-        string target_workflow_state_id = 2 [(validate.rules).string = {min_len: 1}];
-
         // The name of the Sankey diagram state.
         oneof value_type {
           option (validate.required) = true;
 
           // A fixed value.
-          string fixed = 3 [(validate.rules).string = {min_len: 1}];
+          string fixed = 1 [(validate.rules).string = {min_len: 1}];
 
           // The value extracted from a field.
-          FieldExtracted field_extracted = 4;
+          FieldExtracted field_extracted = 2;
         }
 
         // Extracts the value from a field.
@@ -279,7 +274,7 @@ message Workflow {
         // order, and as soon as the limit is exceeded, the oldest ones are dropped to make space for new
         // ones. A limit of 0 means this feature is effectively disabled, and all states for a given state
         // step are retained.
-        uint32 limit = 5;
+        uint32 limit = 3;
       }
 
       // The sequence of node steps that make up the journey. Each node step corresponds to a
