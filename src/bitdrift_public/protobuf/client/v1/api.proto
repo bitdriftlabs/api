@@ -197,7 +197,27 @@ message ApiRequest {
     ConfigurationUpdateAck runtime_update_ack = 5;
     OpaqueConfigurationUpdateAck opaque_configuration_update_ack = 8;
     OpaqueRequest opaque_upload = 9;
+    SankeyDiagramUploadRequest sankey_diagram_upload = 10;
   }
+}
+
+// A request to upload a Sankey diagram.
+message SankeyDiagramUploadRequest {
+  // A single node in the Sankey diagram. This differs from workflow states. Each node corresponds
+  // to a single transition from a workflow origin state to a workflow target state.
+  message Node {
+    // The value extracted from the matched log.
+    string extracted_value = 1 [(validate.rules).string = {min_len: 1}];
+  }
+
+  // Sankey diagram ID.
+  string id = 1 [(validate.rules).string = {min_len: 1}];
+  // The identifier that represents a traversed state's path registered for a diagram. Two diagram paths
+  // within the same diagram can have the same ID only if their nodes are identical.
+  // Conflicts in diagram path IDs between different diagrams are possible.
+  string path_id = 2 [(validate.rules).string = {min_len: 1}];
+  // The list of traversed diagram nodes.
+  repeated Node nodes = 3 [(validate.rules).repeated = {min_items: 1}];
 }
 
 // The response sent as part of stream establishment.
@@ -376,6 +396,10 @@ message FlushBuffers {
   repeated string buffer_id_list = 1;
 }
 
+// The response to Sankey diagram upload request.
+message SankeyDiagramUploadResponse {
+}
+
 // A multiplexed response sent over the bitdrift API.
 message ApiResponse {
   oneof response_type {
@@ -392,6 +416,7 @@ message ApiResponse {
     FlushBuffers flush_buffers = 9;
     OpaqueConfigurationUpdate opaque_configuration_update = 10;
     OpaqueResponse opaque_upload = 11;
+    SankeyDiagramUploadResponse sankey_diagram_upload = 12;
   }
 }
 
