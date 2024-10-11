@@ -81,7 +81,7 @@ message Workflow {
 
   // An extra configuration for a given transition.
   message TransitionExtension {
-    oneof annotation_type {
+    oneof extension_type {
       option (validate.required) = true;
       SankeyDiagramValueExtraction sankey_diagram_value_extraction = 1;
     }
