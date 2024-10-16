@@ -218,6 +218,10 @@ message Workflow {
       // The tags for the metric.
       repeated Tag tags = 4;
 
+      // A synthetic counter.
+      message Counter {
+      }
+
       // A synthetic histogram.
       message Histogram {
       }
@@ -262,18 +266,6 @@ message Workflow {
 
       // The tags for the metric.
       repeated Tag tags = 3;
-
-      // The type of metric. Currently only counters are supported.
-      oneof metric_type {
-        option (validate.required) = true;
-
-        // A counter.
-        Counter counter = 4;
-      }
-    }
-
-    // A synthetic counter.
-    message Counter {
     }
 
     // Wraps a tag that is associated with the metric.
