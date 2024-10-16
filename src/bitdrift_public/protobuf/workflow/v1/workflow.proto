@@ -263,7 +263,8 @@ message Workflow {
       // are dropped to make space for new ones. A limit of 0 means this feature is effectively disabled,
       // and all extracted values are retained.
       //
-      // For any Sankey diagram and its path, dropping of extracted values doesn't apply to:
+      // For any Sankey diagram and its paths, the limitation on values and the exclusion of extracted values
+      // does not apply to:
       // * Transitions on the path from the START node to the first node with incoming backward-
       //   pointing transitions.
       // * Transitions on the path from the last transition with two or more outgoing transitions to the END node.
@@ -274,7 +275,7 @@ message Workflow {
       //                ▼  │
       // START --> A --> B --> C --> END -> Sankey
       //
-      // For example, if the limit is set to `5` and the above workflow encounters log-matching nodes in the
+      // For example, if the limit is set to three (3) and the above workflow encounters log-matching nodes in the
       // following  order: A -> B(1) -> B(2) -> B(3) -> B(4) -> B(5) -> C, the final Sankey diagram will show
       // the values extracted from the following nodes sequence: A -> B(3) -> B(4) -> B(5) -> C.
       uint32 limit = 2;
