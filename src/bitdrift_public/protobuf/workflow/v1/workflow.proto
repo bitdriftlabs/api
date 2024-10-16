@@ -278,7 +278,7 @@ message Workflow {
       // For example, if the limit is set to three (3) and the above workflow encounters log-matching nodes in the
       // following  order: A -> B(1) -> B(2) -> B(3) -> B(4) -> B(5) -> C, the final Sankey diagram will show
       // the values extracted from the following nodes sequence: A -> B(3) -> B(4) -> B(5) -> C.
-      uint32 limit = 2;
+      uint32 limit = 2 [(validation.rules).uint32.gt = 0];
     }
   }
 
