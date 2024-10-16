@@ -264,7 +264,8 @@ message Workflow {
       // the values extracted from the following nodes sequence: A -> B(3) -> B(4) -> B(5) -> C.
       uint32 limit = 2 [(validate.rules).uint32.gt = 0];
 
-      // The tags for the metric.
+      // Tags for a counter that is emitted when a Sankey diagram path is completed.
+      // Each completion of the path increments the counter by one.
       repeated Tag tags = 3;
     }
 
