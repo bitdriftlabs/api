@@ -99,7 +99,7 @@ message Workflow {
         string fixed = 2 [(validate.rules).string = {min_len: 1}];
 
         // The value extracted from a field.
-        FieldExtracted field_extracted = 3;
+        Action.FieldExtracted field_extracted = 3;
       }
     }
   }
