@@ -218,22 +218,6 @@ message Workflow {
       // The tags for the metric.
       repeated Tag tags = 4;
 
-      // Wraps a tag that is associated with the metric.
-      message Tag {
-        // The name of the tag.
-        string name = 1 [(validate.rules).string = {min_len: 1}];
-
-        oneof tag_type {
-          option (validate.required) = true;
-
-          // A fixed tag value.
-          string fixed_value = 2 [(validate.rules).string = {min_len: 1}];
-
-          // The tag value is extracted from a field in the log. If the field is not present, no tag is added.
-          FieldExtracted field_extracted = 3;
-        }
-      }
-
       // A synthetic counter.
       message Counter {
       }
@@ -279,6 +263,26 @@ message Workflow {
       // following  order: A -> B(1) -> B(2) -> B(3) -> B(4) -> B(5) -> C, the final Sankey diagram will show
       // the values extracted from the following nodes sequence: A -> B(3) -> B(4) -> B(5) -> C.
       uint32 limit = 2 [(validate.rules).uint32.gt = 0];
+
+      // Tags for a counter that is emitted when a Sankey diagram path is completed.
+      // Each completion of the path increments the counter by one.
+      repeated Tag tags = 3;
+    }
+
+    // Wraps a tag that is associated with the metric.
+    message Tag {
+      // The name of the tag.
+      string name = 1 [(validate.rules).string = {min_len: 1}];
+
+      oneof tag_type {
+        option (validate.required) = true;
+
+        // A fixed tag value.
+        string fixed_value = 2 [(validate.rules).string = {min_len: 1}];
+
+        // The tag value is extracted from a field in the log. If the field is not present, no tag is added.
+        FieldExtracted field_extracted = 3;
+      }
     }
   }
 
@@ -310,19 +314,19 @@ message Workflow {
   message LimitDuration {
     uint64 duration_ms = 2 [(validate.rules).uint64.gt = 0];
   }
-}
 
-// A value extracted from log's field.
-message FieldExtracted {
-  string field_name = 1 [(validate.rules).string = {min_len: 1}];
+  // A value extracted from log's field.
+  message FieldExtracted {
+    string field_name = 1 [(validate.rules).string = {min_len: 1}];
 
-  message Exact {
-  };
+    message Exact {
+    };
 
-  // For now we only support exact match, but in the future we might support more complex extraction logic like regex captures.
-  oneof extraction_type {
-    option (validate.required) = true;
+    // For now we only support exact match, but in the future we might support more complex extraction logic like regex captures.
+    oneof extraction_type {
+      option (validate.required) = true;
 
-    Exact exact = 2;
+      Exact exact = 2;
+    }
   }
 }
