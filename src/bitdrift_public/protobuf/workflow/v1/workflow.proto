@@ -99,7 +99,7 @@ message Workflow {
         string fixed = 2 [(validate.rules).string = {min_len: 1}];
 
         // The value extracted from a field.
-        Action.FieldExtracted field_extracted = 3;
+        FieldExtracted field_extracted = 3;
       }
     }
   }
@@ -283,21 +283,6 @@ message Workflow {
         FieldExtracted field_extracted = 3;
       }
     }
-
-    // A value extracted from log's field.
-    message FieldExtracted {
-      string field_name = 1 [(validate.rules).string = {min_len: 1}];
-
-      message Exact {
-      };
-
-      // For now we only support exact match, but in the future we might support more complex extraction logic like regex captures.
-      oneof extraction_type {
-        option (validate.required) = true;
-
-        Exact exact = 2;
-      }
-    }
   }
 
   message Execution {
@@ -327,5 +312,20 @@ message Workflow {
   // The time starts ticking when a given workflow run leaves its initial state.
   message LimitDuration {
     uint64 duration_ms = 2 [(validate.rules).uint64.gt = 0];
+  }
+
+  // A value extracted from log's field.
+  message FieldExtracted {
+    string field_name = 1 [(validate.rules).string = {min_len: 1}];
+
+    message Exact {
+    };
+
+    // For now we only support exact match, but in the future we might support more complex extraction logic like regex captures.
+    oneof extraction_type {
+      option (validate.required) = true;
+
+      Exact exact = 2;
+    }
   }
 }
