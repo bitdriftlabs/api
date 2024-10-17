@@ -7,9 +7,25 @@
 
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 package bitdrift_public.protobuf.client.v1;
+
+// Used to track an index of pending aggregations that need to be uploaded. This is used by the
+// file manager to coordinate merging and uploads.
+message PendingAggregationIndex {
+  message PendingFile {
+    // Name of the file to upload.
+    string name = 1;
+    // The start of the period that this file covers. All metrics are aggregated over this period.
+    google.protobuf.Timestamp period_start = 2;
+    // True if an aggregation is ready to upload and should no longer be written to.
+    bool ready_to_upload = 3;
+  }
+  // List of files, in order of period_start, that are pending upload.
+  repeated PendingFile pending_files = 1;
+}
 
 message Counter {
   // Deprecated do not use this. At some point we will reserve this field and remove it.
