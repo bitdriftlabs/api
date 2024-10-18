@@ -274,6 +274,10 @@ message StatsUploadRequest {
       // The point in time where the first set of stats in this aggregation period was aggregated.
       // This allows the server to get some understanding how old the stats being uploaded are.
       google.protobuf.Timestamp period_start = 4 [(validate.rules).message = {required: true}];
+
+      // When the aggregation was closed. If specified, the server can decide to handle variable
+      // size aggregation windows by averaging the data over the period or some other heuristic.
+      google.protobuf.Timestamp period_end = 5;
     }
 
     // To support different kinds of snapshots, we support providing information about when the data was
