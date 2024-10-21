@@ -198,6 +198,7 @@ message ApiRequest {
     OpaqueConfigurationUpdateAck opaque_configuration_update_ack = 8;
     OpaqueRequest opaque_upload = 9;
     SankeyDiagramUploadRequest sankey_diagram_upload = 10;
+    SankeyIntentRequest sankey_intent = 11;
   }
 }
 
@@ -218,6 +219,18 @@ message SankeyDiagramUploadRequest {
   string path_id = 2 [(validate.rules).string = {min_len: 1}];
   // The list of traversed diagram nodes.
   repeated Node nodes = 3 [(validate.rules).repeated = {min_items: 1}];
+}
+
+// A request to ask whether to upload a Sankey path.
+message SankeyIntentRequest {
+  // The UUID of the intent being negotiated. This is used to correlate the response with the request.
+  string intent_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  // The ID of the path that is being considered for upload.
+  string path_id = 2 [(validate.rules).string = {min_len: 1}];
+
+  // The ID of the diagram that the path was discovered in.
+  string sankey_diagram_id = 3 [(validate.rules).string = {min_len: 1}];
 }
 
 // The response sent as part of stream establishment.
@@ -404,6 +417,20 @@ message FlushBuffers {
 message SankeyDiagramUploadResponse {
 }
 
+// The response to Sankey diagram intent request.
+message SankeyIntentResponse {
+  enum Decision {
+    // The diagram should be uploaded.
+    UPLOAD = 0;
+    // The diagram should be dropped.
+    DROP = 1;
+  }
+
+  string intent_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  Decision decision = 2;
+}
+
 // A multiplexed response sent over the bitdrift API.
 message ApiResponse {
   oneof response_type {
@@ -421,6 +448,7 @@ message ApiResponse {
     OpaqueConfigurationUpdate opaque_configuration_update = 10;
     OpaqueResponse opaque_upload = 11;
     SankeyDiagramUploadResponse sankey_diagram_upload = 12;
+    SankeyIntentResponse sankey_intent_response = 13;
   }
 }
 
