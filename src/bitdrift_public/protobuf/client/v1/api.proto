@@ -228,6 +228,9 @@ message SankeyIntentRequest {
 
   // The ID of the path that is being considered for upload.
   string path_id = 2 [(validate.rules).string = {min_len: 1}];
+
+  // The ID of the diagram that the path was discovered in.
+  string sankey_diagram_id = 3 [(validate.rules).string = {min_len: 1}];
 }
 
 // The response sent as part of stream establishment.
