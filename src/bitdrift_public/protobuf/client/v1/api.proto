@@ -445,7 +445,7 @@ message ApiResponse {
     OpaqueConfigurationUpdate opaque_configuration_update = 10;
     OpaqueResponse opaque_upload = 11;
     SankeyDiagramUploadResponse sankey_diagram_upload = 12;
-    SnakeyIntentResponse sankey_intent_response = 13;
+    SankeyIntentResponse sankey_intent_response = 13;
   }
 }
 
