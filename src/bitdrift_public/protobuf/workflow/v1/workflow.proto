@@ -101,11 +101,11 @@ message Workflow {
         // The value extracted from a field.
         FieldExtracted field_extracted = 3;
       }
-    }
 
-    // Whether extracting the value with the extension counts against the limit of the extracted values
-    // defined on a given emit Sankey diagram action.
-    bool consumes_sankey_extraction_limit = 4;
+      // Whether extracting the value with the extension counts against the limit of the extracted values
+      // defined on a given emit Sankey diagram action.
+      bool counts_against_sankey_extraction_limit = 4;
+    }
   }
 
   // Rule used to transition based on a log.
