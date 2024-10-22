@@ -104,7 +104,7 @@ message Workflow {
 
       // Whether extracting the value with the extension counts against the limit of the extracted values
       // defined on a given emit Sankey diagram action.
-      bool counts_against_sankey_extraction_limit = 4;
+      bool counts_toward_sankey_extraction_limit = 4;
     }
   }
 
