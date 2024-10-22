@@ -102,7 +102,7 @@ message Workflow {
         FieldExtracted field_extracted = 3;
       }
 
-      // Whether extracting the value with the extension counts against the limit of the extracted values
+      // Whether extracting the value with the extension counts toward the limit of the extracted values
       // defined on a given emit Sankey diagram action.
       bool counts_toward_sankey_extraction_limit = 4;
     }
