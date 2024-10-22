@@ -128,6 +128,7 @@ message Workflow {
       ActionFlushBuffers action_flush_buffers = 1;
       ActionEmitMetric action_emit_metric = 2;
       ActionEmitSankeyDiagram action_emit_sankey_diagram = 3;
+      ActionTakeScreenshot action_take_screenshot = 4;
     }
 
     // Flush the content of the specified buffer(s) to the bitdrift control plane, with the option to continue
@@ -284,6 +285,14 @@ message Workflow {
         FieldExtracted field_extracted = 3;
       }
     }
+  }
+
+  // Emit a log containing application screenshot.
+  message ActionTakeScreenshot {
+    // The ID of an action. If multiple actions have them same ID and are performed
+    // as the result of processing the same event (i.e. log) a client performs only one
+    // of the actions.
+    string id = 1 [(validate.rules).string = {min_len: 1}];
   }
 
   message Execution {
