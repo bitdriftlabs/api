@@ -413,7 +413,7 @@ message FlushBuffers {
   repeated string buffer_id_list = 1;
 }
 
-// The response to Sankey path upload request.
+// The response to Sankey diagram path upload request.
 message SankeyPathUploadResponse {
   // The UUID corresponding to the upload request.
   string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
