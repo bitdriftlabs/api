@@ -197,13 +197,13 @@ message ApiRequest {
     ConfigurationUpdateAck runtime_update_ack = 5;
     OpaqueConfigurationUpdateAck opaque_configuration_update_ack = 8;
     OpaqueRequest opaque_upload = 9;
-    SankeyDiagramUploadRequest sankey_diagram_upload = 10;
+    SankeyPathUploadRequest sankey_path_upload = 10;
     SankeyIntentRequest sankey_intent = 11;
   }
 }
 
-// A request to upload a Sankey diagram.
-message SankeyDiagramUploadRequest {
+// A request to upload a Sankey diagram path.
+message SankeyPathUploadRequest {
   // A single node in the Sankey diagram. This differs from workflow states. Each node corresponds
   // to a single transition from a workflow origin state to a workflow target state.
   message Node {
@@ -413,8 +413,14 @@ message FlushBuffers {
   repeated string buffer_id_list = 1;
 }
 
-// The response to Sankey diagram upload request.
-message SankeyDiagramUploadResponse {
+// The response to Sankey path upload request.
+message SankeyPathUploadResponse {
+  // The UUID corresponding to the upload request.
+  string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  // Optional error message which indicates that sankey upload failed and/or some metrics were
+  // dropped.
+  string error = 2;
 }
 
 // The response to Sankey diagram intent request.
@@ -447,7 +453,7 @@ message ApiResponse {
     FlushBuffers flush_buffers = 9;
     OpaqueConfigurationUpdate opaque_configuration_update = 10;
     OpaqueResponse opaque_upload = 11;
-    SankeyDiagramUploadResponse sankey_diagram_upload = 12;
+    SankeyPathUploadResponse sankey_diagram_upload = 12;
     SankeyIntentResponse sankey_intent_response = 13;
   }
 }
