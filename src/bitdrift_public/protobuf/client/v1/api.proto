@@ -428,16 +428,24 @@ message SankeyPathUploadResponse {
 
 // The response to Sankey diagram intent request.
 message SankeyIntentResponse {
-  enum Decision {
-    // The diagram should be uploaded.
-    UPLOAD = 0;
-    // The diagram should be dropped.
-    DROP = 1;
-  }
-
   string intent_uuid = 1 [(validate.rules).string = {min_len: 1}];
 
-  Decision decision = 2;
+  reserved 2;
+  reserved 'decision';
+
+  message UploadImmediately {
+  }
+
+  message Drop {
+  }
+
+  oneof decision {
+    // The candidate sankey path should be uploaded immediatly.
+    UploadImmediately upload_immediately = 3;
+
+    // The candidate sankey path should be dropped.
+    Drop drop = 4;
+  }
 }
 
 // A multiplexed response sent over the bitdrift API.
