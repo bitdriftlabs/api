@@ -112,7 +112,7 @@ message LogUploadIntentRequest {
 
   // The session ID of the log that caused the intent negotiation. This allows correlating the intent with
   // a specific user session.
-  string session_id = 5;
+  string session_id = 6;
 
   message WorkflowActionUpload {
     // The listener(s) which triggered this upload.
