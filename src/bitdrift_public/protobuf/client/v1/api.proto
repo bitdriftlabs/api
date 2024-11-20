@@ -88,11 +88,11 @@ message OpaqueConfigurationUpdateAck {
   ConfigurationUpdateAck ack = 2;
 }
 
-// Notifies the server about the intent to upload one or more batchs of logs. The client is expected (but
+// Notifies the server about the intent to upload one or more batches of logs. The client is expected (but
 // not required, for backwards compatibility) to notify the server about the intent to upload
 // before uploading. The server is thusly able to influence whether the client
 // actually uploads (e.g. the backend no longer wants more of these kind of logs)
-// or delay the upload (e.g. we are hitting rate limits and are applying backpressure).
+// or delay the upload (e.g. we are hitting rate limits and are applying back-pressure).
 message LogUploadIntentRequest {
   // The number of logs that the client wants to upload. Note that for a ListenerUpload this is
   // an approximation of all logs across all batches.
@@ -109,6 +109,10 @@ message LogUploadIntentRequest {
   // during intent negotiation as well as allowing for parallel intent requests to be responded
   // to out of order.
   string intent_uuid = 4;
+
+  // The session ID of the log that caused the intent negotiation. This allows correlating the intent with
+  // a specific user session.
+  string session_id = 6;
 
   message WorkflowActionUpload {
     // The listener(s) which triggered this upload.
@@ -132,7 +136,7 @@ message LogUploadIntentResponse {
   }
 
   oneof decision {
-    // The log should be uploaded immediatly.
+    // The log should be uploaded immediately.
     UploadImmediately upload_immediately = 2;
 
     // The candidate batch should be dropped.
@@ -302,7 +306,7 @@ message StatsUploadRequest {
       option (validate.required) = true;
 
       // The snapshot data is aggregated over an indefinite period. This supports metrics where we
-      // care more about the total data (e.g. counts) than understanding precisecly when the data was
+      // care more about the total data (e.g. counts) than understanding precisely when the data was
       // recorded.
       Aggregated aggregated = 2;
     }
@@ -411,7 +415,7 @@ message ErrorShutdown {
 // the buffers locally (e.g., rate limiting, intents, etc.).
 message FlushBuffers {
   // The list of buffers to flush. If the list is empty, all buffers should be flushed. In the case
-  // of a server side listener trigger, every occurence of ActionFlushBuffer in the trigger_actions
+  // of a server side listener trigger, every occurrence of ActionFlushBuffer in the trigger_actions
   // field will populate a buffer in this list.
   repeated string buffer_id_list = 1;
 }
