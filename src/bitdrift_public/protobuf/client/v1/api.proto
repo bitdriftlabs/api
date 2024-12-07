@@ -65,6 +65,10 @@ message HandshakeRequest {
   // with all the opaque types it cares about (keyed by its type url) along side the active version nonce
   // or empty string if there is no active configuration.
   map<string, string> opqaue_version_nonces = 5;
+
+  // Reports the reason, if any, that the client was previously disconnected from the server. This
+  // is useful for debugging reconnect loops.
+  string previous_disconnect_reason = 6;
 }
 
 // A configuration update using a opaque configuration type. This wraps an Any, allowing us to send
