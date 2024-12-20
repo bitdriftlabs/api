@@ -27,6 +27,7 @@ message LogMatcher {
       OPERATOR_UNSPECIFIED = 0;
       OPERATOR_LESS_THAN = 1;
       OPERATOR_LESS_THAN_OR_EQUAL = 2;
+      // For double matching this is an epsilon comparison.
       OPERATOR_EQUALS = 3;
       OPERATOR_GREATER_THAN = 4;
       OPERATOR_GREATER_THAN_OR_EQUAL = 5;
@@ -44,7 +45,13 @@ message LogMatcher {
     // Used to define a match rule for a numeric value of type int32.
     message IntValueMatch {
       Operator operator = 1 [(validate.rules).enum.defined_only = true];
-      int32 match_value = 2 [(validate.rules).message = {required: true}];
+      int32 match_value = 2;
+    }
+
+    // Used to define a match rule for a numeric value of type double.
+    message DoubleValueMatch {
+      Operator operator = 1 [(validate.rules).enum.defined_only = true];
+      double match_value = 2;
     }
 
     // Used to define a match rule for semantic versioning (e.g. 1.02.43).
@@ -72,6 +79,7 @@ message LogMatcher {
         IntValueMatch int_value_match = 3;
         SemVerValueMatch sem_ver_value_match = 4;
         IsSetMatch is_set_match = 5;
+        DoubleValueMatch double_value_match = 6;
       }
     }
 
