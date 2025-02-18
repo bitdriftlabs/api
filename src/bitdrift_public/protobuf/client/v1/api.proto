@@ -258,18 +258,6 @@ message UploadArtifactIntentRequest {
   bytes metadata = 3;
 }
 
-message UploadArtifactIntentRequest {
-  // The UUID of the intent being negotiated. This is used to correlate the response with the request.
-  string intent_uuid = 1 [(validate.rules).string = {min_len: 1}];
-
-  // The type of the artifact being considered for upload.
-  string type_id = 2 [(validate.rules).string = {min_len: 1}];
-
-  // The metadata associated with the artifact. This is a binary blob that is interpreted by the server
-  // based on the type_id.
-  bytes metadata = 3;
-}
-
 message UploadArtifactIntentResponse {
   // The UUID of the intent being negotiated. This is used to correlate the response with the request.
   string intent_uuid = 1 [(validate.rules).string = {min_len: 1}];
