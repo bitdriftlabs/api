@@ -9,5 +9,5 @@ message FileArtifact {
   // to reference this file artifact in logs.
   string id = 1 [(validate.rules).string = {min_len: 1}];
 
-  byte contents = 2;
+  bytes contents = 2;
 }
