@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "validate/validate.proto";
+
+package bitdrift_public.protobuf.client.v1;
+
+message FileArtifact {
+  // The ID of this file artifact.
+  string id = 1 [(validate.rules).string = {min_len: 1}];
+
+  byte contents = 2;
+}
