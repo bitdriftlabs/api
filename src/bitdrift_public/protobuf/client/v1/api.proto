@@ -207,6 +207,8 @@ message ApiRequest {
     OpaqueRequest opaque_upload = 9;
     SankeyPathUploadRequest sankey_path_upload = 10;
     SankeyIntentRequest sankey_intent = 11;
+    UploadArtifactRequest artifact_upload = 12;
+    UploadArtifactIntentRequest artifact_intent = 13;
   }
 }
 
@@ -242,6 +244,56 @@ message SankeyIntentRequest {
 
   // The ID of the diagram that the path was discovered in.
   string sankey_diagram_id = 3 [(validate.rules).string = {min_len: 1}];
+}
+
+message UploadArtifactIntentRequest {
+  // The UUID of the intent being negotiated. This is used to correlate the response with the request.
+  string intent_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  // The type of the artifact being considered for upload.
+  string type_id = 2 [(validate.rules).string = {min_len: 1}];
+
+  // The metadata associated with the artifact. This is a binary blob that is interpreted by the server
+  // based on the type_id.
+  bytes metadata = 3;
+}
+
+message UploadArtifactIntentResponse {
+  // The UUID of the intent being negotiated. This is used to correlate the response with the request.
+  string intent_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  message UploadImmediately {
+  }
+
+  message Drop {
+  }
+
+  oneof decision {
+    // The artifact should be uploaded immediately.
+    UploadImmediately upload_immediately = 3;
+
+    // The candidate artifact should be dropped.
+    Drop drop = 4;
+  }
+}
+
+message UploadArtifactRequest {
+  // Upload UUID used to provide idempotence and to correlate a response with this request.
+  string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  // The type of the artifact being uploaded.
+  string type_id = 2 [(validate.rules).string = {min_len: 1}];
+
+  // The artifact to upload. This is a binary blob that is interpreted by the server based on the type_id.
+  bytes contents = 3 [(validate.rules).bytes = {min_len: 1}];
+}
+
+message UploadArtifactResponse {
+  // The UUID corresponding to the upload request.
+  string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
+
+  // Optional error message which indicates that artifact upload failed.
+  string error = 2;
 }
 
 // The response sent as part of stream establishment.
@@ -474,6 +526,8 @@ message ApiResponse {
     OpaqueResponse opaque_upload = 11;
     SankeyPathUploadResponse sankey_diagram_upload = 12;
     SankeyIntentResponse sankey_intent_response = 13;
+    UploadArtifactResponse artifact_upload = 14;
+    UploadArtifactIntentResponse artifact_intent = 15;
   }
 }
 
