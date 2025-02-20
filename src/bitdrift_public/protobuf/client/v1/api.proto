@@ -289,7 +289,7 @@ message UploadArtifactRequest {
   string type_id = 2 [(validate.rules).string = {min_len: 1}];
 
   // The artifact to upload. This is a binary blob that is interpreted by the server based on the type_id.
-  bytes contents = 3 [(validate.rules).bytes = {min_len: 1}];
+  bytes contents = 3;
 
   // A client-generated ID that uniquely identifies the artifact being uploaded.. This is used to correlate
   // the artifact with logs that reference it.
