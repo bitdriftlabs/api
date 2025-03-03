@@ -75,8 +75,9 @@ message Workflow {
     oneof rule_type {
       option (validate.required) = true;
       RuleLogMatch rule_log_match = 1;
-      RuleTimeout rule_timeout = 2;
     }
+
+    reserved 2;
   }
 
   // An extra configuration for a given transition.
@@ -84,6 +85,22 @@ message Workflow {
     oneof extension_type {
       option (validate.required) = true;
       SankeyDiagramValueExtraction sankey_diagram_value_extraction = 1;
+      SaveTimestamp save_timestamp = 2;
+      SaveField save_field = 3;
+    }
+
+    // The timestamp of the transition will be snapped, and persisted to the workflow state. This
+    // can be looked up by ID by further transitions. The saved timestamp is fraction seconds since
+    // the Unix epoch.
+    message SaveTimestamp {
+      string id = 1;
+    }
+
+    // The log's field value, if available, will be snapped, and persisted to the workflow state.
+    // This can be looked up by ID by further transitions.
+    message SaveField {
+      string id = 1;
+      string field_name = 2;
     }
 
     // The configuration of a value extraction for a Sankey diagram.
@@ -116,15 +133,6 @@ message Workflow {
     uint32 count = 2 [(validate.rules).uint32.gt = 0];
   }
 
-  // Rule used to transition based on the amount of time that passed between
-  // when workflow run arrived at transition's "from" state and the time of
-  // of processing the current log.
-  //
-  // It can be used as a safety hatch to exit a workflow.
-  message RuleTimeout {
-    uint64 duration_ms = 1 [(validate.rules).uint64.gte = 0];
-  }
-
   // An action to be taken when moving to a new state.
   message Action {
     oneof action_type {
@@ -133,6 +141,63 @@ message Workflow {
       ActionEmitMetric action_emit_metric = 2;
       ActionEmitSankeyDiagram action_emit_sankey_diagram = 3;
       ActionTakeScreenshot action_take_screenshot = 4;
+      ActionGenerateLog action_generate_log = 5;
+    }
+
+    // Generates a new log message. This log will be injected into the workflow engine and processed
+    // like any other log, either by this workflow or by another workflow.
+    message ActionGenerateLog {
+      // Describes how to obtain a value used in field composition.
+      message ValueReference {
+        oneof value_reference_type {
+          // Fixed value that never changes.
+          string fixed = 1;
+          // The value of the field from the current log.
+          string field_from_current_log = 2;
+          // The value of a field from a previous log, saved via the SaveField extension. This is
+          // the ID of the extension.
+          string saved_field_id = 3;
+          // The timestamp of a previous log, saved via the SaveTimestamp extension. This is the ID
+          // of the extension.
+          string saved_timestamp_id = 4;
+        }
+      }
+
+      // A pair of values.
+      message ValueReferencePair {
+        ValueReference lhs = 1;
+        ValueReference rhs = 2;
+      }
+
+      // A field to be generated. Note that when operating on timestamps, the values are expected
+      // to be fractions of seconds since the Unix epoch.
+      message GeneratedField {
+        // The name of the field.
+        string name = 1;
+
+        // The value of the field.
+        oneof generated_field_value_type {
+          option (validate.required) = true;
+
+          // A single value.
+          ValueReference single = 2;
+
+          // Perform subtraction. lhs - rhs. Both values must be convertible to floating point.
+          ValueReferencePair subtract = 3;
+
+          // Perform addition. lhs + rhs. Both values must be convertible to floating point.
+          ValueReferencePair add = 4;
+
+          // Perform multiplication. lhs * rhs. Both values must be convertible to floating point.
+          ValueReferencePair multiply = 5;
+
+          // Perform division. lhs / rhs. Both values must be convertible to floating point.
+          ValueReferencePair divide = 6;
+        }
+      }
+
+      string message = 1;
+      repeated GeneratedField fields = 2;
     }
 
     // Flush the content of the specified buffer(s) to the bitdrift control plane, with the option to continue
@@ -197,8 +262,7 @@ message Workflow {
       // regex "[a-zA-Z_][a-zA-Z0-9_]*".
       string id = 1 [(validate.rules).string = {min_len: 1}];
 
-      // The type of metric. Currently only counters are supported. In the future histograms could
-      // be supported as well.
+      // The type of metric.
       oneof metric_type {
         option (validate.required) = true;
 

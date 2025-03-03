@@ -13,7 +13,7 @@ import "validate/validate.proto";
 
 // A LogMatcher is used to declare a boolean expression which evaluates a log on various facets for matching.
 // The most basic version of a matcher will just contain a single base matcher which could be used to
-// evaluate if a log message matches a given string or a field comforms to a predicate. A more advanced
+// evaluate if a log message matches a given string or a field conforms to a predicate. A more advanced
 // matcher could declare AND/OR expressions which can be nested but ultimately require BaseMatchers at the leaves.
 message LogMatcher {
 
