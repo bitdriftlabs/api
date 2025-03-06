@@ -39,19 +39,31 @@ message LogMatcher {
     // Used to define a match rule for a string value.
     message StringValueMatch {
       Operator operator = 1 [(validate.rules).enum.defined_only = true];
-      string match_value = 2 [(validate.rules).string = {min_len: 1}];
+      oneof string_value_match_type {
+        string match_value = 2 [(validate.rules).string = {min_len: 1}];
+        // Corresponds to a field saved from a previous match via the SaveField extension.
+        string save_field_id = 3;
+      }
     }
 
     // Used to define a match rule for a numeric value of type int32.
     message IntValueMatch {
       Operator operator = 1 [(validate.rules).enum.defined_only = true];
-      int32 match_value = 2;
+      oneof int_value_match_type {
+        int32 match_value = 2;
+        // Corresponds to a field saved from a previous match via the SaveField extension.
+        string save_field_id = 3;
+      }
     }
 
     // Used to define a match rule for a numeric value of type double.
     message DoubleValueMatch {
       Operator operator = 1 [(validate.rules).enum.defined_only = true];
-      double match_value = 2;
+      oneof double_value_match_type {
+        double match_value = 2;
+        // Corresponds to a field saved from a previous match via the SaveField extension.
+        string save_field_id = 3;
+      }
     }
 
     // Used to define a match rule for semantic versioning (e.g. 1.02.43).
