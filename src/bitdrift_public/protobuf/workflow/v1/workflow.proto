@@ -198,6 +198,11 @@ message Workflow {
 
       string message = 1;
       repeated GeneratedField fields = 2;
+
+      // A unique identifier for the action. If multiple generate log actions have the same ID and
+      // are performed as the result of processing the same log, a client will emit only a single
+      // log as the result. This implies that the resulting logs in this case should be identical.
+      string id = 3;
     }
 
     // Flush the content of the specified buffer(s) to the bitdrift control plane, with the option to continue
