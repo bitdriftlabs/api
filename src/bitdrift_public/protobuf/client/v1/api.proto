@@ -21,6 +21,10 @@ import "validate/validate.proto";
 
 package bitdrift_public.protobuf.client.v1;
 
+message GlobalState {
+  map<string, logging.v1.Data> state = 1;
+}
+
 // File written to disk if the client has been placed in the "killed" state and told not to
 // contact the server for some period of time.
 message ClientKillFile {
