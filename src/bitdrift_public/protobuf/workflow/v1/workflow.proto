@@ -203,6 +203,10 @@ message Workflow {
       // are performed as the result of processing the same log, a client will emit only a single
       // log as the result. This implies that the resulting logs in this case should be identical.
       string id = 3;
+
+      // Should be one of the log types in buffer_log.fbs. If unset the default is 0 which is
+      // Normal.
+      uint32 log_type = 4;
     }
 
     // Flush the content of the specified buffer(s) to the bitdrift control plane, with the option to continue
