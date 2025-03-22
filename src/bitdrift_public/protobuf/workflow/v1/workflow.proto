@@ -160,6 +160,8 @@ message Workflow {
           // The timestamp of a previous log, saved via the SaveTimestamp extension. This is the ID
           // of the extension.
           string saved_timestamp_id = 4;
+          // Fill the field with a UUID v4.
+          bool uuid = 5;
         }
       }
 
