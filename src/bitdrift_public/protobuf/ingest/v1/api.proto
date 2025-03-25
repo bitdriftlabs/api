@@ -1,0 +1,72 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.ingest.v1;
+
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+enum MetricPlatformType {
+  UNSPECIFIED = 0;
+  APPLE = 1;
+  ANDROID = 2;
+  ELECTRON = 3;
+}
+
+message IngestMetricRequest {
+  // The metric ID that this ingestion request applies to. This ingestion ID will be made available
+  // in different ways depending on the integration point. See the product documentation for
+  // when and how this should be used.
+  string metric_id = 1 [(validate.rules).string = {min_len: 1}];
+
+  // Metrics must have an attached platform type. For server-side integrations, the platform must
+  // be propagated from the client. UNSPECIFIED is not a valid platform type and will result in an
+  // error.
+  MetricPlatformType platform_type = 2 [(validate.rules).enum.defined_only = true];
+
+  // Metrics must have an attached app_id. For server-side integrations, the app_id must be
+  // propagated from the client.
+  string app_id = 3 [(validate.rules).string = {min_len: 1}];
+
+  // Metrics must have an attached app_version. For server-side integrations, the app_version
+  // must be propagated from the client.
+  string app_version = 4 [(validate.rules).string = {min_len: 1}];
+
+  // An optional timestamp that the metric should be recorded at. If not supplied, defaults to
+  // the current server time.
+  google.protobuf.Timestamp timestamp = 5;
+
+  oneof metric_value_type {
+    option (validate.required) = true;
+
+    // Increments an integer counter by the supplied delta. If the metric_id does not point to a
+    // counter, this request will fail.
+    uint64 counter_delta = 6;
+  }
+}
+
+message IngestMetricResponse {
+}
+
+// All APIs are available at api.bitdrift.io and require token authentication. The product API
+// key should be supplied as the x-bitdrift-api-key header. APIs can be called in the following
+// forms:
+// 1) Standard gRPC (application/grpc)
+// 2) Connect (https://connectrpc.com/docs/protocol/) via either application/proto or
+//    application/json. application/proto is preferred for performance reasons. JSON transcoding
+//    uses the standard proto3 JSON format as documented here:
+//    https://developers.google.com/protocol-buffers/docs/proto3#json
+service IngestService {
+  // Ingest a metric into bitdrift as a server-side integration. See the product documentation
+  // for when and how this should be used.
+  //
+  // POST https://api.bitdrift.io/bitdrift_public.protobuf.ingest.v1.IngestService/IngestMetric
+  rpc IngestMetric(IngestMetricRequest) returns (IngestMetricResponse) {
+  }
+}
