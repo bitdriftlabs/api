@@ -30,33 +30,12 @@ message PendingAggregationIndex {
 }
 
 message Counter {
-  // Deprecated do not use this. At some point we will reserve this field and remove it.
-  uint32 value_deprecated = 1;
+  reserved 1;
 
   // The value to report for this counter. For now this will be the aggregated value of this
-  // counter since the last time the client sucessfully uploaded stats, but might change as
+  // counter since the last time the client successfully uploaded stats, but might change as
   // we start supporting non-aggregated snapshots (see StatsUploadRequest::Snapshot).
   uint64 value = 2;
-}
-
-// Deprecated and no longer supported by the SaaS. This is kept here do that we can better keep
-// track of how many of this type of metric is still being reported.
-message FixedBucketHistogram {
-  message Bucket {
-    double less_than_equal_to = 1;
-    uint64 count = 2;
-  }
-
-  // Buckets with defined <= semantics. These should be in sorted order, where each larger bucket
-  // contains the counts from all previous buckets. This is based on Prometheus exposition format.
-  repeated Bucket fixed_buckets = 1;
-
-  // This is the bucket equivalent to the Prometheus {le="+Inf"} bucket. It gives the count of all
-  // samples. Any samples that did not fit in the fixed buckets can be inferred from this count.
-  uint64 count = 2;
-
-  // This is the sum of all samples.
-  double sum = 3;
 }
 
 // A histogram in DDSketch format.
@@ -83,13 +62,12 @@ message Metric {
   // Tags associated with this metric.
   map<string, string> tags = 2;
 
+  reserved 4;
+
   oneof data {
     option (validate.required) = true;
 
     Counter counter = 3;
-
-    // Deprecated per above.
-    FixedBucketHistogram fixed_bucket_histogram_deprecated = 4;
 
     DDSketchHistogram ddsketch_histogram = 5;
 
