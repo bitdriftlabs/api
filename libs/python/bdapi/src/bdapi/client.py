@@ -14,7 +14,8 @@ class APIError(Exception):
         super().__init__(message)
         self.status_code = status_code
         self.status = grpc_status
-        self.message = grpc_message
+        self.message = message
+        self.grpc_message = grpc_message
 
 
 class UnauthorizedError(Exception):

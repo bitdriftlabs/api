@@ -17,7 +17,11 @@ packages = [{ include = "bdapi", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
+click = "^8.1.8"
 
 [build-system]
 requires = [ "poetry-core>=2.0.0,<3.0.0" ]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+cli = "cli:main"
