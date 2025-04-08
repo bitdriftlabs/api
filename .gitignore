@@ -4,6 +4,7 @@ build/
 # Python artifacts
 *.pyc
 *.egg-info
+dist
 
 # vim generated
 *.swp
