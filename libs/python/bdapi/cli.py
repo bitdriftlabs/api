@@ -50,7 +50,7 @@ def main(
         raise SystemExit(1)
 
     except APIError as e:
-        click.secho(f"❌ API Error: {e.message}", fg="red")
+        click.secho(f"❌ {e.message}", fg="red")
         raise SystemExit(1)
 
 
