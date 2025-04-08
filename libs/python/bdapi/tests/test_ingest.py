@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from datetime import datetime
 
-from bdapi.client import APIError, UnauthorizedError, Bitdrift
+from bdapi.client import APIError, UnauthorizedError, Bitdrift, _connect_encode
 from bdapi.models import _IngestMetricResponseDTO, MetricPlatform
 
 
@@ -62,7 +62,7 @@ class TestBitdriftAPIClient(unittest.TestCase):
     @patch("bdapi.client.requests.Session.post")
     def test_ingest_metric_success(self, mock_post):
         fake_response = MagicMock()
-        fake_response.content = _IngestMetricResponseDTO().SerializeToString()
+        fake_response.content = _connect_encode(_IngestMetricResponseDTO().SerializeToString())
         fake_response.raise_for_status = MagicMock()
         fake_response.headers = {"grpc-status": "0"}
         mock_post.return_value = fake_response
