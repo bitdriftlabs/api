@@ -1,6 +1,6 @@
 [project]
 name = "bdapi"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = [
     { name = "bitdrift, Inc.", email = "info@bitdrift.io" }
@@ -13,7 +13,10 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{ include = "bdapi", from = "src" }]
+packages = [
+    { include = "bdapi", from = "src" },
+    { include = "protos", from = "src" },
+]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
