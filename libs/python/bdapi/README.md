@@ -36,6 +36,14 @@ client.ingest_metric(
 )
 ```
 
+### CLI
+
+You can also use the client from the command line for testing as:
+
+```bash
+$ poetry run cli --help
+```
+
 ## 📦 API Overview
 
 | Method           | Description                        |
