@@ -224,7 +224,7 @@ table Thread {
     stack_trace:[Frame];
 }
 
-table Threads {
+table ThreadDetails {
     // total number of threads, which may exceed the number able to be
     // captured in the threads collection
     count:uint16;
@@ -287,7 +287,7 @@ table Report {
 
     // thread state at the moment the event occurred or was reported. No
     // guaranteed ordering between the threads in the collection.
-    threads:Threads;
+    thread_details:ThreadDetails;
 
     // dynamic libraries loaded by the application and present in Error or
     // Thread stack traces
