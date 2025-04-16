@@ -8,7 +8,7 @@
 // Specification for the format of reporting programmatic issues
 namespace bitdrift_public.fbs.issue_reporting.v1;
 
-enum EventType : int8 {
+enum ReportType : int8 {
     Unknown = 0,
     AppNotResponding,
     HandledError,
@@ -275,6 +275,8 @@ table SDKInfo {
 
 table Report {
     sdk:SDKInfo;
+
+    type:ReportType;
 
     app_metrics:AppMetrics;
 
