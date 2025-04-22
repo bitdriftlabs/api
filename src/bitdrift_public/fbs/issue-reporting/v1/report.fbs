@@ -171,6 +171,11 @@ table SourceFile {
     column:int64;
 }
 
+table CPURegister {
+    name:string;
+    value:uint64;
+}
+
 table Frame {
     type:FrameType;
 
@@ -191,6 +196,9 @@ table Frame {
 
     // address of the named symbol nearest above the current execution frame
     symbol_address:uint64;
+
+    // CPU register names and values at the moment execution was paused
+    registers:[CPURegister];
 
     // platform-specific context explaining the thread state, if any. Examples:
     // - locked resource causing thread blocked state
