@@ -147,6 +147,15 @@ table PowerMetrics {
     charge_percent:uint8;
 }
 
+table Display {
+    // height in pixels of the display containing the app
+    height:uint32;
+    // width in pixels of the display containing the app
+    width:uint32;
+    // screen density expressed as dots-per-inch
+    density_dpi:uint32;
+}
+
 table DeviceMetrics {
     // The moment the event occurred
     time: Timestamp;
@@ -160,6 +169,8 @@ table DeviceMetrics {
     rotation:Rotation;
 
     arch:Architecture;
+
+    display:Display;
 
     manufacturer:string;
     model:string;
