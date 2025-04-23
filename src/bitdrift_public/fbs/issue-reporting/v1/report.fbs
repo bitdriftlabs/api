@@ -96,6 +96,15 @@ table AppMetrics {
 
     // Build number (platform-specific names and types)
     build_number:AppBuildNumber;
+
+    // Platform-specific constant indicating the perceptibility of the app
+    //
+    // Apple platforms values include: "active" "inactive" "background"
+    // https://developer.apple.com/documentation/uikit/uiapplication/state
+    //
+    // Android-specific values: "foreground" "foreground_service" "perceptible"
+    // https://developer.android.com/reference/android/app/ActivityManager.RunningAppProcessInfo
+    running_state:string;
 }
 
 table OSBuild {
