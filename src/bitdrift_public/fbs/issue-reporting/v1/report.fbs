@@ -1,0 +1,328 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+// Specification for the format of reporting programmatic issues
+namespace bitdrift_public.fbs.issue_reporting.v1;
+
+enum ReportType : int8 {
+    Unknown = 0,
+    AppNotResponding,
+    HandledError,
+    JVMCrash,
+    MemoryTermination,
+    NativeCrash,
+    StrictModeViolation,
+}
+
+enum Platform : int8 {
+    Unknown = 0,
+    Android,
+    iOS,
+    macOS,
+}
+
+enum Architecture : int8 {
+    Unknown = 0,
+    arm32,
+    arm64,
+    x86,
+    x86_64,
+}
+
+enum FrameType : int8 {
+    Unknown = 0,
+
+    // An exception from a Java or Dalvik virtual machine
+    JVM,
+
+    // An event from C/C++ (etc) code which can be symbolicated using DWARF
+    // format files
+    DWARF,
+
+    // An event from C/C++ (etc) code on Android
+    AndroidNative,
+}
+
+enum ErrorRelation : int8 {
+    CausedBy = 1,
+}
+
+enum PowerState : int8 {
+    Unknown = 0,
+    RunningOnBattery,
+    PluggedInNoBattery,
+    PluggedInCharging,
+    PluggedInCharged,
+}
+
+enum NetworkState : int8 {
+    Unknown = 0,
+    Disconnected,
+    Cellular,
+    WiFi,
+}
+
+struct Timestamp {
+  seconds:uint64;
+  nanos:uint32;
+}
+
+struct Memory {
+    total:uint64;
+    free:uint64;
+    used:uint64;
+}
+
+table AppBuildNumber {
+    version_code:int64;
+    cf_bundle_version:string;
+}
+
+table AppMetrics {
+    // A unique identifier for the app, such as BuildConfig.APPLICATION_ID on
+    // Android or CFBundleIdentifier from the Info.plist on Apple platforms.
+    app_id:string;
+
+    // Memory state at the moment the event occurred
+    memory:Memory;
+
+    // The installed app version, such as BuildConfig.VERSION_NAME on Android
+    // or CFBundleShortVersionString from the Info.plist on Apple platforms.
+    version:string;
+
+    // Build number (platform-specific names and types)
+    build_number:AppBuildNumber;
+
+    // Platform-specific constant indicating the perceptibility of the app
+    //
+    // Apple platforms values include: "active" "inactive" "background"
+    // https://developer.apple.com/documentation/uikit/uiapplication/state
+    //
+    // Android-specific values: "foreground" "foreground_service" "perceptible"
+    // https://developer.android.com/reference/android/app/ActivityManager.RunningAppProcessInfo
+    running_state:string;
+}
+
+table OSBuild {
+    // Current version of the device's operating system
+    version:string;
+
+    // (Android-specific) Consumer-visible brand
+    // See: https://developer.android.com/reference/android/os/Build#BRAND
+    brand:string;
+
+    // (Android-specific) Unique identifier for the build itself
+    // See: https://developer.android.com/reference/android/os/Build#FINGERPRINT
+    fingerprint:string;
+
+    // (Apple platforms-specific) Identifier differentiating different builds
+    // within a particular OS version. Most helpful during Beta Release Season.
+    kern_osversion:string;
+}
+
+enum Rotation : int8 {
+    Unknown = 0,
+
+    // Natural orientation. Rotated 0º
+    Portrait,
+
+    // "Bottom" of the device pointed to the right. Rotated 90º
+    LandscapeRight,
+
+    // "Bottom" of the device pointed to the left. Rotated 270º
+    LandscapeLeft,
+
+    // Rotated 180º
+    PortraitUpsideDown,
+}
+
+table PowerMetrics {
+    power_state:PowerState;
+
+    // Amount charged, number between 0 and 100
+    charge_percent:uint8;
+}
+
+table Display {
+    // height in pixels of the display containing the app
+    height:uint32;
+    // width in pixels of the display containing the app
+    width:uint32;
+    // screen density expressed as dots-per-inch
+    density_dpi:uint32;
+}
+
+table DeviceMetrics {
+    // The moment the event occurred
+    time: Timestamp;
+
+    timezone:string;
+
+    power_metrics:PowerMetrics;
+
+    network_state:NetworkState;
+
+    rotation:Rotation;
+
+    arch:Architecture;
+
+    display:Display;
+
+    manufacturer:string;
+    model:string;
+
+    os_build:OSBuild;
+
+    // Development platform or operating system manufacturer
+    platform:Platform;
+
+    // Android-specific, ABIs supported by the device, in order of preference
+    // See: https://developer.android.com/reference/android/os/Build#SUPPORTED_ABIS
+    cpu_abis:[string];
+}
+
+table SourceFile {
+    path:string;
+    line:int64;
+    column:int64;
+}
+
+table CPURegister {
+    name:string;
+    value:uint64;
+}
+
+table Frame {
+    type:FrameType;
+
+    // the fully-qualified class name, if any
+    class_name:string;
+
+    // the method or function name
+    symbol_name:string;
+
+    // source file path
+    source_file:SourceFile;
+
+    // identifier for the compiled binary originating this line of code
+    image_id:string;
+
+    // address of the current execution frame
+    frame_address:uint64;
+
+    // address of the named symbol nearest above the current execution frame
+    symbol_address:uint64;
+
+    // CPU register names and values at the moment execution was paused
+    registers:[CPURegister];
+
+    // platform-specific context explaining the thread state, if any. Examples:
+    // - locked resource causing thread blocked state
+    // - awaited thread ID
+    state:[string];
+}
+
+table Thread {
+    name:string;
+
+    // true if this thread is reporting the problem
+    active:bool = false;
+
+    // numeric identifier for the thread, such as Java's Thread.getId()
+    index:uint32;
+
+    // platform-specific name of the thread's current operation mode
+    state:string;
+
+    // platform-specific value indicating the relative priority of a thread
+    // Apple platforms: value between 0.0 and 1.0
+    // JVM: integer value between 1 and 10
+    // .NET: integer value between 0 and 4
+    priority:float;
+
+    // (Apple platforms) the level of resources available to the thread
+    quality_of_service:int8 = -1;
+
+    // execution path, ordered from most recently executed to least recently.
+    // (i.e. a main() function would be last not first)
+    stack_trace:[Frame];
+}
+
+table ThreadDetails {
+    // total number of threads, which may exceed the number able to be
+    // captured in the threads collection
+    count:uint16;
+
+    threads:[Thread];
+}
+
+table Error {
+    // Descriptive category for the event, such as the fully-qualified name of
+    // an exception, Mach or POSIX signal, or termination category (e.g.
+    // "Application Not Responding", "Memory Pressure Termination", "StrictMode
+    // Violation")
+    name:string;
+
+    // Contextual information about the event, briefly explaining why the event
+    // happened. Frequently the message content of the Exception or Error
+    // instance, if any.
+    reason:string;
+
+    // execution path, ordered from most recently executed to least recently.
+    // (i.e. a main() function would be last not first)
+    stack_trace:[Frame];
+
+    // Given there is a subsequent entry in the collection containing this Error,
+    // it has the following relation to this Error.
+    relation_to_next:ErrorRelation = CausedBy;
+}
+
+table BinaryImage {
+    // identifier for the compiled binary - corresponds to Frame.image_id
+    id:string;
+
+    // path on disk at build time
+    path:string;
+
+    // offset between the start of program memory and this image
+    load_address:uint64;
+}
+
+table SDKInfo {
+    // identifier for a build configuration generating a report, i.e. capture-sdk
+    // on Android being io.bitdrift.capture-android
+    id:string;
+
+    // release version
+    version:string;
+}
+
+table Report {
+    sdk:SDKInfo;
+
+    type:ReportType;
+
+    app_metrics:AppMetrics;
+
+    device_metrics:DeviceMetrics;
+
+    // The captured Error (or Exception), where the first entry is the error
+    // which was captured or reported, and subsequent entries are related to
+    // the first by a specified relation, such as being the cause.
+    errors:[Error];
+
+    // thread state at the moment the event occurred or was reported. No
+    // guaranteed ordering between the threads in the collection.
+    thread_details:ThreadDetails;
+
+    // dynamic libraries loaded by the application and present in Error or
+    // Thread stack traces
+    binary_images:[BinaryImage];
+
+}
+
+root_type Report;
