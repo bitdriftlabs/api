@@ -10,3 +10,9 @@ filegroup(
   srcs = glob(["**/*.fbs"]),
   visibility = ["//visibility:public"],
 )
+
+filegroup(
+  name = "buffer_log",
+  srcs = ["src/bitdrift_public/fbs/logging/v1/buffer_log.fbs"],
+  visibility = ["//visibility:public"],
+)
