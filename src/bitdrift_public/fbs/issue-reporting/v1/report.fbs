@@ -196,14 +196,25 @@ table CPURegister {
     value:uint64;
 }
 
+enum FrameStatus : int8 {
+  Symbolicated = 0,
+  MissingSymbol,
+  UnknownImage,
+  Missing,
+  Malformed,
+}
+
 table Frame {
     type:FrameType;
 
-    // the fully-qualified class name, if any
+    // the fully-qualified class name, if any. This will be replaced with the deobfuscated name after symbolication.
     class_name:string;
 
     // the method or function name
     symbol_name:string;
+
+    // The symbolicated name of this function. 
+    function_name:string;
 
     // source file path
     source_file:SourceFile;
@@ -224,6 +235,12 @@ table Frame {
     // - locked resource causing thread blocked state
     // - awaited thread ID
     state:[string];
+
+    // The result of symbolicating this frame.
+    frame_status: FrameStatus;
+
+    // The original index of this frame before symbolication.
+    original_index:uint64;
 }
 
 table Thread {
