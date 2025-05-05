@@ -56,8 +56,13 @@ message InlineHistogramValues {
 }
 
 message Metric {
-  // Unique name of this metric.
-  string name = 1 [(validate.rules).string = {min_len: 1}];
+  oneof metric_name_type {
+    // Unique name of this metric. This is used for global metrics.
+    string name = 1;
+
+    // The ID of the metric, if applicable. This is used for workflow scoped metrics.
+    string metric_id = 7;
+  }
 
   // Tags associated with this metric.
   map<string, string> tags = 2;

@@ -374,6 +374,9 @@ message StatsUploadRequest {
       // recorded.
       Aggregated aggregated = 2;
     }
+
+    // A map of metric ID to any cardinality overflows that occurred during this snapshot interval.
+    map<string, uint64> metric_id_overflows = 3;
   }
 
   // A collection of stats snapshots to be recorded by the backend.
