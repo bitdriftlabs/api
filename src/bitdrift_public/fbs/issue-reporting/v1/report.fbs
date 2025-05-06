@@ -196,6 +196,14 @@ table CPURegister {
     value:uint64;
 }
 
+enum FrameStatus : int8 {
+  Missing = 0,
+  Symbolicated,
+  MissingSymbol,
+  UnknownImage,
+  Malformed,
+}
+
 table Frame {
     type:FrameType;
 
@@ -224,6 +232,20 @@ table Frame {
     // - locked resource causing thread blocked state
     // - awaited thread ID
     state:[string];
+
+    // The result of symbolicating this frame.
+    frame_status: FrameStatus;
+
+    // The original index of this frame before symbolication. Some languages may expand
+    // a single frame into multiple during symbolication, so keeping this field allows
+    // us to track this.
+    original_index:uint64;
+
+    // Whether this frame is considered "in app/project".
+    in_app:bool;
+
+    // The symbolicated name of this function.
+    symbolicated_name:string;
 }
 
 table Thread {
