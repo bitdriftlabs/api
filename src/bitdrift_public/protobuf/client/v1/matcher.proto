@@ -41,7 +41,7 @@ message Matcher {
     // no match will occur.
     Key key = 1 [(validate.rules).message = {required: true}];
 
-    // The value to match against. Empty string is an acceptible match value.
+    // The value to match against. Empty string is an acceptable match value.
     string value = 2;
 
     // The type of string match to perform.
@@ -69,6 +69,24 @@ message Matcher {
     int64 value = 2;
 
     // The type of int match to perform.
+    Type match_type = 3;
+  }
+
+  // Describes a semantic version match.
+  message SemVerMatch {
+    enum Type {
+      GREATER_THAN_OR_EQUAL = 0;
+      LESS_THAN = 1;
+    }
+
+    // The lookup key that will derive the value to match against. If the key produces no value,
+    // or is not a semantic version, no match will occur.
+    Key key = 1 [(validate.rules).message = {required: true}];
+
+    // The value to match against.
+    string value = 2;
+
+    // The type of semver match to perform.
     Type match_type = 3;
   }
 
@@ -109,27 +127,16 @@ message Matcher {
 
     // A matcher that uses consistent hashing.
     ConsistentHashMatch consistent = 6;
+
+    // A matcher that uses a semantic versioning match.
+    SemVerMatch semver = 7;
   }
 }
 
 // A root matcher with associated metadata that applies to the entire matcher structure.
 message RootMatcher {
-  // A matcher that when matched, should have its associated payload executed on
-  // the client.
-  message ClientTarget {
-  }
-
-  // A matcher that when matched, should have its associated payload executed on
-  // the server.
-  message ServerTarget {
-  }
-
-  oneof target_type {
-    option (validate.required) = true;
-
-    ClientTarget client_target = 1;
-    ServerTarget server_target = 2;
-  }
+  reserved 1;
+  reserved 2;
 
   // The recursive matching structure for doing the actual matching.
   Matcher matcher = 3 [(validate.rules).message = {required: true}];
