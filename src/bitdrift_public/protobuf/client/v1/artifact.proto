@@ -1,0 +1,40 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/any.proto";
+import "bitdrift_public/protobuf/client/v1/runtime.proto";
+import "bitdrift_public/protobuf/client/v1/metric.proto";
+import "bitdrift_public/protobuf/filter/v1/filter.proto";
+import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
+import "bitdrift_public/protobuf/bdtail/v1/bdtail_config.proto";
+import "bitdrift_public/protobuf/config/v1/config.proto";
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "validate/validate.proto";
+
+package bitdrift_public.protobuf.client.v1;
+
+// Used to track an index of pending artifacts that need to be uploaded. This is used by the
+// the upload manager to coordinate intents and uploads.
+message ArtifactUploadIndex {
+  message Artifact {
+    // Name of the file to upload.
+    string name = 1;
+    // The time associated with this artifact, e.g. when the data was captured.
+    google.protobuf.Timestamp time = 2;
+    // Whether this artifact requires intent negotiation. If intent negotiation resulted
+    // in us rejecting the upload, the artifact will be removed from the local cache, so
+    // this being true means that the file should be uploaded.
+    bool pending_intent_negotation = 3;
+  }
+
+  // List of files, in order of time, that are pending upload.
+  repeated PendingFile pending_files = 1;
+}
