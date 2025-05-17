@@ -9,7 +9,6 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
-import "google/protobuf/any.proto";
 import "bitdrift_public/protobuf/client/v1/runtime.proto";
 import "bitdrift_public/protobuf/client/v1/metric.proto";
 import "bitdrift_public/protobuf/filter/v1/filter.proto";
@@ -61,35 +60,11 @@ message HandshakeRequest {
   // be empty.
   string runtime_version_nonce = 4;
 
-  // Active version nonces to be used with OpaqueConfigurationUpdate. The client will populate this map
-  // with all the opaque types it cares about (keyed by its type url) along side the active version nonce
-  // or empty string if there is no active configuration.
-  map<string, string> opqaue_version_nonces = 5;
+  reserved 5;
 
   // Reports the reason, if any, that the client was previously disconnected from the server. This
   // is useful for debugging reconnect loops.
   string previous_disconnect_reason = 6;
-}
-
-// A configuration update using a opaque configuration type. This wraps an Any, allowing us to send
-// down any piece of the configuration that the client might want without the transport protocol
-// needing to be made aware of it. The client is expected to indicate which version of this configuration
-// it is at by including the version nonce in the `extra_version_nonces` field on the handshake when it
-// connects to the API server.
-message OpaqueConfigurationUpdate {
-  // The version nonce of the updated configuration.
-  string version_nonce = 1;
-
-  // The actual configuration wrapped up in an Any.
-  google.protobuf.Any configuration = 2;
-}
-
-message OpaqueConfigurationUpdateAck {
-  // The url of the resource being acked. This allows the server to differentiate between multiple
-  // in flight opaque configuration updates.
-  string type_url = 1;
-
-  ConfigurationUpdateAck ack = 2;
 }
 
 // Notifies the server about the intent to upload one or more batches of logs. The client is expected (but
@@ -203,13 +178,14 @@ message ApiRequest {
     PingRequest ping = 3;
     ConfigurationUpdateAck configuration_update_ack = 4;
     ConfigurationUpdateAck runtime_update_ack = 5;
-    OpaqueConfigurationUpdateAck opaque_configuration_update_ack = 8;
-    OpaqueRequest opaque_upload = 9;
     SankeyPathUploadRequest sankey_path_upload = 10;
     SankeyIntentRequest sankey_intent = 11;
     UploadArtifactRequest artifact_upload = 12;
     UploadArtifactIntentRequest artifact_intent = 13;
   }
+
+  reserved 8;
+  reserved 9;
 }
 
 // A request to upload a Sankey diagram path.
@@ -406,21 +382,6 @@ message StatsUploadResponse {
   uint32 metrics_dropped = 3;
 }
 
-message OpaqueRequest {
-  // An optional UUID corresponding to the request. This can be used to provide idempotence or to correlate a response to a request.
-  string uuid = 1;
-
-  google.protobuf.Any request = 2 [(validate.rules).message = {required: true}];
-}
-
-message OpaqueResponse {
-  // An optional UUID corresponding to the request. This is used to in conjunction with a request uuid to correlate the response to a request.
-  string uuid = 1 [(validate.rules).string = {min_len: 1}];
-
-  // Optional error message which indicates that the request failed.
-  optional string error = 2;
-}
-
 // Response to a client ping.
 message PongResponse {
 }
@@ -537,13 +498,14 @@ message ApiResponse {
     RuntimeUpdate runtime_update = 5;
     ErrorShutdown error_shutdown = 6;
     FlushBuffers flush_buffers = 9;
-    OpaqueConfigurationUpdate opaque_configuration_update = 10;
-    OpaqueResponse opaque_upload = 11;
     SankeyPathUploadResponse sankey_diagram_upload = 12;
     SankeyIntentResponse sankey_intent_response = 13;
     UploadArtifactResponse artifact_upload = 14;
     UploadArtifactIntentResponse artifact_intent = 15;
   }
+
+  reserved 10;
+  reserved 11;
 }
 
 service ApiService {
