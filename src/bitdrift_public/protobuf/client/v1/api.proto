@@ -292,9 +292,11 @@ message HandshakeResponse {
 
   StreamSettings stream_settings = 1;
 
-  // If true, no immediate configuration/runtime updates will be sent as subsequent messages and
-  // the client should assume everything is up to date.
-  bool all_configs_up_to_date = 2;
+  // A flag set that describes the status of configuration updates based on the provided
+  // configuration nonces.
+  // 0x1: Runtime is up to date and no further update message will be supplied.
+  // 0x2: Configuration is up to date and no further update message will be supplied.
+  uint32 configuration_update_status = 2;
 }
 
 // A general indication of rate limiting from server to client. Further configuration of what to do
