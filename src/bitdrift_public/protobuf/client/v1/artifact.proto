@@ -22,7 +22,7 @@ message ArtifactUploadIndex {
     // Whether this artifact requires intent negotiation. If intent negotiation resulted
     // in us rejecting the upload, the artifact will be removed from the local cache, so
     // this being true means that the file should be uploaded.
-    bool pending_intent_negotation = 3;
+    bool pending_intent_negotiation = 3;
   }
 
   // List of files, in order of time, that are pending upload.
