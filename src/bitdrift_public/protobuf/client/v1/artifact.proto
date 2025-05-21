@@ -1,0 +1,30 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package bitdrift_public.protobuf.client.v1;
+
+// Used to track an index of pending artifacts that need to be uploaded. This is used by the
+// the upload manager to coordinate intents and uploads.
+message ArtifactUploadIndex {
+  message Artifact {
+    // Name of the file to upload.
+    string name = 1;
+    // The time associated with this artifact, e.g. when the data was captured.
+    google.protobuf.Timestamp time = 2;
+    // Whether this artifact requires intent negotiation. If intent negotiation resulted
+    // in us rejecting the upload, the artifact will be removed from the local cache, so
+    // this being true means that the file should be uploaded.
+    bool pending_intent_negotiation = 3;
+  }
+
+  // List of files, in order of time, that are pending upload.
+  repeated Artifact artifact = 1;
+}
