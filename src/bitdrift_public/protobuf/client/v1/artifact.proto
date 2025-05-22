@@ -8,6 +8,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
 
 package bitdrift_public.protobuf.client.v1;
 
