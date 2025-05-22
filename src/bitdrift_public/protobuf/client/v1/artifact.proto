@@ -23,6 +23,11 @@ message ArtifactUploadIndex {
     // in us rejecting the upload, the artifact will be removed from the local cache, so
     // this being true means that the file should be uploaded.
     bool pending_intent_negotiation = 3;
+
+    // An optional set of key-value data indicating the state of the device at the time of artifact emission. For example, this may capture information about the device at the time of a crash.
+    // This is stored outside of the artifact itself to be compatible with opaque uploads where storing this metadata
+    // within the artifact is not possible.
+    map<string, bitdrift_public.protobuf.logging.v1.Data> state_metadata = 5;
   }
 
   // List of files, in order of time, that are pending upload.

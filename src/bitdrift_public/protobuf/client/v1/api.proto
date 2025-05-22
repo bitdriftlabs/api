@@ -270,6 +270,10 @@ message UploadArtifactRequest {
   // A client-generated ID that uniquely identifies the artifact being uploaded. This is used to correlate
   // the artifact with logs that reference it.
   string artifact_id = 4 [(validate.rules).string = {min_len: 1}];
+
+  // An optional set of key-value data indicating the state of the device at the time of artifact emission. For example,
+  // this may capture information about the device at the time of a crash.
+  map<string, bitdrift_public.protobuf.logging.v1.Data> state_metadata = 5;
 }
 
 message UploadArtifactResponse {
