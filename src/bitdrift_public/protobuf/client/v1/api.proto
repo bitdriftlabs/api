@@ -236,6 +236,9 @@ message UploadArtifactIntentRequest {
   // A client-generated ID that uniquely identifies the artifact. This is used to correlate the artifact
   // with logs that reference it.
   string artifact_id = 4 [(validate.rules).string = {min_len: 1}];
+
+  // The timestamp associated with this upload. This allows us to possibly reject the upload of very old artifacts.
+  google.protobuf.Timestamp time = 5 [(validate.rules).message = {required: true}];
 }
 
 message UploadArtifactIntentResponse {
@@ -274,6 +277,12 @@ message UploadArtifactRequest {
   // An optional set of key-value data indicating the state of the device at the time of artifact emission. For example,
   // this may capture information about the device at the time of a crash.
   map<string, bitdrift_public.protobuf.logging.v1.Data> state_metadata = 5;
+
+  // The timestamp associated with this upload. This allows us to possibly reject the upload of very old artifacts.
+  google.protobuf.Timestamp time = 6 [(validate.rules).message = {required: true}];
+
+  // The session ID associated with the artifact.
+  string session_id = 7 [(validate.rules).string = {min_len: 1}];
 }
 
 message UploadArtifactResponse {
