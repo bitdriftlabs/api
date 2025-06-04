@@ -65,6 +65,9 @@ message HandshakeRequest {
   // Reports the reason, if any, that the client was previously disconnected from the server. This
   // is useful for debugging reconnect loops.
   string previous_disconnect_reason = 6;
+
+  // At the time of the handshake, whether the client is operating in sleep mode.
+  bool sleep_mode = 7;
 }
 
 // Notifies the server about the intent to upload one or more batches of logs. The client is expected (but
@@ -139,6 +142,8 @@ message LogUploadRequest {
 
 // Empty message to maintain a application layer keep alive mechanism.
 message PingRequest {
+  // At the time of the ping, whether the client is operating in sleep mode.
+  bool sleep_mode = 1;
 }
 
 // Configuration update response from client to server.
