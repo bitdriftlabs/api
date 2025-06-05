@@ -380,16 +380,11 @@ message Workflow {
     message ExecutionExclusive {
     }
 
-    // An execution mode where a new workflow *run* starting from an initial
-    // state can be always started as long as the number of active runs of a given workflow
-    // is below the specified limit.
-    message ExecutionParallel {
-    }
-
     oneof execution_type {
       ExecutionExclusive execution_exclusive = 1;
-      ExecutionParallel execution_parallel = 2;
     };
+
+    reserved 2;
   }
 
   // A limit for the number of logs that a workflow run can match.
