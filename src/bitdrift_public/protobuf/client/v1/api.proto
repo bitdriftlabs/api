@@ -99,6 +99,9 @@ message LogUploadIntentRequest {
   message WorkflowActionUpload {
     // The listener(s) which triggered this upload.
     repeated string workflow_action_ids = 1;
+
+    // Session capture was explicitly triggered by the client.
+    bool explicit_session_capture = 2;
   }
 
   oneof intent_type {
