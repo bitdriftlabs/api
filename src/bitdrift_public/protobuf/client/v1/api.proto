@@ -99,13 +99,18 @@ message LogUploadIntentRequest {
   message WorkflowActionUpload {
     // The listener(s) which triggered this upload.
     repeated string workflow_action_ids = 1;
+  }
 
-    // Session capture was explicitly triggered by the client.
-    bool explicit_session_capture = 2;
+  message ExplicitSessionCapture {
+    // An opaque identifier that is used to identify the reason for the session capture.
+    string id = 1 [(validate.rules).string = {min_len: 1}];
   }
 
   oneof intent_type {
     WorkflowActionUpload workflow_action_upload = 5;
+ 
+    // Session capture was explicitly triggered by the client.
+    ExplicitSessionCapture explicit_session_capture = 7;
   }
 }
 
