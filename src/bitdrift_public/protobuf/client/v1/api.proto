@@ -108,7 +108,7 @@ message LogUploadIntentRequest {
 
   oneof intent_type {
     WorkflowActionUpload workflow_action_upload = 5;
- 
+
     // Session capture was explicitly triggered by the client.
     ExplicitSessionCapture explicit_session_capture = 7;
   }
