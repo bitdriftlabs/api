@@ -53,6 +53,14 @@ message Workflow {
     repeated Transition transitions = 2;
   }
 
+  message TransitionTimeout {
+    // The identifier of the state to transition to.
+    string target_state_id = 1 [(validate.rules).string = {min_len: 1}];
+    uint64 timeout_ms = 2 [(validate.rules).uint64.gt = 0];
+    // An optional array of actions to be executed upon performing this transition.
+    repeated Action actions = 3;
+  }
+
   // A transition used to describe the connection between two states. Specifies
   // a rule for the change of state and provides actions that to be performed
   // upon executing the transition.
@@ -68,6 +76,9 @@ message Workflow {
     // An optional array of extensions that act as configuration points for actions attached
     // to the current transition or transitions further down the line.
     repeated TransitionExtension extensions = 4;
+    // An optional timeout transition that will occur if the rule match above does not match before
+    // the specified timeouts. Timeouts are persisted across app restarts in the workflow state.
+    TransitionTimeout timeout = 5;
   }
 
   // A predicate that must be satisfied for a transition to happen.
