@@ -34,7 +34,7 @@ def main(
     timestamp: datetime | None,
 ):
     """Ingest a metric using the Bitdrift API."""
-    client = Bitdrift(api_key=api_key, base_url="https://api.bitdrift.dev")
+    client = Bitdrift(api_key=api_key)
     try:
         client.ingest_metric(
             metric_id=metric_id,
