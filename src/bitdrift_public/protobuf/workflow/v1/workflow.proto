@@ -51,6 +51,9 @@ message Workflow {
     // An optional array of transitions that can be taken from a given state.
     // No array or empty array of transitions means that the state is a final state.
     repeated Transition transitions = 2;
+    // An optional timeout transition that will occur if no transition occurs before the specified
+    // timeout. The timeout is persisted across app restarts in the workflow state.
+    TransitionTimeout timeout = 3;
   }
 
   message TransitionTimeout {
@@ -76,9 +79,6 @@ message Workflow {
     // An optional array of extensions that act as configuration points for actions attached
     // to the current transition or transitions further down the line.
     repeated TransitionExtension extensions = 4;
-    // An optional timeout transition that will occur if the rule match above does not match before
-    // the specified timeouts. Timeouts are persisted across app restarts in the workflow state.
-    TransitionTimeout timeout = 5;
   }
 
   // A predicate that must be satisfied for a transition to happen.
