@@ -310,6 +310,10 @@ table Thread {
     // execution path, ordered from most recently executed to least recently.
     // (i.e. a main() function would be last not first)
     stack_trace:[Frame];
+
+    // summary or highlight of the most important information in thread data
+    // [intended for use during symbolication]
+    summary:string;
 }
 
 table ThreadDetails {
