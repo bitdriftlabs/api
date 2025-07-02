@@ -123,8 +123,8 @@ table AppMetrics {
     cpu_usage:ProcessorUsage;
 
     // (Apple platforms-specific) application lifecycle event hook executing
-    // prior to system termination, like process-start, process-exit,
-    // scene-create, scene-update, &c.
+    // prior to system termination, like process-launch, process-exit,
+    // scene-create, scene-update, scene-invalidated, &c.
     lifecycle_event:string;
 }
 
