@@ -82,6 +82,13 @@ table AppBuildNumber {
     cf_bundle_version:string;
 }
 
+table ProcessorUsage {
+    // Seconds elapsed while active
+    duration_seconds:uint64,
+    // Amount in use, number between 0 and 100
+    used_percent:uint8,
+}
+
 table AppMetrics {
     // A unique identifier for the app, such as BuildConfig.APPLICATION_ID on
     // Android or CFBundleIdentifier from the Info.plist on Apple platforms.
@@ -105,6 +112,20 @@ table AppMetrics {
     // Android-specific values: "foreground" "foreground_service" "perceptible"
     // https://developer.android.com/reference/android/app/ActivityManager.RunningAppProcessInfo
     running_state:string;
+
+    // identifier (PID) of the running process
+    process_id:uint32;
+
+    // installed regional variant of the app
+    region_format:string;
+
+    // CPU usage by the app at the moment the event occurred
+    cpu_usage:ProcessorUsage;
+
+    // (Apple platforms-specific) application lifecycle event hook executing
+    // prior to system termination, like process-launch, process-exit,
+    // scene-create, scene-update, scene-invalidated, &c.
+    lifecycle_event:string;
 }
 
 table OSBuild {
@@ -183,6 +204,23 @@ table DeviceMetrics {
     // Android-specific, ABIs supported by the device, in order of preference
     // See: https://developer.android.com/reference/android/os/Build#SUPPORTED_ABIS
     cpu_abis:[string];
+
+    // True if the device has a reduced power consumption mode enabled
+    low_power_mode_enabled:bool;
+
+    // Total CPU usage at the moment the event occurred
+    cpu_usage:ProcessorUsage;
+
+    // Platform-specific constants representing the system's thermal state
+    //
+    // On Android, this value should reflect the THERMAL_STATUS constants
+    // returned by PowerManager.getCurrentThermalStatus(): light, moderate,
+    // severe, critical, emergency, and shutdown, which map to the integer
+    // values 1-6
+    //
+    // On iOS, these values are derived from NSProcessInfoThermalState:
+    // nominal, fair, serious, critical, which map to the values 0-4
+    thermal_state:uint8;
 }
 
 table SourceFile {
@@ -272,6 +310,10 @@ table Thread {
     // execution path, ordered from most recently executed to least recently.
     // (i.e. a main() function would be last not first)
     stack_trace:[Frame];
+
+    // summary or highlight of the most important information in thread data
+    // [intended for use during symbolication]
+    summary:string;
 }
 
 table ThreadDetails {
