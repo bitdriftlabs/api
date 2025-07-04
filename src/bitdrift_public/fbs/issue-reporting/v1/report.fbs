@@ -84,9 +84,9 @@ table AppBuildNumber {
 
 table ProcessorUsage {
     // Seconds elapsed while active
-    duration_seconds:uint64,
+    duration_seconds:uint64;
     // Amount in use, number between 0 and 100
-    used_percent:uint8,
+    used_percent:uint8;
 }
 
 table AppMetrics {
