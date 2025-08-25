@@ -7,15 +7,11 @@
 
 namespace bitdrift_public.fbs.logging.v1;
 
+import "src/bitdrift_public/fbs/common/v1/common.fbs";
+
 // Table wrapper for UTF-8 data.
 table StringData {
   data:string (id: 0, required);
-}
-
-// Table wrapper for binary data.
-table BinaryData {
-  data_type:string (id: 0);
-  data:[ubyte] (id: 1, required);
 }
 
 // Flatbuffer representation of a google.protobuf.Timestamp
@@ -24,20 +20,6 @@ table BinaryData {
 table Timestamp {
   seconds:int64 (id: 0);
   nanos:int32 (id: 1);
-}
-
-// Union of different data types.
-union Data {
-  string_data:StringData,
-  binary_data:BinaryData
-}
-
-table Field {
-  // Field key. Required to be a UTF-8 string.
-  key:string (id: 0, required);
-
-  // Field value. (Union uses 2 ID slots)
-  value:Data (id: 2, required);
 }
 
 enum LogType: uint32 {
@@ -74,10 +56,10 @@ table Log {
   log_level:uint32 (id: 0);
 
   // The message associated with the log. (Union uses 2 ID slots)
-  message:Data (id: 2, required);
+  message:common.v1.Data (id: 2, required);
 
   // An optional list of high cardinality fields.
-  fields:[Field] (id: 3);
+  fields:[common.v1.Field] (id: 3);
 
   // The ID of the session associated with this log.
   session_id:string (id: 4);
