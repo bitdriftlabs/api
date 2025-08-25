@@ -6,9 +6,10 @@
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 
 // Specification for the format of reporting programmatic issues
-namespace bitdrift_public.fbs.issue_reporting.v1;
 
-import "bitdrift_public/fbs/common/v1/common.fbs";
+include "bitdrift_public/fbs/common/v1/common.fbs";
+
+namespace bitdrift_public.fbs.issue_reporting.v1;
 
 enum ReportType : int8 {
     Unknown = 0,
@@ -86,9 +87,9 @@ table AppBuildNumber {
 
 table ProcessorUsage {
     // Seconds elapsed while active
-    duration_seconds:uint64,
+    duration_seconds:uint64;
     // Amount in use, number between 0 and 100
-    used_percent:uint8,
+    used_percent:uint8;
 }
 
 table AppMetrics {
@@ -369,6 +370,7 @@ table SDKInfo {
 
 table FeatureFlag {
     name:string;
+
     value:string;
 }
 
@@ -396,12 +398,11 @@ table Report {
 
     // arbitrary key/value pairs representing custom fields added to the report
     // by the application at runtime
-    state:[common.v1.Field]
+    state:[common.v1.Field];
 
     // arbitrary key/value pairs representing feature flags and their values at
     // the time the report was generated
-    feature_flags:[FeatureFlag]
-
+    feature_flags:[FeatureFlag];
 }
 
 root_type Report;

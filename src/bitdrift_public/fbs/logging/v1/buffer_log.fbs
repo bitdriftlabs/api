@@ -5,14 +5,9 @@
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 
+include "src/bitdrift_public/fbs/common/v1/common.fbs";
+
 namespace bitdrift_public.fbs.logging.v1;
-
-import "src/bitdrift_public/fbs/common/v1/common.fbs";
-
-// Table wrapper for UTF-8 data.
-table StringData {
-  data:string (id: 0, required);
-}
 
 // Flatbuffer representation of a google.protobuf.Timestamp
 // The first attempt of this tried to make this a struct for a smaller wire size, but the

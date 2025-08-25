@@ -1,5 +1,10 @@
 namespace bitdrift_public.fbs.common.v1;
 
+// Table wrapper for UTF-8 data.
+table StringData {
+  data:string (id: 0, required);
+}
+
 // Table wrapper for binary data.
 table BinaryData {
   data_type:string (id: 0);
