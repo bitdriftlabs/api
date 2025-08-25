@@ -1,0 +1,22 @@
+namespace bitdrift_public.fbs.common.v1;
+
+// Table wrapper for binary data.
+table BinaryData {
+  data_type:string (id: 0);
+  data:[ubyte] (id: 1, required);
+}
+
+
+// Union of different data types.
+union Data {
+  string_data:StringData,
+  binary_data:BinaryData
+}
+
+table Field {
+  // Field key. Required to be a UTF-8 string.
+  key:string (id: 0, required);
+
+  // Field value. (Union uses 2 ID slots)
+  value:Data (id: 2, required);
+}

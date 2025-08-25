@@ -8,6 +8,8 @@
 // Specification for the format of reporting programmatic issues
 namespace bitdrift_public.fbs.issue_reporting.v1;
 
+import "bitdrift_public/fbs/common/v1/common.fbs";
+
 enum ReportType : int8 {
     Unknown = 0,
     AppNotResponding,
@@ -365,6 +367,11 @@ table SDKInfo {
     version:string;
 }
 
+table FeatureFlag {
+    name:string;
+    value:string;
+}
+
 table Report {
     sdk:SDKInfo;
 
@@ -386,6 +393,14 @@ table Report {
     // dynamic libraries loaded by the application and present in Error or
     // Thread stack traces
     binary_images:[BinaryImage];
+
+    // arbitrary key/value pairs representing custom fields added to the report
+    // by the application at runtime
+    state:[common.v1.Field]
+
+    // arbitrary key/value pairs representing feature flags and their values at
+    // the time the report was generated
+    feature_flags:[FeatureFlag]
 
 }
 
