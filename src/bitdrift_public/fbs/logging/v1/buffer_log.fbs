@@ -5,7 +5,7 @@
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 
-include "src/bitdrift_public/fbs/common/v1/common.fbs";
+include "bitdrift_public/fbs/common/v1/common.fbs";
 
 namespace bitdrift_public.fbs.logging.v1;
 
