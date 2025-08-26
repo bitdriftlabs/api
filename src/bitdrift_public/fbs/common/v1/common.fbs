@@ -1,0 +1,34 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+namespace bitdrift_public.fbs.common.v1;
+
+// Table wrapper for UTF-8 data.
+table StringData {
+  data:string (id: 0, required);
+}
+
+// Table wrapper for binary data.
+table BinaryData {
+  data_type:string (id: 0);
+  data:[ubyte] (id: 1, required);
+}
+
+
+// Union of different data types.
+union Data {
+  string_data:StringData,
+  binary_data:BinaryData
+}
+
+table Field {
+  // Field key. Required to be a UTF-8 string.
+  key:string (id: 0, required);
+
+  // Field value. (Union uses 2 ID slots)
+  value:Data (id: 2, required);
+}
