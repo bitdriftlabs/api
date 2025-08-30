@@ -468,6 +468,9 @@ message ErrorShutdown {
 
   // The message that would have been sent in trailers.
   string grpc_message = 2;
+
+  // Optional minimum retry backoff duration that the client should adhere to.
+  google.protobuf.Duration retry_after = 3;
 }
 
 // Called by the server to tell the client to flush a set of owned buffers. When this command is
