@@ -41,7 +41,7 @@ message HandshakeRequest {
   // TODO(snowp): Improve the story for this when parameters change during a
   // logging period, e.g. if we capture multiple process restarts that may span
   // versions.
-  map<string, bitdrift_public.protobuf.logging.v1.Data> static_device_metadata = 1;
+  map<string, logging.v1.Data> static_device_metadata = 1;
 
   // This was never used by the client. Reserve it for now to avoid implementing it. We can bring
   // it back later if needed.
@@ -146,6 +146,11 @@ message LogUploadRequest {
 
   // The UUID (v4) of the buffer that is producing the logs.
   string buffer_uuid = 3 [(validate.rules).string = {min_len: 1}];
+
+  // Whether the server should not respond to this upload. This is used for high
+  // throughput, low value logs where the client does not need to know whether
+  // the upload succeeded or failed.
+  bool ackless = 4;
 }
 
 // Empty message to maintain a application layer keep alive mechanism.
@@ -195,6 +200,7 @@ message ApiRequest {
     SankeyIntentRequest sankey_intent = 11;
     UploadArtifactRequest artifact_upload = 12;
     UploadArtifactIntentRequest artifact_intent = 13;
+    DebugDataRequest debug_data = 14;
   }
 
   reserved 8;
@@ -289,7 +295,7 @@ message UploadArtifactRequest {
 
   // An optional set of key-value data indicating the state of the device at the time of artifact emission. For example,
   // this may capture information about the device at the time of a crash.
-  map<string, bitdrift_public.protobuf.logging.v1.Data> state_metadata = 5;
+  map<string, logging.v1.Data> state_metadata = 5;
 
   // The timestamp associated with this upload. This allows us to possibly reject the upload of very old artifacts.
   google.protobuf.Timestamp time = 6 [(validate.rules).message = {required: true}];
@@ -425,19 +431,27 @@ message ConfigurationUpdate {
     reserved 2;
 
     // The list of buffers.
-    bitdrift_public.protobuf.config.v1.BufferConfigList buffer_config_list = 3;
+    config.v1.BufferConfigList buffer_config_list = 3;
 
     // The workflows configuration.
-    bitdrift_public.protobuf.workflow.v1.WorkflowsConfiguration workflows_configuration = 4;
+    workflow.v1.WorkflowsConfiguration workflows_configuration = 4;
 
     // The list of active bdtail sessions.
-    bitdrift_public.protobuf.bdtail.v1.BdTailConfigurations bdtail_configuration = 6;
+    bdtail.v1.BdTailConfigurations bdtail_configuration = 6;
 
     reserved "insights_configuration";
     reserved 7;
 
     // The filters configuration.
-    bitdrift_public.protobuf.filter.v1.FiltersConfiguration filters_configuration = 8;
+    filter.v1.FiltersConfiguration filters_configuration = 8;
+
+    // The list of workflows to debug. If the workflow is already deployed, debug data will be
+    // generated for it alongside the deployed workflow. If the workflow is not deployed, the
+    // workflow will be executed in debug mode, however actions will *not* be executed (metrics,
+    // flushes, and so on).
+    // NOTE: "already deployed" implies that the workflow will be found in the
+    // workflows_configuration field. The server will not de-dup for simplification purposes.
+    workflow.v1.WorkflowsConfiguration debug_workflows = 9;
   }
 
   // A version nonce that can be used for both tracking the last applied update as well as for
@@ -514,6 +528,40 @@ message SankeyIntentResponse {
     // The candidate sankey path should be dropped.
     Drop drop = 4;
   }
+}
+
+// Debug data that is periodically sent when instructed via the DebugControlResponse message.
+message DebugDataRequest {
+  message WorkflowStateDebugData {
+    // The ID of the state being reported on.
+    string state_id = 1;
+
+    oneof transition_type {
+      // The index of the transition that was taken to leave this state.
+      uint32 transition_index = 2;
+
+      // Whether this transition was a timeout transition.
+      bool timeout_transition = 3;
+    }
+
+    // The number of times this state/transition has been transitioned out of.
+    uint64 transition_count = 4;
+
+    // The last time this state/transition was transitioned out of.
+    google.protobuf.Timestamp last_transition_time = 5;
+  }
+
+  message WorkflowDebugData {
+    // The ID of the workflow being debugged.
+    string workflow_id = 1;
+
+    // The state debug data for each state in the workflow that has been transitioned.
+    repeated WorkflowStateDebugData states = 2;
+  }
+
+  // If instructed to debug workflows, this will contain the debug data for each workflow being
+  // debugged.
+  repeated WorkflowDebugData workflow_debug_data = 1;
 }
 
 // A multiplexed response sent over the bitdrift API.
