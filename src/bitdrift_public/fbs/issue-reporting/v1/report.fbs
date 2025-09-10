@@ -369,9 +369,12 @@ table SDKInfo {
 }
 
 table FeatureFlag {
+    // The name of the feature flag
     name:string;
-
+    // The value of the feature flag, as a string
     value:string;
+    // The time the feature flag was last modified
+    timestamp:Timestamp;
 }
 
 table Report {
