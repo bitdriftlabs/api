@@ -374,7 +374,7 @@ table FeatureFlag {
     // The value of the feature flag, as a string
     value:string;
     // The time the feature flag was last modified
-    timestamp:Timestamp;
+    timestamp:common.v1.Timestamp;
 }
 
 table Report {
