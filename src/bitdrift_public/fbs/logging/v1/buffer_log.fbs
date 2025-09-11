@@ -9,14 +9,6 @@ include "bitdrift_public/fbs/common/v1/common.fbs";
 
 namespace bitdrift_public.fbs.logging.v1;
 
-// Flatbuffer representation of a google.protobuf.Timestamp
-// The first attempt of this tried to make this a struct for a smaller wire size, but the
-// generated Rust code has the wrong alignment. Using a table fixes this.
-table Timestamp {
-  seconds:int64 (id: 0);
-  nanos:int32 (id: 1);
-}
-
 enum LogType: uint32 {
   // Normal logs, from application code.
   Normal = 0,
@@ -60,7 +52,7 @@ table Log {
   session_id:string (id: 4);
 
   // The timestamp (in UTC) indicating when this log was recorded.
-  timestamp:Timestamp (id: 5);
+  timestamp:common.v1.Timestamp (id: 5);
 
   // The list of action IDs that were triggered by this log line.
   workflow_action_ids:[string] (id: 6);
