@@ -13,10 +13,12 @@ import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
 package bitdrift_public.protobuf.bdtail.v1;
 
 message BdTailStream {
-  // The name of the bdtail stream. Logs that match the matcher below should be annotated with this stream ID to allow the SaaS to associate the log with the bdtail stream.
+  // The name of the bdtail stream. Logs that match the matcher below should be annotated with this
+  // stream ID to allow the SaaS to associate the log with the bdtail stream.
   string stream_id = 1 [(validate.rules).string = {min_len: 1}];
 
-  // The match criteria for logs that should be forwarded to this bdtail stream. If empty, all logs will be forwarded to this stream.
+  // The match criteria for logs that should be forwarded to this bdtail stream. If empty, all logs
+  // will be forwarded to this stream.
   matcher.v1.LogMatcher matcher = 2;
 }
 
