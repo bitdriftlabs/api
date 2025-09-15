@@ -15,6 +15,7 @@ import "bitdrift_public/protobuf/filter/v1/filter.proto";
 import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
 import "bitdrift_public/protobuf/bdtail/v1/bdtail_config.proto";
 import "bitdrift_public/protobuf/config/v1/config.proto";
+import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "validate/validate.proto";
 
@@ -271,17 +272,6 @@ message UploadArtifactIntentResponse {
     // The candidate artifact should be dropped.
     Drop drop = 4;
   }
-}
-
-message FeatureFlag {
-  // The name of the feature flag.
-  string name = 1 [(validate.rules).string = {min_len: 1}];
-
-  // The variant of the feature flag, if any.
-  optional string variant = 2;
-
-  // The last time the feature flag was updated.
-  google.protobuf.Timestamp last_updated = 3 [(validate.rules).message = {required: true}];
 }
 
 message UploadArtifactRequest {
