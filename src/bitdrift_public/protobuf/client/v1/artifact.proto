@@ -9,6 +9,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
 
 package bitdrift_public.protobuf.client.v1;
 
@@ -31,6 +32,8 @@ message ArtifactUploadIndex {
     map<string, bitdrift_public.protobuf.logging.v1.Data> state_metadata = 5;
 
     string session_id = 6;
+
+    repeated FeatureFlag feature_flags = 7;
   }
 
   // List of files, in order of time, that are pending upload.

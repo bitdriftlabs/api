@@ -15,6 +15,7 @@ import "bitdrift_public/protobuf/filter/v1/filter.proto";
 import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
 import "bitdrift_public/protobuf/bdtail/v1/bdtail_config.proto";
 import "bitdrift_public/protobuf/config/v1/config.proto";
+import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "validate/validate.proto";
 
@@ -302,6 +303,9 @@ message UploadArtifactRequest {
 
   // The session ID associated with the artifact.
   string session_id = 7 [(validate.rules).string = {min_len: 1}];
+
+  // The set of feature flags that were active at the time of artifact emission.
+  repeated FeatureFlag feature_flags = 8;
 }
 
 message UploadArtifactResponse {
