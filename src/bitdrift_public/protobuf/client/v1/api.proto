@@ -396,6 +396,9 @@ message StatsUploadRequest {
 
     // A map of metric ID to any cardinality overflows that occurred during this snapshot interval.
     map<string, uint64> metric_id_overflows = 3;
+
+    // Workflow ID to debug data that occurred during this snapshot interval.
+    map<string, DebugDataRequest.WorkflowDebugData> workflow_debug_data = 4;
   }
 
   // A collection of stats snapshots to be recorded by the backend.
@@ -536,36 +539,35 @@ message SankeyIntentResponse {
 
 // Debug data that is periodically sent when instructed via the DebugControlResponse message.
 message DebugDataRequest {
-  message WorkflowStateDebugData {
-    // The ID of the state being reported on.
-    string state_id = 1;
-
+  message WorkflowTransitionDebugData {
     oneof transition_type {
       // The index of the transition that was taken to leave this state.
-      uint32 transition_index = 2;
+      uint32 transition_index = 1;
 
       // Whether this transition was a timeout transition.
-      bool timeout_transition = 3;
+      bool timeout_transition = 2;
     }
 
     // The number of times this state/transition has been transitioned out of.
-    uint64 transition_count = 4;
+    uint64 transition_count = 3;
 
     // The last time this state/transition was transitioned out of.
-    google.protobuf.Timestamp last_transition_time = 5;
+    google.protobuf.Timestamp last_transition_time = 4;
+  }
+
+  message WorkflowStateDebugData {
+    repeated WorkflowTransitionDebugData transitions = 1;
   }
 
   message WorkflowDebugData {
-    // The ID of the workflow being debugged.
-    string workflow_id = 1;
-
-    // The state debug data for each state in the workflow that has been transitioned.
-    repeated WorkflowStateDebugData states = 2;
+    // The state debug data for each state in the workflow that has been transitioned. This is a map
+    // of state ID to data.
+    map<string, WorkflowStateDebugData> states = 1;
   }
 
   // If instructed to debug workflows, this will contain the debug data for each workflow being
-  // debugged.
-  repeated WorkflowDebugData workflow_debug_data = 1;
+  // debugged. This is map of workflow ID to data.
+  map<string, WorkflowDebugData> workflow_debug_data = 1;
 }
 
 // A multiplexed response sent over the bitdrift API.
