@@ -529,7 +529,7 @@ message SankeyIntentResponse {
   }
 
   oneof decision {
-    // The candidate sankey path should be uploaded immediatly.
+    // The candidate sankey path should be uploaded immediately.
     UploadImmediately upload_immediately = 3;
 
     // The candidate sankey path should be dropped.
@@ -563,6 +563,12 @@ message DebugDataRequest {
     // The state debug data for each state in the workflow that has been transitioned. This is a map
     // of state ID to data.
     map<string, WorkflowStateDebugData> states = 1;
+
+    // This is incremented every time the workflow starts or resets. Effectively it will be
+    // incremented when the workflow is delivered, and every time it is reset to the initial state.
+    // We reuse the existing WorkflowTransitionDebugData message and leave the transition_type
+    // unset.
+    WorkflowTransitionDebugData start_reset = 2;
   }
 
   // If instructed to debug workflows, this will contain the debug data for each workflow being
