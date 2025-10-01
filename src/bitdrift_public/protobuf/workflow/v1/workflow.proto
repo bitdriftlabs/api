@@ -373,6 +373,9 @@ message Workflow {
 
         // The tag value is extracted from a field in the log. If the field is not present, no tag is added.
         FieldExtracted field_extracted = 3;
+
+        // The tag value is the body of the log. If the body is not present, no tag is added.
+        bool log_body_extracted = 4;
       }
     }
 
