@@ -419,10 +419,9 @@ message Workflow {
     message Exact {
     };
 
-    // For now we only support exact match, but in the future we might support more complex extraction logic like regex captures.
+    // For now we only support exact match, but in the future we might support more complex
+    // extraction logic like regex captures. If not specified, the default is exact match.
     oneof extraction_type {
-      option (validate.required) = true;
-
       Exact exact = 2;
     }
   }
