@@ -69,6 +69,11 @@ message HandshakeRequest {
 
   // At the time of the handshake, whether the client is operating in sleep mode.
   bool sleep_mode = 7;
+
+  // Opaque client state previously provided by the server in a HandshakeResponse. The client
+  // should continue to send this on every handshake request until the server provides a new
+  // value (which may be empty to clear existing state).
+  optional bytes opaque_client_state = 8;
 }
 
 // Notifies the server about the intent to upload one or more batches of logs. The client is expected (but
@@ -333,6 +338,11 @@ message HandshakeResponse {
   // 0x1: Runtime is up to date and no further update message will be supplied.
   // 0x2: Configuration is up to date and no further update message will be supplied.
   uint32 configuration_update_status = 2;
+
+  // Opaque client state that should be echoed back to the server on every future handshake
+  // request. If unset, the client should continue to send any existing opaque state, or none
+  // if it has none. Sending an explicit empty value will clear any existing state.
+  optional bytes opaque_client_state_to_echo = 3;
 }
 
 // A general indication of rate limiting from server to client.
