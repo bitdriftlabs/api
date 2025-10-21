@@ -141,7 +141,7 @@ table AppMetrics {
     lifecycle_event:string;
 
     // JavaScript engine used by the application (only relevant for React Native/JS apps)
-    javascript_engine:JavaScriptEngine;
+    javascript_engine:JavaScriptEngine (optional);
 }
 
 table OSBuild {
@@ -301,9 +301,10 @@ table Frame {
     // The symbolicated name of this function.
     symbolicated_name:string;
 
-    // The bundle/module name (e.g., "App.bundle", "index.bundle")
-    // Extracted from URL path: ".../src/app/App.bundle//&..." → "App.bundle"
-    js_bundle_name:string;
+    // The bundle/module path (e.g., "/src/app/App.bundle", "/index.bundle")
+    // Full URL path to avoid ambiguity when multiple bundles have the same name
+    // Extracted from URL: ".../src/app/App.bundle//&..." → "/src/app/App.bundle"
+    js_bundle_path:string;
 }
 
 table Thread {
