@@ -141,7 +141,7 @@ table AppMetrics {
     lifecycle_event:string;
 
     // JavaScript engine used by the application (only relevant for React Native/JS apps)
-    javascript_engine:JavaScriptEngine (optional);
+    javascript_engine:JavaScriptEngine;
 }
 
 table OSBuild {
