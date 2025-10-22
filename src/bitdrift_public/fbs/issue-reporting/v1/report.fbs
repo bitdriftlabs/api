@@ -19,6 +19,7 @@ enum ReportType : int8 {
     MemoryTermination,
     NativeCrash,
     StrictModeViolation,
+    JavaScriptError, 
 }
 
 enum Platform : int8 {
@@ -48,6 +49,9 @@ enum FrameType : int8 {
 
     // An event from C/C++ (etc) code on Android
     AndroidNative,
+
+    // A JavaScript frame (e.g., React Native / Hermes / JSC)
+    JavaScript,
 }
 
 enum ErrorRelation : int8 {
@@ -67,6 +71,12 @@ enum NetworkState : int8 {
     Disconnected,
     Cellular,
     WiFi,
+}
+
+enum JavaScriptEngine : int8 {
+    UnknownJsEngine = 0,
+    JavaScriptCore = 1,  // JavaScriptCore (JSC) (Used by React Native on iOS)
+    Hermes = 2,          // Hermes (Used by React Native on Android and iOS)
 }
 
 struct Timestamp {
@@ -129,6 +139,9 @@ table AppMetrics {
     // prior to system termination, like process-launch, process-exit,
     // scene-create, scene-update, scene-invalidated, &c.
     lifecycle_event:string;
+
+    // JavaScript engine used by the application (only relevant for React Native/JS apps)
+    javascript_engine:JavaScriptEngine;
 }
 
 table OSBuild {
@@ -287,6 +300,11 @@ table Frame {
 
     // The symbolicated name of this function.
     symbolicated_name:string;
+
+    // The bundle/module path (e.g., "/src/app/App.bundle", "/index.bundle")
+    // Full URL path to avoid ambiguity when multiple bundles have the same name
+    // Extracted from URL: ".../src/app/App.bundle//&..." → "/src/app/App.bundle"
+    js_bundle_path:string;
 }
 
 table Thread {
