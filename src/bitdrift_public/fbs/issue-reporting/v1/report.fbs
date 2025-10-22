@@ -267,10 +267,11 @@ table Frame {
     // the method or function name
     symbol_name:string;
 
-    // source file path
+    // original source file on disk or pre-symbolicated file/line info for
+    // proguard or source maps
     source_file:SourceFile;
 
-    // identifier for the compiled binary originating this line of code
+    // identifier for the compiled binary or JS bundle originating this line of code
     image_id:string;
 
     // address of the current execution frame
