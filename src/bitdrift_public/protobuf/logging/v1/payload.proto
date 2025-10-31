@@ -22,3 +22,51 @@ message Data {
     BinaryData binary_data = 2;
   }
 };
+
+enum LogType {
+  // Normal logs, from application code.
+  NORMAL = 0;
+  // Session replay logs.
+  REPLAY = 1;
+  // Application lifecycle logs.
+  LIFECYCLE = 2;
+  // Resource monitoring logs, such as memory, CPU, and battery consumption.
+  RESOURCE = 3;
+  // Internal SDK logs.
+  INTERNAL_SDK = 4;
+  // View lifecycle.
+  VIEW = 5;
+  // Device state.
+  DEVICE = 6;
+  // UX interaction.
+  UX = 7;
+  // Span start/end pairs.
+  SPAN = 8;
+}
+
+message Log {
+  message Field {
+    string key = 1;
+    Data value = 2;
+  }
+
+  // The timestamp in unix microseconds indicating when this log was recorded.
+  // NOTE: This was intentionally chosen to be the first field for trivial extraction without
+  //       parsing the full message.
+  uint64 timestamp_unix_micro = 1;
+  // The log level.
+  uint32 log_level = 2;
+  // The message associated with the log.
+  Data message = 3;
+  // An optional list of high cardinality fields.
+  repeated Field fields = 4;
+  // The ID of the session associated with this log.
+  string session_id = 5;
+  // The list of action IDs that were triggered by this log line.
+  repeated string action_ids = 6;
+  // The type of log.
+  LogType log_type = 7;
+  // The list of stream IDs that were associated with this streaming log.
+  // This should only be set when the log has been streamed.
+  repeated string stream_ids = 8;
+}

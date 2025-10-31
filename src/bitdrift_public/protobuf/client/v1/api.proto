@@ -147,8 +147,12 @@ message LogUploadRequest {
   string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
 
   // A repeated set of flatbuffer encoding of a number of log lines. Each log line is of type
-  // Log defined in buffer_log.fbs.
-  repeated bytes logs = 2 [(validate.rules).repeated = {min_items: 1}];
+  // Log defined in buffer_log.fbs. This is deprecated. New clients send protobuf encoded logs
+  // in the 'logs' field.
+  repeated bytes legacy_flatbuffer_logs = 2;
+
+  // Logs encoded in bitdrift_public.protobuf.logging.v1.Log format.
+  repeated bytes proto_logs = 5;
 
   // The UUID (v4) of the buffer that is producing the logs.
   string buffer_uuid = 3 [(validate.rules).string = {min_len: 1}];
