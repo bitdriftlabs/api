@@ -9,16 +9,27 @@ syntax = "proto3";
 
 package bitdrift_public.protobuf.bdtail.v1;
 
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "validate/validate.proto";
 
 message TailLogsRequest {
-  // A DSL expression that is used to target clients and filter logs. This is parsed and validated by the server.
+  // A DSL expression that is used to target clients and filter logs. This is parsed and validated
+  // by the server.
   string dsl_expression = 1;
+
+  // 0: old clients that do not support the new proto structured logs.
+  // 1: switched to proto structured logs.
+  uint32 config_version = 2;
 }
 
 message Logs {
   // A single batch of logs tailed via the tail API. Encoded as flatbuffer `Log`s.
-  repeated bytes logs = 1 [(validate.rules).repeated = {min_items: 1}];
+  // This is deprecated in place of proto logs below. This will be removed once we fully roll out
+  // proto logs.
+  repeated bytes logs = 1;
+
+  // A single batch of logs tailed via the tail API. Encoded as proto `Log`s.
+  repeated logging.v1.Log proto_logs = 2;
 }
 
 message InvalidRequest {
