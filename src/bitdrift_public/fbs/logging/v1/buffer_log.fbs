@@ -36,6 +36,9 @@ enum LogType: uint32 {
 
   // Span start/end pairs.
   Span = 8,
+
+  // Feature flag changes.
+  FeatureFlags = 9,
 }
 
 table Log {

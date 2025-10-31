@@ -95,10 +95,20 @@ message LogMatcher {
       }
     }
 
+    message FeatureFlagMatch {
+      string flag_name = 1 [(validate.rules).string = {min_len: 1, max_len: 64}];
+      oneof value_match {
+        option (validate.required) = true;
+        StringValueMatch string_value_match = 2;
+        IsSetMatch is_set_match = 3;
+      }
+    }
+
     oneof match_type {
       option (validate.required) = true;
       MessageMatch message_match = 1;
       TagMatch tag_match = 2;
+      FeatureFlagMatch feature_flag_match = 3;
     }
   }
 

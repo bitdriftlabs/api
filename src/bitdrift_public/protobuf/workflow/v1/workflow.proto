@@ -376,6 +376,8 @@ message Workflow {
 
         // The tag value is the body of the log. If the body is not present, no tag is added.
         bool log_body_extracted = 4;
+
+        FeatureFlagExtracted feature_flag_extracted = 5;
       }
     }
 
@@ -415,6 +417,20 @@ message Workflow {
   // A value extracted from log's field.
   message FieldExtracted {
     string field_name = 1 [(validate.rules).string = {min_len: 1}];
+
+    message Exact {
+    };
+
+    // For now we only support exact match, but in the future we might support more complex
+    // extraction logic like regex captures. If not specified, the default is exact match.
+    oneof extraction_type {
+      Exact exact = 2;
+    }
+  }
+
+  // A value extracted from the feature flags.
+  message FeatureFlagExtracted {
+    string name = 1 [(validate.rules).string = {min_len: 1}];
 
     message Exact {
     };
