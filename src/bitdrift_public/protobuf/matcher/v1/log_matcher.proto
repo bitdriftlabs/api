@@ -95,11 +95,18 @@ message LogMatcher {
       }
     }
 
+    // Base matcher for evaluating the value of a feature flag.
     message FeatureFlagMatch {
       string flag_name = 1 [(validate.rules).string = {min_len: 1, max_len: 64}];
+
       oneof value_match {
         option (validate.required) = true;
+
+        // Matches against the string value of the feature flag variant. If the variant
+        // is not set we'll match against the empty string.
         StringValueMatch string_value_match = 2;
+
+        // Matches if the feature flag is set (regardless of variant).
         IsSetMatch is_set_match = 3;
       }
     }
