@@ -20,7 +20,7 @@ enum ReportType : int8 {
     NativeCrash,
     StrictModeViolation,
     JavaScriptNonFatalError,
-    JavaScriptFatalError, 
+    JavaScriptFatalError,
 }
 
 enum Platform : int8 {
