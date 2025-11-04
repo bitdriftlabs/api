@@ -21,3 +21,40 @@ message FeatureFlag {
   // The last time the feature flag was updated.
   google.protobuf.Timestamp last_updated = 3 [(validate.rules).message = {required: true}];
 }
+
+// A feature flag update may be contained in a feature flag log entry, indicting either the delta
+// (change due to the last update) or a key frame containing the complete set of feature flags.
+//
+// This can be used to reconstruct the state of feature flags at any point in time by applying
+// the deltas in order, either working forward from an initial key frame or backward from a
+// later key frame.
+message FeatureFlagUpdate {
+  message Delta {
+    message Update {
+      oneof update_type {
+        option (validate.required) = true;
+
+        // A feature flag that was added or updated.
+        FeatureFlag feature_flag = 1;
+
+        // The name of a feature flag that was removed.
+        string removed_feature_flag_name = 2 [(validate.rules).string = {min_len: 1}];
+      }
+    }
+  }
+
+  message KeyFrame {
+    // The complete set of feature flags.
+    repeated FeatureFlag feature_flags = 1;
+  }
+
+  oneof update_type {
+    option (validate.required) = true;
+
+    // A delta update containing added, updated, or removed feature flags.
+    Delta delta = 1;
+
+    // A key frame update containing the complete set of feature flags.
+    KeyFrame key_frame = 2;
+  }
+}
