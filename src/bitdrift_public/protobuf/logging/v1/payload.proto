@@ -42,6 +42,8 @@ enum LogType {
   UX = 7;
   // Span start/end pairs.
   SPAN = 8;
+  // Feature flag update logs.
+  FEATURE_FLAG = 9;
 }
 
 message Log {
