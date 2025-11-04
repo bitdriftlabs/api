@@ -50,6 +50,11 @@ message Log {
     Data value = 2;
   }
 
+  message CompressedContents {
+    Data message = 1;
+    repeated Field fields = 2;
+  }
+
   // The timestamp in unix microseconds indicating when this log was recorded.
   // NOTE: This was intentionally chosen to be the first field for trivial extraction without
   //       parsing the full message.
@@ -69,4 +74,8 @@ message Log {
   // The list of stream IDs that were associated with this streaming log.
   // This should only be set when the log has been streamed.
   repeated string stream_ids = 8;
+  // If set, this is a zlib compressed `CompressedContents` message containing the log's
+  // message and fields. In this case the message and fields above will be empty and should be
+  // synthetically reconstructed by decompressing this field.
+  bytes compressed_contents = 9;
 }
