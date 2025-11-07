@@ -383,10 +383,7 @@ message Workflow {
 
     // Emit a log containing application screenshot.
     message ActionTakeScreenshot {
-      // The ID of an action. If multiple actions have them same ID and are performed
-      // as the result of processing the same event (i.e. log) a client performs only one
-      // of the actions.
-      string id = 1 [(validate.rules).string = {min_len: 1}];
+      reserved 1;
     }
   }
 
