@@ -1,0 +1,29 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.state.v1;
+
+// The payload for a state value stored within the state sub-system.
+//
+// A state value is either a value or a deletion marker. If none of the value fields are set,
+// then the state value represents a deletion.
+message StateValue {
+  oneof value_type {
+    string string_value = 1;
+    int64 int_value = 2;
+    double double_value = 3;
+    bool bool_value = 4;
+  }
+}
+
+// A key/value pair representing a state entry.
+message StateKeyValuePair {
+  string key = 1;
+  StateValue value = 2;
+}
