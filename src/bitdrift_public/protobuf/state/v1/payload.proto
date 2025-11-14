@@ -21,3 +21,9 @@ message StateValue {
     bool bool_value = 4;
   }
 }
+
+// A key/value pair representing a state entry.
+message StateKeyValuePair {
+  string key = 1;
+  StateValue value = 2;
+}
