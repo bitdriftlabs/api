@@ -1,0 +1,25 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.state.v1;
+
+import "validate/validate.proto";
+import "bitdrift_public/protobuf/value_matcher/v1/matcher.proto";
+
+// The matcher used to evaluate a state value. This is reused between log matching and state transition matching.
+message StateValueMatch {
+  oneof value_match {
+    option (validate.required) = true;
+
+    value_matcher.v1.StringValueMatch string_value_match = 3;
+    value_matcher.v1.IntValueMatch int_value_match = 4;
+    value_matcher.v1.DoubleValueMatch double_value_match = 5;
+    value_matcher.v1.IsSetMatch is_set_match = 6;
+  }
+}

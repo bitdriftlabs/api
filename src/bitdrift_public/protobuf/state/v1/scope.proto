@@ -9,15 +9,8 @@ syntax = "proto3";
 
 package bitdrift_public.protobuf.state.v1;
 
-// The payload for a state value stored within the state sub-system.
-//
-// A state value is either a value or a deletion marker. If none of the value fields are set,
-// then the state value represents a deletion.
-message StateValue {
-  oneof value_type {
-    string string_value = 1;
-    int64 int_value = 2;
-    double double_value = 3;
-    bool bool_value = 4;
-  }
+enum StateScope {
+  UNSPECIFIED = 0;
+  FEATURE_FLAG = 1;
+  GLOBAL_STATE = 2;
 }
