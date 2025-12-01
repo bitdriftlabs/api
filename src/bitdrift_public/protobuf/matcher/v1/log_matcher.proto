@@ -19,7 +19,6 @@ import "bitdrift_public/protobuf/value_matcher/v1/matcher.proto";
 // evaluate if a log message matches a given string or a field conforms to a predicate. A more advanced
 // matcher could declare AND/OR expressions which can be nested but ultimately require BaseMatchers at the leaves.
 message LogMatcher {
-
   // A base log matcher evaluates a log a specified facet using "oneof" the sub matcher types (String, Int, SemVer, etc).
   // These are required at a leaf level. A LogMatcher could consist of just a single BaseLogMatcher.
   message BaseLogMatcher {
@@ -32,7 +31,10 @@ message LogMatcher {
 
     // Base matcher for evaluating the value in a tag _value_ on a specified key.
     message TagMatch {
-      string tag_key = 1 [(validate.rules).string = {min_len: 1, max_len: 64}];
+      string tag_key = 1 [(validate.rules).string = {
+        min_len: 1
+        max_len: 64
+      }];
       oneof value_match {
         option (validate.required) = true;
         value_matcher.v1.StringValueMatch string_value_match = 2;
@@ -45,7 +47,10 @@ message LogMatcher {
 
     // Base matcher for evaluating the value of a feature flag.
     message FeatureFlagMatch {
-      string flag_name = 1 [(validate.rules).string = {min_len: 1, max_len: 64}];
+      string flag_name = 1 [(validate.rules).string = {
+        min_len: 1
+        max_len: 64
+      }];
 
       oneof value_match {
         option (validate.required) = true;

@@ -7,12 +7,10 @@
 
 syntax = "proto3";
 
-import "validate/validate.proto";
-import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
-import "bitdrift_public/protobuf/state/v1/scope.proto";
-import "bitdrift_public/protobuf/state/v1/matcher.proto";
-
 package bitdrift_public.protobuf.workflow.v1;
+
+import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
+import "validate/validate.proto";
 
 // The wrapper for the list of workflows. Top-level item used to send information
 // about workflows from server to all connected clients.
@@ -329,12 +327,10 @@ message Workflow {
       repeated Tag tags = 4;
 
       // A synthetic counter.
-      message Counter {
-      }
+      message Counter {}
 
       // A synthetic histogram.
-      message Histogram {
-      }
+      message Histogram {}
     }
 
     // Emit data for Sankey diagram.
@@ -409,12 +405,11 @@ message Workflow {
   message Execution {
     // An execution mode where a new workflow *run* starting from an initial
     // state can be started only if there are no other active runs of a given workflow.
-    message ExecutionExclusive {
-    }
+    message ExecutionExclusive {}
 
     oneof execution_type {
       ExecutionExclusive execution_exclusive = 1;
-    };
+    }
 
     reserved 2;
   }
@@ -434,8 +429,7 @@ message Workflow {
   message FieldExtracted {
     string field_name = 1 [(validate.rules).string = {min_len: 1}];
 
-    message Exact {
-    };
+    message Exact {}
 
     // For now we only support exact match, but in the future we might support more complex
     // extraction logic like regex captures. If not specified, the default is exact match.
@@ -448,8 +442,7 @@ message Workflow {
   message FeatureFlagExtracted {
     string name = 1 [(validate.rules).string = {min_len: 1}];
 
-    message Exact {
-    };
+    message Exact {}
 
     // For now we only support exact match, but in the future we might support more complex
     // extraction logic like regex captures. If not specified, the default is exact match.

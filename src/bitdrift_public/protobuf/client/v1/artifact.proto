@@ -7,11 +7,11 @@
 
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
-import "bitdrift_public/protobuf/logging/v1/payload.proto";
-import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
-
 package bitdrift_public.protobuf.client.v1;
+
+import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "google/protobuf/timestamp.proto";
 
 // Used to track an index of pending artifacts that need to be uploaded. This is used by the
 // the upload manager to coordinate intents and uploads.
