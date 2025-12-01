@@ -63,5 +63,4 @@ message SemVerValueMatch {
 }
 
 // Matcher to evaluate whether a value is set.
-message IsSetMatch {
-}
+message IsSetMatch {}

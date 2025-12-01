@@ -9,8 +9,8 @@ syntax = "proto3";
 
 package bitdrift_public.protobuf.state.v1;
 
-import "validate/validate.proto";
 import "bitdrift_public/protobuf/value_matcher/v1/matcher.proto";
+import "validate/validate.proto";
 
 // The matcher used to evaluate a state value. This is reused between log matching and state transition matching.
 message StateValueMatch {

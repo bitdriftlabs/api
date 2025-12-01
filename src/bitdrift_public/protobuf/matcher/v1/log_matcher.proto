@@ -9,10 +9,10 @@ syntax = "proto3";
 
 package bitdrift_public.protobuf.matcher.v1;
 
-import "validate/validate.proto";
 import "bitdrift_public/protobuf/state/v1/matcher.proto";
 import "bitdrift_public/protobuf/state/v1/scope.proto";
 import "bitdrift_public/protobuf/value_matcher/v1/matcher.proto";
+import "validate/validate.proto";
 
 // A LogMatcher is used to declare a boolean expression which evaluates a log on various facets for matching.
 // The most basic version of a matcher will just contain a single base matcher which could be used to
@@ -22,7 +22,6 @@ message LogMatcher {
   // A base log matcher evaluates a log a specified facet using "oneof" the sub matcher types (String, Int, SemVer, etc).
   // These are required at a leaf level. A LogMatcher could consist of just a single BaseLogMatcher.
   message BaseLogMatcher {
-
     // Base matcher for evaluating the value of a log message.
     // Currently it only supports String matching but that could be extended in the future.
     message MessageMatch {
