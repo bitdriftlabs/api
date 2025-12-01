@@ -10,6 +10,8 @@ syntax = "proto3";
 package bitdrift_public.protobuf.workflow.v1;
 
 import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
+import "bitdrift_public/protobuf/state/v1/matcher.proto";
+import "bitdrift_public/protobuf/state/v1/scope.proto";
 import "validate/validate.proto";
 
 // The wrapper for the list of workflows. Top-level item used to send information
