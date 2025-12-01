@@ -9,6 +9,9 @@ syntax = "proto3";
 
 package bitdrift_public.protobuf.matcher.v1;
 
+import "bitdrift_public/protobuf/state/v1/matcher.proto";
+import "bitdrift_public/protobuf/state/v1/scope.proto";
+import "bitdrift_public/protobuf/value_matcher/v1/value_matcher.proto";
 import "validate/validate.proto";
 
 // A LogMatcher is used to declare a boolean expression which evaluates a log on various facets for matching.
@@ -19,65 +22,11 @@ message LogMatcher {
   // A base log matcher evaluates a log a specified facet using "oneof" the sub matcher types (String, Int, SemVer, etc).
   // These are required at a leaf level. A LogMatcher could consist of just a single BaseLogMatcher.
   message BaseLogMatcher {
-    // Used to compare values both numeric and string (lexicographically).
-    enum Operator {
-      reserved 8, 9;
-      OPERATOR_UNSPECIFIED = 0;
-      OPERATOR_LESS_THAN = 1;
-      OPERATOR_LESS_THAN_OR_EQUAL = 2;
-      // For double matching this is an epsilon comparison.
-      OPERATOR_EQUALS = 3;
-      OPERATOR_GREATER_THAN = 4;
-      OPERATOR_GREATER_THAN_OR_EQUAL = 5;
-      OPERATOR_NOT_EQUALS = 6;
-      // Only supported for values of type string, otherwise uses EQUALS.
-      OPERATOR_REGEX = 7;
-    }
-
-    // Used to define a match rule for a string value.
-    message StringValueMatch {
-      Operator operator = 1 [(validate.rules).enum.defined_only = true];
-      oneof string_value_match_type {
-        string match_value = 2 [(validate.rules).string = {min_len: 1}];
-        // Corresponds to a field saved from a previous match via the SaveField extension.
-        string save_field_id = 3;
-      }
-    }
-
-    // Used to define a match rule for a numeric value of type int32.
-    message IntValueMatch {
-      Operator operator = 1 [(validate.rules).enum.defined_only = true];
-      oneof int_value_match_type {
-        int32 match_value = 2;
-        // Corresponds to a field saved from a previous match via the SaveField extension.
-        string save_field_id = 3;
-      }
-    }
-
-    // Used to define a match rule for a numeric value of type double.
-    message DoubleValueMatch {
-      Operator operator = 1 [(validate.rules).enum.defined_only = true];
-      oneof double_value_match_type {
-        double match_value = 2;
-        // Corresponds to a field saved from a previous match via the SaveField extension.
-        string save_field_id = 3;
-      }
-    }
-
-    // Used to define a match rule for semantic versioning (e.g. 1.02.43).
-    message SemVerValueMatch {
-      Operator operator = 1 [(validate.rules).enum.defined_only = true];
-      string match_value = 2 [(validate.rules).string = {min_len: 1}];
-    }
-
     // Base matcher for evaluating the value of a log message.
     // Currently it only supports String matching but that could be extended in the future.
     message MessageMatch {
-      StringValueMatch string_value_match = 1;
+      value_matcher.v1.StringValueMatch string_value_match = 1;
     }
-
-    // Matcher to evaluate whether a value is set.
-    message IsSetMatch {}
 
     // Base matcher for evaluating the value in a tag _value_ on a specified key.
     message TagMatch {
@@ -87,39 +36,32 @@ message LogMatcher {
       }];
       oneof value_match {
         option (validate.required) = true;
-        StringValueMatch string_value_match = 2;
-        IntValueMatch int_value_match = 3;
-        SemVerValueMatch sem_ver_value_match = 4;
-        IsSetMatch is_set_match = 5;
-        DoubleValueMatch double_value_match = 6;
+        value_matcher.v1.StringValueMatch string_value_match = 2;
+        value_matcher.v1.IntValueMatch int_value_match = 3;
+        value_matcher.v1.SemVerValueMatch sem_ver_value_match = 4;
+        value_matcher.v1.IsSetMatch is_set_match = 5;
+        value_matcher.v1.DoubleValueMatch double_value_match = 6;
       }
     }
 
-    // Base matcher for evaluating the value of a feature flag.
-    message FeatureFlagMatch {
-      string flag_name = 1 [(validate.rules).string = {
-        min_len: 1
-        max_len: 64
-      }];
+    message StateMatch {
+      // The scope in which to look for the state key.
+      state.v1.StateScope scope = 1 [(validate.rules).enum.defined_only = true];
+      // The key of the state value to match against.
+      string state_key = 2 [(validate.rules).string = {min_len: 1}];
 
-      oneof value_match {
-        option (validate.required) = true;
-
-        // Matches against the string value of the feature flag variant. If the variant
-        // is not set we'll match against the empty string.
-        StringValueMatch string_value_match = 2;
-
-        // Matches if the feature flag is set (regardless of variant).
-        IsSetMatch is_set_match = 3;
-      }
+      // The matcher to use against the state value.
+      state.v1.StateValueMatch state_value_match = 3 [(validate.rules).message.required = true];
     }
 
     oneof match_type {
       option (validate.required) = true;
       MessageMatch message_match = 1;
       TagMatch tag_match = 2;
-      FeatureFlagMatch feature_flag_match = 3;
+      StateMatch state_match = 4;
     }
+
+    reserved 3;
   }
 
   // A list of two or more matchers. Used to allow using a list within a oneof for and/or matching.

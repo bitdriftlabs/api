@@ -10,6 +10,8 @@ syntax = "proto3";
 package bitdrift_public.protobuf.workflow.v1;
 
 import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
+import "bitdrift_public/protobuf/state/v1/matcher.proto";
+import "bitdrift_public/protobuf/state/v1/scope.proto";
 import "validate/validate.proto";
 
 // The wrapper for the list of workflows. Top-level item used to send information
@@ -86,6 +88,7 @@ message Workflow {
     oneof rule_type {
       option (validate.required) = true;
       RuleLogMatch rule_log_match = 1;
+      RuleStateChangeMatch rule_state_change_match = 3;
     }
 
     reserved 2;
@@ -142,6 +145,22 @@ message Workflow {
     matcher.v1.LogMatcher log_matcher = 1 [(validate.rules).message = {required: true}];
     // The number of times the condition needs to be met, default is 1.
     uint32 count = 2 [(validate.rules).uint32.gt = 0];
+  }
+
+  // Matches against a state change. Every time the value of a scoped key changes (new value is different from previous value),
+  // the rule evaluates whether the previous and new values match the specified conditions.
+  message RuleStateChangeMatch {
+    // The scope of the state to watch for.
+    state.v1.StateScope scope = 1 [(validate.rules).enum.defined_only = true];
+
+    // The key of the state to watch for.
+    string key = 2 [(validate.rules).string = {min_len: 1}];
+
+    // The match condition which is applied to the previous value of the state during a state change.
+    state.v1.StateValueMatch previous_value = 3;
+
+    // The match condition which is applied to the new value of the state during a state change.
+    state.v1.StateValueMatch new_value = 4 [(validate.rules).message = {required: true}];
   }
 
   // An action to be taken when moving to a new state.

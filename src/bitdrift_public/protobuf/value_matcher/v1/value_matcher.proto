@@ -1,0 +1,66 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.value_matcher.v1;
+
+import "validate/validate.proto";
+
+// Used to compare values both numeric and string (lexicographically).
+enum Operator {
+  reserved 8, 9;
+  OPERATOR_UNSPECIFIED = 0;
+  OPERATOR_LESS_THAN = 1;
+  OPERATOR_LESS_THAN_OR_EQUAL = 2;
+  // For double matching this is an epsilon comparison.
+  OPERATOR_EQUALS = 3;
+  OPERATOR_GREATER_THAN = 4;
+  OPERATOR_GREATER_THAN_OR_EQUAL = 5;
+  OPERATOR_NOT_EQUALS = 6;
+  // Only supported for values of type string, otherwise uses EQUALS.
+  OPERATOR_REGEX = 7;
+}
+
+// Used to define a match rule for a string value.
+message StringValueMatch {
+  Operator operator = 1 [(validate.rules).enum.defined_only = true];
+  oneof string_value_match_type {
+    string match_value = 2 [(validate.rules).string = {min_len: 1}];
+    // Corresponds to a field saved from a previous match via the SaveField extension.
+    string save_field_id = 3;
+  }
+}
+
+// Used to define a match rule for a numeric value of type int32.
+message IntValueMatch {
+  Operator operator = 1 [(validate.rules).enum.defined_only = true];
+  oneof int_value_match_type {
+    int32 match_value = 2;
+    // Corresponds to a field saved from a previous match via the SaveField extension.
+    string save_field_id = 3;
+  }
+}
+
+// Used to define a match rule for a numeric value of type double.
+message DoubleValueMatch {
+  Operator operator = 1 [(validate.rules).enum.defined_only = true];
+  oneof double_value_match_type {
+    double match_value = 2;
+    // Corresponds to a field saved from a previous match via the SaveField extension.
+    string save_field_id = 3;
+  }
+}
+
+// Used to define a match rule for semantic versioning (e.g. 1.02.43).
+message SemVerValueMatch {
+  Operator operator = 1 [(validate.rules).enum.defined_only = true];
+  string match_value = 2 [(validate.rules).string = {min_len: 1}];
+}
+
+// Matcher to evaluate whether a value is set.
+message IsSetMatch {}
