@@ -17,5 +17,6 @@ jobs:
       - uses: bufbuild/buf-action@v1
         with:
           push: false
+          input: src/
       - name: Check license
         run: tools/check_license.sh
