@@ -14,25 +14,15 @@ import "common/protobuf/http.proto";
 // MetricsDiscoveryEngine is a service for metric discovery and aggregation.
 service MetricsDiscoveryEngine {
   option (common.http_server_options).protocol = GRPC;
-  rpc GetBlocklist(GetBlocklistRequest) returns (GetBlocklistResponse) {
-  }
-  rpc AllowMetrics(AllowMetricsRequest) returns (AllowMetricsResponse) {
-  }
-  rpc BlockMetrics(BlockMetricsRequest) returns (BlockMetricsResponse) {
-  }
-  rpc GetAllowlist(GetAllowlistRequest) returns (GetAllowlistResponse) {
-  }
-  rpc AllowMetricsByQuery(AllowMetricsByQueryRequest) returns (AllowMetricsByQueryResponse) {
-  }
-  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse) {
-  }
-  rpc BulkUpdateLastRead(BulkUpdateLastReadRequest) returns (BulkUpdateLastReadResponse) {
-  }
-  rpc BulkUpdateQueriesMetadata(BulkUpdateQueriesMetadataRequest)
-      returns (BulkUpdateQueriesMetadataResponse) {
-  }
-  rpc GetTypeaheadSuggestions(TypeaheadRequest) returns (TypeaheadResponse) {
-  }
+  rpc GetBlocklist(GetBlocklistRequest) returns (GetBlocklistResponse) {}
+  rpc AllowMetrics(AllowMetricsRequest) returns (AllowMetricsResponse) {}
+  rpc BlockMetrics(BlockMetricsRequest) returns (BlockMetricsResponse) {}
+  rpc GetAllowlist(GetAllowlistRequest) returns (GetAllowlistResponse) {}
+  rpc AllowMetricsByQuery(AllowMetricsByQueryRequest) returns (AllowMetricsByQueryResponse) {}
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse) {}
+  rpc BulkUpdateLastRead(BulkUpdateLastReadRequest) returns (BulkUpdateLastReadResponse) {}
+  rpc BulkUpdateQueriesMetadata(BulkUpdateQueriesMetadataRequest) returns (BulkUpdateQueriesMetadataResponse) {}
+  rpc GetTypeaheadSuggestions(TypeaheadRequest) returns (TypeaheadResponse) {}
 }
 
 // Metric resembles a Prometheus metric.
@@ -102,18 +92,15 @@ message AllowMetricsRequest {
   bool allow_regex = 2;
 }
 
-message AllowMetricsResponse {
-}
+message AllowMetricsResponse {}
 
 message BlockMetricsRequest {
   Matcher matcher = 1;
 }
 
-message BlockMetricsResponse {
-}
+message BlockMetricsResponse {}
 
-message GetAllowlistRequest {
-}
+message GetAllowlistRequest {}
 
 message GetAllowlistResponse {
   repeated Matcher matcher = 1;
@@ -123,8 +110,7 @@ message AllowMetricsByQueryRequest {
   string query = 1;
 }
 
-message AllowMetricsByQueryResponse {
-}
+message AllowMetricsByQueryResponse {}
 
 // Next field: 7
 message GetMetricsRequest {
@@ -144,11 +130,11 @@ message GetMetricsRequest {
   }
 
   /*
-    ANALYZED: requests like production count:sum alerts
-    REGEX: requests using the matcher object
-    PROMQL: requests with promQL query string
-    ANALYZED & PROMQL requests will use the query string. REGEX requests will use the matcher object.
-    */
+     ANALYZED: requests like production count:sum alerts
+     REGEX: requests using the matcher object
+     PROMQL: requests with promQL query string
+     ANALYZED & PROMQL requests will use the query string. REGEX requests will use the matcher object.
+  */
   enum SearchType {
     SEARCH_TYPE_UNKNOWN = 0;
     SEARCH_TYPE_ANALYZED = 1;
@@ -193,12 +179,10 @@ message QueryMetadata {
 message BulkUpdateLastReadRequest {
   repeated string queries = 1;
 }
-message BulkUpdateLastReadResponse {
-}
+message BulkUpdateLastReadResponse {}
 
 message BulkUpdateQueriesMetadataRequest {
   repeated QueryMetadata queries_metadata = 1;
 }
 
-message BulkUpdateQueriesMetadataResponse {
-}
+message BulkUpdateQueriesMetadataResponse {}

@@ -27,7 +27,7 @@ message Matcher {
 
   // A list of matchers, required for embedding inside a oneof.
   message MatcherList {
-    repeated Matcher matchers = 1 [(validate.rules).repeated .min_items = 2];
+    repeated Matcher matchers = 1 [(validate.rules).repeated.min_items = 2];
   }
 
   // Describes a string match.
