@@ -14,9 +14,9 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: bufbuild/buf-action@v1
-        with:
-          push: false
-          input: src/
+      - uses: bufbuild/buf-setup-action@v1
+      - uses: bufbuild/buf-lint-action@v1
+      - name: Format
+        run: tools/format.sh
       - name: Check license
         run: tools/check_license.sh
