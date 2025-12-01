@@ -11,7 +11,7 @@ package bitdrift_public.protobuf.matcher.v1;
 
 import "bitdrift_public/protobuf/state/v1/matcher.proto";
 import "bitdrift_public/protobuf/state/v1/scope.proto";
-import "bitdrift_public/protobuf/value_matcher/v1/matcher.proto";
+import "bitdrift_public/protobuf/value_matcher/v1/value_matcher.proto";
 import "validate/validate.proto";
 
 // A LogMatcher is used to declare a boolean expression which evaluates a log on various facets for matching.
