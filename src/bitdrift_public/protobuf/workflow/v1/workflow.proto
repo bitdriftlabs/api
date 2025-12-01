@@ -157,7 +157,7 @@ message Workflow {
     string key = 2 [(validate.rules).string = {min_len: 1}];
 
     // The match condition which is applied to the previous value of the state during a state change.
-    state.v1.StateValueMatch previous_value = 3 [(validate.rules).message = {required: true}];
+    state.v1.StateValueMatch previous_value = 3;
 
     // The match condition which is applied to the new value of the state during a state change.
     state.v1.StateValueMatch new_value = 4 [(validate.rules).message = {required: true}];
