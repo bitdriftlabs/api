@@ -7,21 +7,19 @@
 
 syntax = "proto3";
 
+package bitdrift_public.protobuf.config.v1;
+
 import "bitdrift_public/protobuf/client/v1/matcher.proto";
 import "validate/validate.proto";
-
-package bitdrift_public.protobuf.config.v1;
 
 // A LogMatcher is used to declare a boolean expression which evaluates a log on various facets as either matching or
 // not matching. The most basic version of a matcher will just contain a single base matcher which could be used to
 // evaluate if a log message matches a given string or is at a particular log level (eg "error"). A more advanced
 // matcher could declare AND/OR/NOT expressions which can be nested but ultimately require BaseMatchers at the leaves.
 message LogMatcher {
-
   // A base log matcher evaluates a log a specified facet using "oneof" the sub matcher types (Message, LogLevel etc).
   // These are required at a leaf level. A LogMatcher could consist of just a single BaseLogMatcher.
   message BaseLogMatcher {
-
     // This type of base matcher is used to evaluate a log level (ie. info, error etc)
     message LogLevelMatch {
       // Used to evaluate a LogLevel, see below for an ordered list
@@ -64,13 +62,15 @@ message LogMatcher {
     // Base matcher for evaluating the string in a tag _value_ on a specified key
     message TagMatch {
       StringMatchType match_type = 1 [(validate.rules).enum.defined_only = true];
-      string tag_key = 2 [(validate.rules).string = {min_len: 1, max_len: 64}];
+      string tag_key = 2 [(validate.rules).string = {
+        min_len: 1
+        max_len: 64
+      }];
       string match_value = 3 [(validate.rules).string = {min_len: 1}];
     }
 
     // This base matcher is "true" for any log it evaluates
-    message AnyMatch {
-    }
+    message AnyMatch {}
 
     // Base matcher for evaluating a log type. Unlike log levels, log types are not ordered which
     // simplifies the the matcher.

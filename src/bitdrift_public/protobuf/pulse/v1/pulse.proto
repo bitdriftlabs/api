@@ -7,20 +7,15 @@
 
 syntax = "proto3";
 
-import "validate/validate.proto";
-
 package bitdrift_public.protobuf.pulse.v1;
 
-message Kubelet {
-}
-message PodName {
-}
-message Namespace {
-}
-message Service {
-}
-message Deployment {
-}
+import "validate/validate.proto";
+
+message Kubelet {}
+message PodName {}
+message Namespace {}
+message Service {}
+message Deployment {}
 message UserProvided {
   string name = 1;
 }

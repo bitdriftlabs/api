@@ -7,19 +7,19 @@
 
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
-import "bitdrift_public/protobuf/client/v1/runtime.proto";
-import "bitdrift_public/protobuf/client/v1/metric.proto";
-import "bitdrift_public/protobuf/filter/v1/filter.proto";
-import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
-import "bitdrift_public/protobuf/bdtail/v1/bdtail_config.proto";
-import "bitdrift_public/protobuf/config/v1/config.proto";
-import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
-import "bitdrift_public/protobuf/logging/v1/payload.proto";
-import "validate/validate.proto";
-
 package bitdrift_public.protobuf.client.v1;
+
+import "bitdrift_public/protobuf/bdtail/v1/bdtail_config.proto";
+import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
+import "bitdrift_public/protobuf/client/v1/metric.proto";
+import "bitdrift_public/protobuf/client/v1/runtime.proto";
+import "bitdrift_public/protobuf/config/v1/config.proto";
+import "bitdrift_public/protobuf/filter/v1/filter.proto";
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
 
 // File written to disk if the client has been placed in the "killed" state and told not to
 // contact the server for some period of time.
@@ -124,8 +124,7 @@ message LogUploadIntentResponse {
   // The UUID of the intent being negotiated.
   string intent_uuid = 1;
 
-  message UploadImmediately {
-  }
+  message UploadImmediately {}
 
   message Drop {
     // If the upload intent was a ListenerUpload the entire upload should be canceled.
@@ -274,11 +273,9 @@ message UploadArtifactIntentResponse {
   // The UUID of the intent being negotiated. This is used to correlate the response with the request.
   string intent_uuid = 1 [(validate.rules).string = {min_len: 1}];
 
-  message UploadImmediately {
-  }
+  message UploadImmediately {}
 
-  message Drop {
-  }
+  message Drop {}
 
   oneof decision {
     // The artifact should be uploaded immediately.
@@ -439,8 +436,7 @@ message StatsUploadResponse {
 }
 
 // Response to a client ping.
-message PongResponse {
-}
+message PongResponse {}
 
 // Configuration update from server to client.
 message ConfigurationUpdate {
@@ -536,11 +532,9 @@ message SankeyIntentResponse {
   reserved 2;
   reserved 'decision';
 
-  message UploadImmediately {
-  }
+  message UploadImmediately {}
 
-  message Drop {
-  }
+  message Drop {}
 
   oneof decision {
     // The candidate sankey path should be uploaded immediately.

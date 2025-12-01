@@ -51,8 +51,7 @@ message IngestMetricRequest {
   }
 }
 
-message IngestMetricResponse {
-}
+message IngestMetricResponse {}
 
 // All APIs are available at api.bitdrift.io and require token authentication. The product API
 // key should be supplied as the x-bitdrift-api-key header. APIs can be called in the following
@@ -67,6 +66,5 @@ service IngestService {
   // for when and how this should be used.
   //
   // POST https://api.bitdrift.io/bitdrift_public.protobuf.ingest.v1.IngestService/IngestMetric
-  rpc IngestMetric(IngestMetricRequest) returns (IngestMetricResponse) {
-  }
+  rpc IngestMetric(IngestMetricRequest) returns (IngestMetricResponse) {}
 }

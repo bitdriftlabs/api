@@ -7,10 +7,10 @@
 
 syntax = "proto3";
 
-import "validate/validate.proto";
-import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
-
 package bitdrift_public.protobuf.bdtail.v1;
+
+import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
+import "validate/validate.proto";
 
 message BdTailStream {
   // The name of the bdtail stream. Logs that match the matcher below should be annotated with this

@@ -7,10 +7,10 @@
 
 syntax = "proto3";
 
+package bitdrift_public.protobuf.client.v1;
+
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
-
-package bitdrift_public.protobuf.client.v1;
 
 // Used to track an index of pending aggregations that need to be uploaded. This is used by the
 // file manager to coordinate merging and uploads.

@@ -21,7 +21,7 @@ message Data {
     string string_data = 1;
     BinaryData binary_data = 2;
   }
-};
+}
 
 enum LogType {
   // Normal logs, from application code.
