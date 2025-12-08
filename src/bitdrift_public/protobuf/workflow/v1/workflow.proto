@@ -394,8 +394,11 @@ message Workflow {
         // The tag value is the body of the log. If the body is not present, no tag is added.
         bool log_body_extracted = 4;
 
-        FeatureFlagExtracted feature_flag_extracted = 5;
+        StateExtracted state_extracted = 6;
       }
+
+      reserved 5;
+      reserved "feature_flag_extracted":
     }
 
     // Emit a log containing application screenshot.
@@ -440,14 +443,11 @@ message Workflow {
     }
   }
 
-  // A value extracted from the feature flags.
-  message FeatureFlagExtracted {
-    string name = 1 [(validate.rules).string = {min_len: 1}];
+  message StateExtracted {
+    state.v1.StateScope scope = 1 [(validate.rules).enum.defined_only = true];
 
-    message Exact {}
+    string key = 2 [(validate.rules).string = {min_len: 1}];
 
-    // For now we only support exact match, but in the future we might support more complex
-    // extraction logic like regex captures. If not specified, the default is exact match.
     oneof extraction_type {
       Exact exact = 2;
     }
