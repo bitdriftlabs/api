@@ -449,7 +449,7 @@ message Workflow {
     string key = 2 [(validate.rules).string = {min_len: 1}];
 
     oneof extraction_type {
-      Exact exact = 2;
+      Exact exact = 3;
     }
   }
 }
