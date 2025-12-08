@@ -398,7 +398,7 @@ message Workflow {
       }
 
       reserved 5;
-      reserved "feature_flag_extracted":
+      reserved "feature_flag_extracted";
     }
 
     // Emit a log containing application screenshot.
