@@ -161,6 +161,10 @@ message Workflow {
 
     // The match condition which is applied to the new value of the state during a state change.
     state.v1.StateValueMatch new_value = 4 [(validate.rules).message = {required: true}];
+
+    // Additional properties that must be true at the time of the state change for the rule to match.
+    // Since state changes do not match against a particular log, tags and messages will not be visibile to this matcher.
+    matcher.v1.LogMatcher log_matcher = 5;
   }
 
   // An action to be taken when moving to a new state.
