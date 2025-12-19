@@ -20,6 +20,10 @@ message Data {
   oneof data_type {
     string string_data = 1;
     BinaryData binary_data = 2;
+    uint64 int_data = 3;
+    double double_data = 4;
+    int64 sint_data = 5;
+    bool bool_data = 6;
   }
 }
 
