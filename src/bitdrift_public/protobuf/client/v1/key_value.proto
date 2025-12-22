@@ -10,6 +10,8 @@ syntax = "proto3";
 package bitdrift_public.protobuf.client.v1;
 
 import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
 
 message FixedSessionStrategyState {
   string session_id = 1;
@@ -18,4 +20,19 @@ message FixedSessionStrategyState {
 message ActivitySessionStrategyState {
   string session_id = 1;
   google.protobuf.Timestamp last_activity_timestamp = 2;
+}
+
+message CrashGlobalState {
+  repeated logging.v1.Log.Field fields = 1;
+}
+
+message AppVersion {
+  string version = 1;
+
+  oneof extra {
+    // Comparable using number comparison.
+    int64 app_version_code = 2;
+    // Comparable using semver comparison.
+    string build_number = 3;
+  }
 }
