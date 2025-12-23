@@ -10,7 +10,6 @@ syntax = "proto3";
 package bitdrift_public.protobuf.client.v1;
 
 import "google/protobuf/timestamp.proto";
-import "validate/validate.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
 
 message FixedSessionStrategyState {
