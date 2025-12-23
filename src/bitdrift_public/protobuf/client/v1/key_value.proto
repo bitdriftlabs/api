@@ -1,0 +1,37 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.client.v1;
+
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "google/protobuf/timestamp.proto";
+
+message FixedSessionStrategyState {
+  string session_id = 1;
+}
+
+message ActivitySessionStrategyState {
+  string session_id = 1;
+  google.protobuf.Timestamp last_activity_timestamp = 2;
+}
+
+message CrashGlobalState {
+  repeated logging.v1.Log.Field fields = 1;
+}
+
+message AppVersion {
+  string version = 1;
+
+  oneof extra {
+    // Comparable using number comparison.
+    int64 app_version_code = 2;
+    // Comparable using semver comparison.
+    string build_number = 3;
+  }
+}
