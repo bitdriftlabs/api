@@ -9,8 +9,8 @@ syntax = "proto3";
 
 package bitdrift_public.protobuf.client.v1;
 
-import "google/protobuf/timestamp.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "google/protobuf/timestamp.proto";
 
 message FixedSessionStrategyState {
   string session_id = 1;
