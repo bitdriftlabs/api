@@ -374,6 +374,17 @@ message LogUploadResponse {
 }
 
 message StatsUploadRequest {
+  enum UploadReason {
+    // Default value. Should not be used.
+    UPLOAD_REASON_UNSPECIFIED = 0;
+
+    // Periodic upload of stats.
+    UPLOAD_REASON_PERIODIC = 1;
+
+    // Upload triggered by a specific event, e.g., buffer flush.
+    UPLOAD_REASON_EVENT_TRIGGERED = 2;
+  }
+
   // Upload UUID used to provide idempotence and to correlate a response with this request.
   string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
 
@@ -420,6 +431,9 @@ message StatsUploadRequest {
   // The idea is that upon receiving the stats payload, the server's current time should be close to this
   // value.
   google.protobuf.Timestamp sent_at = 3;
+
+  // The reason for this stats upload.
+  UploadReason upload_reason = 4;
 }
 
 message StatsUploadResponse {
