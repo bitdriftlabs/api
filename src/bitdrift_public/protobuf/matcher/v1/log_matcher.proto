@@ -41,6 +41,7 @@ message LogMatcher {
         value_matcher.v1.SemVerValueMatch sem_ver_value_match = 4;
         value_matcher.v1.IsSetMatch is_set_match = 5;
         value_matcher.v1.DoubleValueMatch double_value_match = 6;
+        value_matcher.v1.JsonPathValueMatch json_value_match = 7;
       }
     }
 
