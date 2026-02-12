@@ -24,7 +24,17 @@ message Data {
     double double_data = 4;
     int64 sint_data = 5;
     bool bool_data = 6;
+    MapData map_data = 7;
+    ArrayData array_data = 8;
   }
+}
+
+message MapData {
+  map<string, Data> entries = 1;
+}
+
+message ArrayData {
+  repeated Data items = 1;
 }
 
 enum LogType {
