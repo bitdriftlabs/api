@@ -64,18 +64,16 @@ message SemVerValueMatch {
 
 message JsonPathValueMatch {
   Operator operator = 1 [(validate.rules).enum.defined_only = true];
-  message JsonPath {
-    message KeyOrIndex {
-      oneof key_or_index {
-        option (validate.required) = true;
+  message KeyOrIndex {
+    oneof key_or_index {
+      option (validate.required) = true;
 
-        string key = 1 [(validate.rules).string = {min_len: 1}];
-        int32 index = 2;
-      }
+      string key = 1 [(validate.rules).string = {min_len: 1}];
+      int32 index = 2;
     }
-
-    string path = 1 [(validate.rules).string = {min_len: 1}];
   }
+
+  repeated KeyOrIndex key_or_index = 3 [(validate.rules).repeated = {min_items: 1}];
   string match_value = 2 [(validate.rules).string = {min_len: 1}];
 }
 
