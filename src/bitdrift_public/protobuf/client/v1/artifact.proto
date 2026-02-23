@@ -13,7 +13,6 @@ import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "google/protobuf/timestamp.proto";
 
-// Used to track an index of pending artifacts that need to be uploaded. This is used by the
 // the upload manager to coordinate intents and uploads.
 message ArtifactUploadIndex {
   message Artifact {
@@ -26,14 +25,18 @@ message ArtifactUploadIndex {
     // this being true means that the file should be uploaded.
     bool pending_intent_negotiation = 3;
 
-    // An optional set of key-value data indicating the state of the device at the time of artifact emission. For example, this may capture information about the device at the time of a crash.
-    // This is stored outside of the artifact itself to be compatible with opaque uploads where storing this metadata
-    // within the artifact is not possible.
-    map<string, bitdrift_public.protobuf.logging.v1.Data> state_metadata = 5;
+    // Additional metadata about the artifact beyond what is available in the file itself. This is sent as part of the intent negotation process to help the server make a decision about whether to accept the upload or not.
+    // For issue reports this corresponds to the "fields" associated with the issue report.
+    map<string, bitdrift_public.protobuf.logging.v1.Data> metadata = 5;
 
+    // The session ID associated with this artfact, if applicable. This will be empty for artifacts that are not associated with a session, like state snapshots that may span sessions.
     string session_id = 6;
 
+    // The feature flags that were active when this artifact was captured. This is used by issue reports to allow the feature flags to be captured independently of the report.
     repeated FeatureFlag feature_flags = 7;
+
+    // The type of the artifact, e.g. "client_report", "state_snapshot", etc. This is used by the server to determine how to process the artifact. For backwards compatibility, if this is absent the artifact is an issue report.
+    optional string type_id = 8;
   }
 
   // List of files, in order of time, that are pending upload.
