@@ -257,15 +257,16 @@ message UploadArtifactIntentRequest {
   // The type of the artifact being considered for upload.
   string type_id = 2 [(validate.rules).string = {min_len: 1}];
 
-  // The metadata associated with the artifact. This is a binary blob that is interpreted by the server
-  // based on the type_id.
-  bytes metadata = 3;
+  reserved 3;
+
+  // The metadata associated with the artifact. The contents within this map depends on the type of the artfact but will generally contain information that can help the server make a decision about whether to accept the upload or not. For example, for issue reports this may contain the "fields" associated with the issue report.
+  map<string, logging.v1.Data> metadata = 6;
 
   // A client-generated ID that uniquely identifies the artifact. This is used to correlate the artifact
   // with logs that reference it.
   string artifact_id = 4 [(validate.rules).string = {min_len: 1}];
 
-  // The timestamp associated with this upload. This allows us to possibly reject the upload of very old artifacts.
+  // The timestamp associated with the artifact being uploaded. This allows us to possibly reject the upload of very old artifacts.
   google.protobuf.Timestamp time = 5 [(validate.rules).message = {required: true}];
 }
 
