@@ -114,7 +114,21 @@ message Workflow {
     // This can be looked up by ID by further transitions.
     message SaveField {
       string id = 1;
-      string field_name = 2;
+
+      oneof save_field_type {
+        // Save's the value of a specified field from the log. If the field is not present, nothing
+        // is saved.
+        string field_name = 2;
+
+        // Save's the message of the log.
+        bool message = 3;
+      }
+
+      // If provided, this must specify a regex with a single capture group. The value of the
+      // captured group will be saved instead of the whole field value. If not provided, the whole
+      // field value will be saved. If the regex doesn't match the field value, nothing will be
+      // saved.
+      optional string regex_capture = 4;
     }
 
     // The configuration of a value extraction for a Sankey diagram.
@@ -416,8 +430,15 @@ message Workflow {
     // state can be started only if there are no other active runs of a given workflow.
     message ExecutionExclusive {}
 
+    message ExecutionParallel {
+      // The maximum number of active workflow runs for this workflow. If not specified uses an
+      // implementation defined default value.
+      optional uint32 max_active_runs = 1;
+    }
+
     oneof execution_type {
       ExecutionExclusive execution_exclusive = 1;
+      ExecutionParallel execution_parallel = 3;
     }
 
     reserved 2;
