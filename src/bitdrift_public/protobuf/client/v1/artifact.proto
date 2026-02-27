@@ -14,7 +14,10 @@ import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "google/protobuf/timestamp.proto";
 
 enum StorageFormat {
+  // The file was checksummed when it was copied into the artifact upload queue, so we can validate the checksum on upload.
   CHECKSUMMED = 0;
+  // The file was stored on disk without being checksummed. This should only be used if the file already has
+  // internal checksumming like zlib.
   RAW = 1;
 }
 
