@@ -13,6 +13,14 @@ import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "google/protobuf/timestamp.proto";
 
+enum StorageFormat {
+  // The file was checksummed when it was copied into the artifact upload queue, so we can validate the checksum on upload.
+  CHECKSUMMED = 0;
+  // The file was stored on disk without being checksummed. This should only be used if the file already has
+  // internal checksumming like zlib.
+  RAW = 1;
+}
+
 // the upload manager to coordinate intents and uploads.
 message ArtifactUploadIndex {
   message Artifact {
@@ -37,6 +45,9 @@ message ArtifactUploadIndex {
 
     // The type of the artifact, e.g. "client_report", "state_snapshot", etc. This is used by the server to determine how to process the artifact. For backwards compatibility, if this is absent the artifact is an issue report.
     optional string type_id = 8;
+
+    // The storage format of the artifact, which determines whether we apply checksum validation during processing.
+    StorageFormat storage_format = 9;
   }
 
   // List of files, in order of time, that are pending upload.
