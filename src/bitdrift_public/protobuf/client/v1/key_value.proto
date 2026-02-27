@@ -35,3 +35,8 @@ message AppVersion {
     string build_number = 3;
   }
 }
+
+message StateSnapshotRange {
+  uint64 oldest_micros = 1;
+  uint64 newest_micros = 2;
+}
