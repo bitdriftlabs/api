@@ -116,11 +116,11 @@ message Workflow {
       string id = 1;
 
       oneof save_field_type {
-        // Save's the value of a specified field from the log. If the field is not present, nothing
+        // Saves the value of a specified field from the log. If the field is not present, nothing
         // is saved.
         string field_name = 2;
 
-        // Save's the message of the log.
+        // Saves the message of the log.
         bool message = 3;
       }
 
