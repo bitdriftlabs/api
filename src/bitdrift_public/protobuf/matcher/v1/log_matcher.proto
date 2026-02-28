@@ -55,11 +55,19 @@ message LogMatcher {
       state.v1.StateValueMatch state_value_match = 3 [(validate.rules).message.required = true];
     }
 
+    message SampledMatch {
+      // The % chance that a match will occur. This is the numerator of the percentage, with the
+      // denominator being 1,000,000. For example, if the value is 10,000, then 1% of matches will
+      // be sampled.
+      uint32 sample_rate = 1;
+    }
+
     oneof match_type {
       option (validate.required) = true;
       MessageMatch message_match = 1;
       TagMatch tag_match = 2;
       StateMatch state_match = 4;
+      SampledMatch sampled_match = 5;
     }
 
     reserved 3;
