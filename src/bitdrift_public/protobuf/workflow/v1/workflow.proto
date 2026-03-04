@@ -190,7 +190,13 @@ message Workflow {
       ActionEmitSankeyDiagram action_emit_sankey_diagram = 3;
       ActionTakeScreenshot action_take_screenshot = 4;
       ActionGenerateLog action_generate_log = 5;
+      ActionStartTracing action_start_tracing = 6;
     }
+
+    // Specifies that the current session will start trace sampling. Tracing will stop when the
+    // workflow run ends. The exception to this is if the run results in a flush. If this happens,
+    // tracing will stay on until flush streaming completes.
+    message ActionStartTracing {}
 
     // Generates a new log message. This log will be injected into the workflow engine and processed
     // like any other log, either by this workflow or by another workflow.
