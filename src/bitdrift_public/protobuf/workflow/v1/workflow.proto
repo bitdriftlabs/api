@@ -12,6 +12,7 @@ package bitdrift_public.protobuf.workflow.v1;
 import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
 import "bitdrift_public/protobuf/state/v1/matcher.proto";
 import "bitdrift_public/protobuf/state/v1/scope.proto";
+import "bitdrift_public/protobuf/workflow/v1/save_field.proto";
 import "validate/validate.proto";
 
 // The wrapper for the list of workflows. Top-level item used to send information
@@ -108,27 +109,6 @@ message Workflow {
     // the Unix epoch.
     message SaveTimestamp {
       string id = 1;
-    }
-
-    // The log's field value, if available, will be snapped, and persisted to the workflow state.
-    // This can be looked up by ID by further transitions.
-    message SaveField {
-      string id = 1;
-
-      oneof save_field_type {
-        // Saves the value of a specified field from the log. If the field is not present, nothing
-        // is saved.
-        string field_name = 2;
-
-        // Saves the message of the log.
-        bool message = 3;
-      }
-
-      // If provided, this must specify a regex with a single capture group. The value of the
-      // captured group will be saved instead of the whole field value. If not provided, the whole
-      // field value will be saved. If the regex doesn't match the field value, nothing will be
-      // saved.
-      optional string regex_capture = 4;
     }
 
     // The configuration of a value extraction for a Sankey diagram.
