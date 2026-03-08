@@ -312,8 +312,8 @@ message UploadArtifactRequest {
   // The timestamp associated with this upload. This allows us to possibly reject the upload of very old artifacts.
   google.protobuf.Timestamp time = 6 [(validate.rules).message = {required: true}];
 
-  // The session ID associated with the artifact.
-  string session_id = 7 [(validate.rules).string = {min_len: 1}];
+  // The session ID associated with the artifact if applicable.
+  string session_id = 7;
 
   // The set of feature flags that were active at the time of artifact emission.
   repeated FeatureFlag feature_flags = 8;
