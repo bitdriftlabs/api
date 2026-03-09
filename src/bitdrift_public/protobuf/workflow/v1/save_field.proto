@@ -1,0 +1,31 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.workflow.v1;
+
+// The log's field value, if available, will be snapped, and persisted to the workflow state.
+// This can be looked up by ID by further transitions.
+message SaveField {
+  string id = 1;
+
+  oneof save_field_type {
+    // Saves the value of a specified field from the log. If the field is not present, nothing
+    // is saved.
+    string field_name = 2;
+
+    // Saves the message of the log.
+    bool message = 3;
+  }
+
+  // If provided, this must specify a regex with a single capture group. The value of the
+  // captured group will be saved instead of the whole field value. If not provided, the whole
+  // field value will be saved. If the regex doesn't match the field value, nothing will be
+  // saved.
+  optional string regex_capture = 4;
+}
