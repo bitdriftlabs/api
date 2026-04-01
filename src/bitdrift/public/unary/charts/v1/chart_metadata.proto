@@ -1,0 +1,187 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.charts.v1;
+
+import "bitdrift/public/unary/charts/v1/chart_id.proto";
+import "validate/validate.proto";
+
+message ChartMetadata {
+  message FlushChartMetadata {}
+
+  message SankeyChartMetadata {}
+
+  message MetricChartMetadata {
+    message TimeSeriesMetadata {
+      enum TopKAlgorithm {
+        TOP_K_ALGORITHM_UNSPECIFIED = 0;
+        TOP_K_ALGORITHM_AVERAGED = 1;
+        TOP_K_ALGORITHM_2TIERED = 2;
+        TOP_K_ALGORITHM_3TIERED = 3;
+      }
+
+      message Axis {
+        // The description of the axis to display.
+        string description = 1 [(validate.rules).string = {max_len: 255}];
+
+        enum Unit {
+          UNSPECIFIED = 0;
+          PERCENTAGE = 1;
+          MILLISECONDS = 2;
+          TIMESTAMP = 3;
+          BYTES = 4;
+          COUNT = 5;
+          KILOBYTES = 6;
+          MEGABYTES = 8;
+          SECONDS = 9;
+          MINUTES = 10;
+          HOURS = 11;
+          DAYS = 12;
+          GIGABYTES = 13;
+        }
+
+        // The unit of the axis.
+        .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.Axis.Unit unit = 2 [(validate.rules).enum = {defined_only: true}];
+      }
+
+      // Configuration for exporting data to a connector.
+      message ConnectorExportConfig {
+        message CloudwatchConnectorExportConfig {
+          // The Cloudwatch namespace to which data will be exported. This will be appended to
+          // 'bitdrift/'.
+          string namespace = 1 [(validate.rules).string = {
+            min_len: 1
+            max_len: 255
+          }];
+
+          // A set of fixed dimensions to include with every metric emitted to Cloudwatch. These
+          // dimensions will be added in addition to any dimensions specified by the time series
+          // query.
+          map<string, string> fixed_dimensions = 2 [(validate.rules).map.max_pairs = 10];
+        }
+
+        // The name of the connector to which data will be exported. The connector should have
+        // already been added via the AdminService's UpsertConnector method. The connector type
+        // must match the type expected by the time series export configuration.
+        string connector_name = 1 [(validate.rules).string = {
+          min_len: 1
+          max_len: 255
+        }];
+
+        oneof connector_type {
+          option (validate.required) = true;
+          // Configuration specific to Cloudwatch connectors. Cloudwatch export is only valid for
+          // time series that are backed by counters. The configuration will fail if the time series
+          // uses histogram data. For metrics that have a numerator and denominator, the export
+          // configuration will actually export 2 cloudwatch metrics: one for the numerator and one
+          // for the denominator. The user is responsible for interpreting these two metrics
+          // correctly. If a numerator and denominator are exported, the supplied namespace will be
+          // appended with "/numerator" and "/denominator" for the respective metrics.
+          .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.CloudwatchConnectorExportConfig cloudwatch_connector_export_config = 2;
+        }
+      }
+
+      // The Y axis of the time series. This is used to format the Y axis of the chart as well as
+      // the hover tooltip.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.Axis y_axis = 1;
+
+      // The title of the time series. This is used to display the time series in the chart.
+      string title = 2 [(validate.rules).string = {max_len: 255}];
+
+      // Determines how the TopK is sorted when performing TopK queries. Defaults to Maximum.
+      .bitdrift.public.unary.charts.v1.SortOrder sort_order = 3 [(validate.rules).enum = {defined_only: true}];
+
+      // Optional limit strategy to persist for this time series (top K count, dimension
+      // selection, sort order).
+      optional .bitdrift.public.unary.charts.v1.LimitStrategy limit_strategy = 4;
+
+      // Optional top K algorithm variant to use for this time series.
+      optional .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.TopKAlgorithm top_k_algorithm = 5 [(validate.rules).enum = {defined_only: true}];
+
+      // Configuration for exporting data to a connector.
+      repeated .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig connector_export_config = 6 [(validate.rules).repeated.max_items = 10];
+    }
+
+    message TimeSeriesDisplayMode {}
+
+    message TableDisplayMode {}
+
+    message HistogramBarChartDisplayMode {}
+
+    oneof display_mode {
+      // Displays the chart as a time series visualization.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesDisplayMode time_series_display_mode = 1;
+
+      // Displays the chart as a table.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TableDisplayMode table_display_mode = 2;
+
+      // Displays histogram data as a bar chart.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HistogramBarChartDisplayMode histogram_bar_chart_display_mode = 3;
+    }
+
+    // Metadata for each time series in the chart. The length of this list should match the number
+    // of time series in the chart's query. If a time series does not have metadata, provide the
+    // default object and defaults will be used.
+    repeated .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata metadata = 4 [(validate.rules).repeated = {max_items: 100}];
+  }
+
+  message FunnelChartMetadata {
+    message StepDetail {
+      // The funnel step name. It is used to display the step in the funnel chart.
+      string name = 1 [(validate.rules).string = {max_len: 255}];
+    }
+
+    // Extra details pertaining to each step of the funnel. The step details is associated via the
+    // index of the array, e.g. the nth element in this array corresponds to the nth step in the
+    // funnel. This allows modifying this data without knowing about the server generated IDs.
+    repeated .bitdrift.public.unary.charts.v1.ChartMetadata.FunnelChartMetadata.StepDetail steps = 1 [(validate.rules).repeated = {max_items: 100}];
+  }
+
+  message Summary {
+    // / A description string that will be displayed alongside the chart as a help text.
+    string description = 1 [(validate.rules).string = {max_len: 500}];
+  }
+
+  // The title of the chart to be displayed.
+  string title = 1 [(validate.rules).string = {max_len: 255}];
+
+  // An optional piece of summary information to display alongside the chart.
+  optional .bitdrift.public.unary.charts.v1.ChartMetadata.Summary summary = 2;
+
+  // An optional message to display when there is no data available for the chart. If not set use
+  // the default message.
+  optional string no_data_message = 3 [(validate.rules).string = {max_len: 500}];
+
+  oneof metadata_type {
+    option (validate.required) = true;
+    // Metadata for metric-based charts such as time series, tables, and histograms.
+    .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata metric_chart_metadata = 4;
+
+    // Metadata for funnel charts.
+    .bitdrift.public.unary.charts.v1.ChartMetadata.FunnelChartMetadata funnel_chart_metadata = 5;
+
+    // Metadata for session capture flush charts.
+    .bitdrift.public.unary.charts.v1.ChartMetadata.FlushChartMetadata flush_chart_metadata = 6;
+
+    // Metadata for sankey charts.
+    .bitdrift.public.unary.charts.v1.ChartMetadata.SankeyChartMetadata sankey_chart_metadata = 7;
+  }
+}
+
+message UpsertWorkflowChartMetadataRequest {
+  // The workflow ID.
+  string workflow_id = 1 [(validate.rules).string = {max_len: 100}];
+
+  // The rule ID.
+  string rule_id = 2 [(validate.rules).string = {max_len: 100}];
+
+  // The metadata.
+  .bitdrift.public.unary.charts.v1.ChartMetadata metadata = 3 [(validate.rules).message = {required: true}];
+}
+
+message UpsertWorkflowChartMetadataResponse {}

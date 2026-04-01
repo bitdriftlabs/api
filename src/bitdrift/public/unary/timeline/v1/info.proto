@@ -1,0 +1,28 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.timeline.v1;
+
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message GetSessionInfoRequest {
+  // The session ID to query for.
+  string session_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message GetSessionInfoResponse {
+  // The start time of the session.
+  .google.protobuf.Timestamp start_time = 5;
+
+  // The end time of the session.
+  .google.protobuf.Timestamp end_time = 6;
+}

@@ -1,0 +1,157 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.shared.explorations.v1;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message LabelPair {
+  // The label name.
+  string name = 1 [(validate.rules).string = {max_len: 255}];
+
+  // The label value.
+  string value = 2 [(validate.rules).string = {max_len: 1024}];
+}
+
+message AndFilter {
+  // Labels that must all match for a record to be included.
+  repeated .bitdrift.public.shared.explorations.v1.LabelPair filter = 1 [(validate.rules).repeated.max_items = 100];
+}
+
+message RateDetails {
+  // The numerator count used to compute the rate.
+  uint64 numerator_count = 1;
+
+  // The denominator count used to compute the rate.
+  uint64 denominator_count = 2;
+}
+
+message DataPoint {
+  // The start of the aggregation window. The size of the aggregation window is
+  // given in the TimeSeries response.
+  .google.protobuf.Timestamp timestamp = 1;
+
+  // The accumulated value of the data point for a given aggregation window.
+  double value = 2;
+
+  // For rate data points, this field contains the numerator and denominator values
+  // to allow the frontend to render the absolute values in addition to the rate.
+  optional .bitdrift.public.shared.explorations.v1.RateDetails rate_details = 3;
+
+  // The unique devices count for this data point based on the TrackUnique configuration.
+  optional uint64 unique_devices = 4;
+}
+
+message Legend {
+  // The text to display for this legend entry.
+  string title = 1 [(validate.rules).string = {min_len: 1}];
+}
+
+message CardinalityOverflows {
+  // Overflowed the total limit for the action ID, including platform and app ID.
+  uint64 total_overflows = 1;
+
+  // Overflowed only the group by limit for the action ID. This can include both client overflows
+  // as well as server overflows.
+  uint64 group_by_overflows = 2;
+
+  // If this is true, during query time the query engine detected very large cardinality during
+  // a group by query. Even with ingestion limits, it's still possible if the data is
+  // problematic and we are querying over a very large window. In order to avoid OOM during TopK
+  // processing, the query engine will fall back to a collapsed group by query which will return
+  // a single time series. The FE should display an indication that this happened as well as
+  // the ability to view example cardinality.
+  bool query_group_by_collapsed = 3;
+}
+
+message TimeSeries {
+  // The id associated with this time series. This is used together with the labels
+  // to uniquely identify a time series.
+  //
+  // For workflow-backed time series, this maps back to one or more action IDs.
+  string id = 1 [(validate.rules).string = {min_len: 1}];
+
+  // The labels associated with this time series.
+  repeated .bitdrift.public.shared.explorations.v1.LabelPair labels = 2;
+
+  // The data points in this time series.
+  repeated .bitdrift.public.shared.explorations.v1.DataPoint data = 3;
+
+  // The aggregation window used for this stream. When streaming data, this is only set on the
+  // first response for a given time series.
+  .google.protobuf.Duration aggregation_window = 4;
+
+  // The Legend associated with this time series. This is a formatted string that can be presented
+  // to the user explaining what the time series represents.
+  //
+  // Note that this may not be set via all APIs.
+  optional .bitdrift.public.shared.explorations.v1.Legend legend = 5;
+
+  // A simple title for the time series. This is a more compact version of the legend that can used
+  // where the legend is too verbose.
+  //
+  // Note that this may not be set via all APIs.
+  optional string title = 6;
+
+  // The unique devices count for the entire series based on the TrackUnique configuration.
+  optional uint64 unique_devices = 7;
+
+  // This is the aggregated rollup for the entire series. It's meaning is dependent on the type of
+  // series.
+  // - counter: The sum of all data points.
+  // - rate: The sum of all numerator data points / the sum of all denominator data points.
+  // - histogram: The quantile over the entire range.
+  double aggregated_rollup = 8;
+
+  // The total count of cardinality overflows for this time series that occurred during the
+  // query time period.
+  .bitdrift.public.shared.explorations.v1.CardinalityOverflows cardinality_overflows = 9;
+}
+
+message Counter {
+  enum CounterAggregationType {
+    SUM = 0;
+    AVG = 1;
+    MIN = 2;
+    MAX = 3;
+  }
+
+  // The counter to query.
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The aggregation to use when presenting this counter in a table.
+  .bitdrift.public.shared.explorations.v1.Counter.CounterAggregationType table_aggregation_type = 2 [(validate.rules).enum = {defined_only: true}];
+}
+
+message Rate {
+  enum RateAggregationType {
+    AVG = 0;
+    MIN = 1;
+    MAX = 2;
+  }
+
+  // The numerator counter to query.
+  string numerator_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The denominator counter to query.
+  string denominator_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The aggregation to use when presenting this rate in a table.
+  .bitdrift.public.shared.explorations.v1.Rate.RateAggregationType table_aggregation_type = 3 [(validate.rules).enum = {defined_only: true}];
+}

@@ -1,0 +1,75 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.timeline.v1;
+
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+enum HydrationStatus {
+  DRY = 0;
+  HYDRATING = 1;
+  HYDRATED = 2;
+  FAILED = 3;
+  UNKNOWN = 4;
+}
+
+message HydrationState {
+  // The time when the hydration record was created.
+  .google.protobuf.Timestamp created_at = 1;
+
+  // The time when the hydrated session data expires.
+  .google.protobuf.Timestamp expiration_time = 2;
+
+  // The time when hydration started.
+  .google.protobuf.Timestamp started_at = 3;
+
+  // The time when hydration finished.
+  .google.protobuf.Timestamp finished_at = 4;
+
+  // The current hydration status of the session.
+  .bitdrift.public.unary.timeline.v1.HydrationStatus hydration_status = 5;
+
+  // Whether the hydration was performed incrementally.
+  bool incremental = 6;
+}
+
+message HydrateSessionRequest {
+  // The session ID to hydrate.
+  string session_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // Whether to force hydration even if the session is already hydrated or is currently hydrating.
+  bool force = 2;
+}
+
+message HydrateSessionResponse {
+  // Whether the hydration request is ignored because the session is already hydrated or is currently hydrating.
+  bool ignored = 1;
+
+  // Whether the hydration request is successful.
+  bool success = 2;
+
+  // The last hydration state of the session. This is useful when the hydration request is ignored because the session is already hydrated or is currently hydrating.
+  .bitdrift.public.unary.timeline.v1.HydrationState last_hydration_state = 3;
+}
+
+message GetHydrationStatusRequest {
+  // The session ID to query for.
+  string session_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message GetHydrationStatusResponse {
+  // The hydration state of the session.
+  .bitdrift.public.unary.timeline.v1.HydrationState status = 1;
+}

@@ -1,0 +1,33 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.admin.v1;
+
+import "bitdrift/public/unary/admin/v1/connector.proto";
+import "bitdrift/public/unary/admin/v1/keys.proto";
+
+// AdminService defines unary RPCs for administrative actions that can be performed by users with the appropriate permissions. These include managing Slack app installations, notification groups, views, API/SDK keys, users, teams, and connectors.
+service AdminService {
+  // Lists the API and SDK keys available to the authenticated user.
+  rpc GetKeys(.bitdrift.public.unary.admin.v1.GetKeysRequest) returns (.bitdrift.public.unary.admin.v1.GetKeysResponse);
+
+  // Creates an API key or SDK key for the authenticated user.
+  rpc CreateKey(.bitdrift.public.unary.admin.v1.CreateKeyRequest) returns (.bitdrift.public.unary.admin.v1.CreateKeyResponse);
+
+  // Revokes an API key or SDK key by ID.
+  rpc RevokeKey(.bitdrift.public.unary.admin.v1.RevokeKeyRequest) returns (.bitdrift.public.unary.admin.v1.RevokeKeyResponse);
+
+  // Gets all connectors for the calling account.
+  rpc GetConnectors(.bitdrift.public.unary.admin.v1.GetConnectorsRequest) returns (.bitdrift.public.unary.admin.v1.GetConnectorsResponse);
+
+  // Upsert a connector for the calling account.
+  rpc UpsertConnector(.bitdrift.public.unary.admin.v1.UpsertConnectorRequest) returns (.bitdrift.public.unary.admin.v1.UpsertConnectorResponse);
+
+  // Delete a connector for the calling account.
+  rpc DeleteConnector(.bitdrift.public.unary.admin.v1.DeleteConnectorRequest) returns (.bitdrift.public.unary.admin.v1.DeleteConnectorResponse);
+}

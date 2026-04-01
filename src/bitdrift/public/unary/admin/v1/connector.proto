@@ -1,0 +1,63 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.admin.v1;
+
+import "validate/validate.proto";
+
+message ConnectorConfig {
+  message CloudwatchConnectorConfig {
+    // The AWS region for the CloudWatch connector.
+    string region = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 64
+    }];
+
+    // The role ARN for the CloudWatch connector. This role will be assumed by the connector
+    // in order to put metrics into CloudWatch.
+    string role_arn = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+  }
+
+  // The name of the connector.
+  string name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  oneof connector_type {
+    option (validate.required) = true;
+    .bitdrift.public.unary.admin.v1.ConnectorConfig.CloudwatchConnectorConfig cloudwatch_connector_config = 2;
+  }
+}
+
+message UpsertConnectorRequest {
+  // The connector to upsert.
+  .bitdrift.public.unary.admin.v1.ConnectorConfig connector = 1 [(validate.rules).message = {required: true}];
+}
+
+message UpsertConnectorResponse {}
+
+message GetConnectorsRequest {}
+
+message GetConnectorsResponse {
+  // The connectors configured for the calling shard.
+  repeated .bitdrift.public.unary.admin.v1.ConnectorConfig connectors = 1;
+}
+
+message DeleteConnectorRequest {
+  // The name of the connector to delete.
+  string name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+message DeleteConnectorResponse {}

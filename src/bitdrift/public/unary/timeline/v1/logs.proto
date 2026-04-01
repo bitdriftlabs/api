@@ -1,0 +1,105 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.timeline.v1;
+
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message Log {
+  enum LogLevel {
+    TRACE = 0;
+    DEBUG = 1;
+    INFO = 2;
+    WARN = 3;
+    ERROR = 4;
+  }
+
+  message LogFields {
+    // Additional key-value fields captured with the log.
+    map<string, bitdrift_public.protobuf.logging.v1.Data> fields = 1;
+  }
+
+  // The log fields of the log. This is a map of key-value pairs that store additional information captured with the log.
+  .bitdrift.public.unary.timeline.v1.Log.LogFields fields = 3;
+
+  // The listener IDs associated with the log. This is used to link the log to specific workflows that captured the log.
+  repeated string listener_ids = 5;
+
+  // The severity level of the log.
+  .bitdrift.public.unary.timeline.v1.Log.LogLevel log_level = 6;
+
+  // The type of the log. This is used to categorize logs and can be used for filtering and display purposes.
+  .bitdrift_public.protobuf.logging.v1.LogType log_type = 7;
+
+  // The main log message of the log.
+  string message = 8;
+
+  // The recorded timestamp of the log.
+  .google.protobuf.Timestamp timestamp = 11;
+}
+
+message LogType {
+  message ScreenCapture {}
+
+  message Resource {}
+
+  message Trigger {}
+
+  message Error {}
+
+  oneof log_type {
+    option (validate.required) = true;
+    // Includes screen capture logs.
+    .bitdrift.public.unary.timeline.v1.LogType.ScreenCapture screen_capture = 1;
+
+    // Includes resource logs.
+    .bitdrift.public.unary.timeline.v1.LogType.Resource resource = 2;
+
+    // Includes trigger logs.
+    .bitdrift.public.unary.timeline.v1.LogType.Trigger trigger = 3;
+
+    // Includes error logs.
+    .bitdrift.public.unary.timeline.v1.LogType.Error error = 4;
+  }
+}
+
+message GetSessionLogsRequest {
+  // The type of logs to query. If not specified, all normal logs will be returned.
+  .bitdrift.public.unary.timeline.v1.LogType log_type = 1;
+
+  // The start time of the query.
+  .google.protobuf.Timestamp start_time = 2 [(validate.rules).message = {required: true}];
+
+  // The end time of the query.
+  .google.protobuf.Timestamp end_time = 3 [(validate.rules).message = {required: true}];
+
+  // The page number and the number of items per page. The server will use this
+  // to paginate the results.
+  optional uint64 page = 5;
+
+  optional uint64 per_page = 6 [(validate.rules).uint64 = {
+    gte: 1
+    lte: 5000
+  }];
+
+  // Session ID to query for.
+  string session_id = 9 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message GetSessionLogsResponse {
+  // The total number of pages available for the query. This is used for pagination purposes to indicate how many pages of results are available based on the total number of logs and the number of logs per page specified in the request.
+  uint64 total_pages = 1;
+
+  // The list of logs for the session based on the query parameters specified in the request.
+  repeated .bitdrift.public.unary.timeline.v1.Log logs = 2;
+}

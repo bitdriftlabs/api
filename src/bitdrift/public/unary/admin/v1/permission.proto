@@ -1,0 +1,35 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.admin.v1;
+
+enum Permission {
+  PERMISSION_UNSPECIFIED = 0;
+  // Allows creating, revoking, and listing SDK keys.
+  SDK_KEY_ADMIN = 1;
+  // Allows editing any workflow.
+  WORKFLOW_ADMIN = 2;
+  // Allows reading any workflow.
+  WORKFLOW_READ = 3;
+  // Allows creating, editing, and deleting workflows that the user owns.
+  WORKFLOW_WRITE = 4;
+  // Allows deploying owned workflows.
+  WORKFLOW_DEPLOY = 5;
+  // Allows reading session/timeline data.
+  SESSION_READ = 7;
+  // Allows reading issue report data.
+  ISSUE_READ = 8;
+  // Allows reading metrics data.
+  METRIC_READ = 9;
+  // Allows managing issue company settings.
+  ISSUE_ADMIN = 11;
+  // Allows reading user data for issue assignment.
+  ISSUE_ASSIGN = 12;
+  // Allows managing connectors.
+  CONNECTOR_ADMIN = 14;
+}

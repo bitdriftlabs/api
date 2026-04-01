@@ -1,0 +1,28 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.timeline.v1;
+
+import "bitdrift/public/unary/timeline/v1/hydration.proto";
+import "bitdrift/public/unary/timeline/v1/info.proto";
+import "bitdrift/public/unary/timeline/v1/logs.proto";
+
+// Provides access to session timeline data and hydration state.
+service TimelineService {
+  // Fetches the logs for a session.
+  rpc GetSessionLogs(.bitdrift.public.unary.timeline.v1.GetSessionLogsRequest) returns (.bitdrift.public.unary.timeline.v1.GetSessionLogsResponse);
+
+  // Fetches the session info for a session.
+  rpc GetSessionInfo(.bitdrift.public.unary.timeline.v1.GetSessionInfoRequest) returns (.bitdrift.public.unary.timeline.v1.GetSessionInfoResponse);
+
+  // Triggers the hydration of a session. Can be used to force a re-hydration of an already hydrated session.
+  rpc HydrateSession(.bitdrift.public.unary.timeline.v1.HydrateSessionRequest) returns (.bitdrift.public.unary.timeline.v1.HydrateSessionResponse);
+
+  // Fetches the hydration status of a session.
+  rpc GetHydrationStatus(.bitdrift.public.unary.timeline.v1.GetHydrationStatusRequest) returns (.bitdrift.public.unary.timeline.v1.GetHydrationStatusResponse);
+}
