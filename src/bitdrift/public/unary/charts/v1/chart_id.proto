@@ -1,0 +1,61 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.charts.v1;
+
+import "validate/validate.proto";
+
+message ChartIdentifier {
+  message WorkflowChart {
+    // The workflow that owns this chart.
+    string workflow_id = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // The ID of the rule node within the workflow that holds the
+    // RuleChartConfiguration for this chart.
+    string chart_rule_id = 3 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // Optional aggregated action ID to further resolve the chart to a specific time series.
+    // Currently this is only used (and required) when the FE is fetching example cardinality for
+    // a specific time series. In the future it might be used to filter the chart to a specific
+    // time series for generic display if desired when sent in the data request.
+    optional string aggregated_action_id = 4 [(validate.rules).string = {max_len: 255}];
+  }
+
+  oneof type {
+    option (validate.required) = true;
+    // A workflow-backed metric chart.
+    .bitdrift.public.unary.charts.v1.ChartIdentifier.WorkflowChart workflow = 1;
+  }
+}
+
+enum SortOrder {
+  MAX = 0;
+  MIN = 1;
+}
+
+message LimitStrategy {}
+
+message HistogramConfiguration {
+  // Pins the histograms within this chart to a specific percentile. This is
+  // required for charts that have histograms with a top K grouping as we don't
+  // support querying the cartestian product of (values, percentiles) with top
+  // K.
+  //
+  // This must be set to one of the percentiles in the ChartMetadata for the
+  // chart if percentiles are defined.
+  float percentile = 2;
+
+  // Percentiles to query when the chart supports returning multiple histogram lines.
+  repeated float percentiles = 3 [(validate.rules).repeated.max_items = 20];
+}

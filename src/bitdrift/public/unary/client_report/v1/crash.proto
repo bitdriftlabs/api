@@ -1,0 +1,193 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.client_report.v1;
+
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+enum FrameType {
+  UNKNOWN = 0;
+  DWARF = 1;
+  ANDROID_NDK = 2;
+  JVM = 3;
+  JAVASCRIPT = 4;
+}
+
+message SourceFile {
+  // The path to the source file.
+  string path = 1 [(validate.rules).string = {min_len: 1}];
+
+  int32 lineno = 2;
+
+  uint32 column = 3;
+}
+
+message Frame {
+  // The result of the symbolication process.
+  .bitdrift.public.unary.client_report.v1.FrameType frame_type = 1 [(validate.rules).enum = {defined_only: true}];
+
+  .bitdrift.public.unary.client_report.v1.SourceFile source_file = 2;
+
+  // The method or function name of the frame.
+  optional string symbol_name = 3;
+
+  // The path to the image that contains the frame.
+  optional string image_path = 4;
+
+  // Address of the current execution frame.
+  optional uint64 frame_address = 5;
+
+  // Address of the named symbol nearest above the current execution frame.
+  optional uint64 symbol_address = 6;
+
+  // The name of the symbol that was resolved during symbolication.
+  optional string symbolicated_name = 7;
+
+  // The original index of this frame before symbolication. Some languages may expand
+  // a single frame into multiple during symbolication, so keeping this field allows
+  // us to track this.
+  uint64 original_index = 8;
+
+  // Whether this frame comes from the application or from a library/third party framework.
+  bool in_app = 9;
+
+  // The starting address of the image which contains this frame
+  optional uint64 image_load_address = 10;
+
+  // The unique identifier of the image which contains this frame
+  optional string image_id = 11;
+
+  enum FrameStatus {
+    UNKNOWN = 0;
+    MISSING = 1;
+    SYMBOLICATED = 2;
+    MISSING_SYMBOL = 3;
+    UNKNOWN_IMAGE = 4;
+    MALFORMED = 5;
+  }
+
+  // The status of the frame after symbolication.
+  // This can be used to determine if the frame was successfully symbolicated or not.
+  .bitdrift.public.unary.client_report.v1.Frame.FrameStatus status = 12 [(validate.rules).enum = {defined_only: true}];
+
+  // contextual info about the frame
+  repeated string state = 13;
+}
+
+message Report {
+  message Field {
+    string key = 1 [(validate.rules).string = {min_len: 1}];
+
+    string value = 2 [(validate.rules).string = {min_len: 1}];
+  }
+
+  message Error {
+    string reason = 1 [(validate.rules).string = {min_len: 1}];
+
+    string details = 2 [(validate.rules).string = {min_len: 1}];
+
+    repeated .bitdrift.public.unary.client_report.v1.Frame frames = 3 [(validate.rules).repeated = {min_items: 1}];
+  }
+
+  message AppMetrics {
+    string app_id = 1 [(validate.rules).string = {min_len: 1}];
+
+    string version = 2 [(validate.rules).string = {min_len: 1}];
+
+    oneof build_number {
+      string bundle_version = 3;
+
+      int64 version_code = 4;
+    }
+  }
+
+  message DeviceMetrics {
+    enum Architecture {
+      UNKNOWN_ARCH = 0;
+      ARM32 = 1;
+      ARM64 = 2;
+      X86 = 3;
+      X86_64 = 4;
+    }
+
+    enum PowerState {
+      UNKNOWN_POWER_STATE = 0;
+      RUNNING_ON_BATTERY = 1;
+      PLUGGED_IN_NO_BATTERY = 2;
+      PLUGGED_IN_CHARGING = 3;
+      PLUGGED_IN_CHARGED = 4;
+    }
+
+    .google.protobuf.Timestamp time = 1 [(validate.rules).string = {min_len: 1}];
+
+    string manufacturer = 2 [(validate.rules).string = {min_len: 1}];
+
+    string model = 3 [(validate.rules).string = {min_len: 1}];
+
+    .bitdrift.public.unary.client_report.v1.Report.DeviceMetrics.Architecture architecture = 4 [(validate.rules).enum = {defined_only: true}];
+
+    // OS metrics
+    string os = 5 [(validate.rules).string = {min_len: 1}];
+
+    string os_version = 6 [(validate.rules).string = {min_len: 1}];
+
+    // Power metrics
+    .bitdrift.public.unary.client_report.v1.Report.DeviceMetrics.PowerState power_state = 7 [(validate.rules).enum = {defined_only: true}];
+
+    uint32 battery_level = 8 [(validate.rules).uint32 = {
+      gte: 0
+      lte: 100
+    }];
+
+    // The unique identifier for the user/device that generated the report.
+    string user_id = 9 [(validate.rules).string = {min_len: 1}];
+  }
+
+  message ThreadDetails {
+    message Thread {
+      // true if this thread is reporting the problem
+      bool active = 1;
+
+      // The name of the thread.
+      string name = 2;
+
+      // The ID of the thread.
+      optional uint32 index = 3;
+
+      // Platform specific state of the thread.
+      string state = 4;
+
+      // Platform specific priority of the thread.
+      // See https://github.com/bitdriftlabs/api/blob/main/src/bitdrift_public/fbs/issue-reporting/v1/report.fbs#L263-L266
+      float priority = 5;
+
+      // Apple specific quality of service.
+      optional int32 quality_of_service = 6;
+
+      // The frames of the stacktrace.
+      repeated .bitdrift.public.unary.client_report.v1.Frame frames = 7 [(validate.rules).message = {required: true}];
+    }
+
+    uint32 total_threads = 1;
+
+    repeated .bitdrift.public.unary.client_report.v1.Report.ThreadDetails.Thread threads = 2;
+  }
+
+  repeated .bitdrift.public.unary.client_report.v1.Report.Error errors = 1;
+
+  .bitdrift.public.unary.client_report.v1.Report.DeviceMetrics device_metrics = 2;
+
+  // State of the thread when the event was reported.
+  .bitdrift.public.unary.client_report.v1.Report.ThreadDetails thread_details = 3;
+
+  .bitdrift.public.unary.client_report.v1.Report.AppMetrics app_metrics = 4;
+
+  // Additional report fields captured from the client report payload.
+  repeated .bitdrift.public.unary.client_report.v1.Report.Field fields = 5;
+}

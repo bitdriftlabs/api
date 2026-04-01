@@ -1,0 +1,101 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.explorations.v1;
+
+import "bitdrift/public/unary/charts/v1/chart_metadata.proto";
+import "bitdrift/public/unary/common/v1/common.proto";
+import "bitdrift/public/unary/explorations/v1/workflow.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+// Service for managing explorations and workflows.
+service ExplorationService {
+  // Get a specific workflow for a given id.
+  // Note that calling this API will adjust the last viewed time of the workflow
+  // for the current user.
+  rpc GetWorkflow(.bitdrift.public.unary.explorations.v1.GetWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.GetWorkflowResponse);
+
+  // Get all available workflows for the logged in user.
+  rpc ListWorkflows(.bitdrift.public.unary.explorations.v1.ListWorkflowsRequest) returns (.bitdrift.public.unary.explorations.v1.ListWorkflowsResponse);
+
+  // Create a new workflow and attach it to the exploration for the given id.
+  rpc CreateWorkflow(.bitdrift.public.unary.explorations.v1.CreateWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.CreateWorkflowResponse);
+
+  // Update a given workflow in full.
+  rpc UpdateWorkflow(.bitdrift.public.unary.explorations.v1.UpdateWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.UpdateWorkflowResponse);
+
+  // Rename an existing workflow.
+  rpc RenameWorkflow(.bitdrift.public.unary.explorations.v1.RenameWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.RenameWorkflowResponse);
+
+  // Remove a workflow and detach it from the parent exploration.
+  rpc DeleteWorkflow(.bitdrift.public.unary.explorations.v1.DeleteWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.DeleteWorkflowResponse);
+
+  // Deploy and starts running an existing workflow.
+  rpc DeployWorkflow(.bitdrift.public.unary.explorations.v1.DeployWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.DeployWorkflowResponse);
+
+  // Stop an existing workflow from running.
+  rpc StopWorkflow(.bitdrift.public.unary.explorations.v1.StopWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.StopWorkflowResponse);
+
+  // Upsert workflow chart metadata.
+  rpc UpsertWorkflowChartMetadata(.bitdrift.public.unary.charts.v1.UpsertWorkflowChartMetadataRequest) returns (.bitdrift.public.unary.charts.v1.UpsertWorkflowChartMetadataResponse);
+}
+
+message FetchCapturedSessionsRequest {
+  // The action id for which insights are requested. If this is empty, this will perform a global
+  // query against all captured sessions.
+  string action_id = 1 [(validate.rules).string = {max_len: 100}];
+
+  // The start time and end time of the captured sessions.
+  .bitdrift.public.unary.common.v1.TimeRange time_range = 8;
+
+  // The page number and the number of items per page. The server will use this
+  // to paginate the results. Defaults to 1 when not set.
+  optional uint64 page = 5;
+
+  // The number of items to return per page. Defaults to 100 when not set.
+  optional uint64 per_page = 6 [(validate.rules).uint64 = {
+    gte: 1
+    lte: 100
+  }];
+}
+
+message FetchCapturedSessionsResponse {
+  message CapturedSession {
+    // The unique identifier of the captured session.
+    string session_id = 1 [(validate.rules).string = {min_len: 1}];
+
+    // The timestamp of the first log seen for this session.
+    .google.protobuf.Timestamp first_seen = 2 [(validate.rules).message = {required: true}];
+
+    // The timestamp of the most recent log seen for this session.
+    .google.protobuf.Timestamp last_seen = 7 [(validate.rules).message = {required: true}];
+
+    // The number of times the session was seen. This will always be set to 1 when performing a
+    // global search. For a per-action search, it will effectively return the number of trigger logs
+    // for the session.
+    uint64 count = 4;
+
+    // The fields associated with the captured session. They are similar to the
+    // fields in the insights.
+    map<string, string> fields = 5;
+  }
+
+  // The captured sessions that matched the request.
+  repeated .bitdrift.public.unary.explorations.v1.FetchCapturedSessionsResponse.CapturedSession captured_sessions = 2;
+
+  // The full count if all items were returned without pagination. This is artificially limited to
+  // the daily flush limit multiplied by the number of days in the time range, rounded up.
+  uint32 full_count = 3;
+}
+
+// Service for querying data collected by workflow actions such as captured sessions and time series.
+service WorkflowDataService {
+  // Fetch captured sessions matching the given criteria, optionally scoped to a specific action ID.
+  rpc FetchCapturedSessions(.bitdrift.public.unary.explorations.v1.FetchCapturedSessionsRequest) returns (.bitdrift.public.unary.explorations.v1.FetchCapturedSessionsResponse);
+}

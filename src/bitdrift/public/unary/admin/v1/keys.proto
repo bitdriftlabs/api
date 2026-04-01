@@ -1,0 +1,123 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.admin.v1;
+
+import "bitdrift/public/unary/admin/v1/permission.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message SdkKeyResponse {
+  // The actual key, base64 encoded.
+  string key = 1;
+
+  // The app/bundle ID regex that the key is associated with.
+  string bundle_id_regex = 2;
+
+  // An optional postfix for the app ID associated with the key. This will be appended to the
+  // real app_id during the handshake.
+  optional string app_id_postfix = 3;
+}
+
+message ApiKeyResponse {
+  // The fingerprint of the API key, base64 encoded. API keys are not stored by the server and
+  // cannot be recovered if lost.
+  string fingerprint = 1;
+
+  // The actual key, base64 encoded. This is *only* returned when the key is created and will be
+  // empty on subsequent responses.
+  string key = 2;
+
+  // The permissions that the key has.
+  repeated .bitdrift.public.unary.admin.v1.Permission permissions = 4;
+}
+
+message KeyResponse {
+  // The ID of the key to be used for revocation and further operations.
+  uint64 id = 1;
+
+  // The creation time of the key.
+  .google.protobuf.Timestamp created_at = 2;
+
+  // An optional expiration time for the key. If the key expires the behavior will be similar to
+  // revocation which will cause an unauthenticated response to be returned.
+  .google.protobuf.Timestamp expires_at = 3;
+
+  // Whether the key was explicitly revoked.
+  bool revoked = 4;
+
+  oneof key_type {
+    // The SDK key details when this key is an SDK key.
+    .bitdrift.public.unary.admin.v1.SdkKeyResponse sdk_key = 5;
+
+    // The API key details when this key is an API key.
+    .bitdrift.public.unary.admin.v1.ApiKeyResponse api_key = 6;
+  }
+
+  // The name of the key, used for (human) identification purposes.
+  string name = 7;
+}
+
+message GetKeysRequest {}
+
+message GetKeysResponse {
+  // The API and SDK keys visible to the authenticated user.
+  repeated .bitdrift.public.unary.admin.v1.KeyResponse keys = 1;
+}
+
+message CreateKeyRequest {
+  message SdkKeyRequest {
+    // The app/bundle ID regex that the key is associated with.
+    string bundle_id_regex = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 2048
+    }];
+
+    // An optional postfix for the app ID associated with the key. This will be appended to the
+    // real app_id during the handshake.
+    optional string app_id_postfix = 2 [(validate.rules).string = {max_len: 255}];
+  }
+
+  message ApiKeyRequest {
+    // The permissions that the key should have. Must have at least one permission.
+    repeated .bitdrift.public.unary.admin.v1.Permission permissions = 2 [(validate.rules).repeated = {
+      min_items: 1
+      max_items: 100
+      items: {
+        enum: {defined_only: true}
+      }
+    }];
+  }
+
+  oneof key_type {
+    option (validate.required) = true;
+    // Creates an SDK key.
+    .bitdrift.public.unary.admin.v1.CreateKeyRequest.SdkKeyRequest sdk_key = 1;
+
+    // Creates an API key.
+    .bitdrift.public.unary.admin.v1.CreateKeyRequest.ApiKeyRequest api_key = 2;
+  }
+
+  // The name of the key, used for (human) identification purposes.
+  string name = 3 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+message CreateKeyResponse {
+  // The created key.
+  .bitdrift.public.unary.admin.v1.KeyResponse key = 1;
+}
+
+message RevokeKeyRequest {
+  // The ID of the key to revoke.
+  uint64 id = 1;
+}
+
+message RevokeKeyResponse {}

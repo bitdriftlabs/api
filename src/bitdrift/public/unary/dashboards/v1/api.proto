@@ -1,0 +1,244 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.dashboards.v1;
+
+import "bitdrift/public/shared/explorations/v1/time_series.proto";
+import "bitdrift/public/shared/platform/v1/platform.proto";
+import "bitdrift/public/unary/charts/v1/chart_id.proto";
+import "bitdrift/public/unary/charts/v1/chart_metadata.proto";
+import "bitdrift/public/unary/common/v1/common.proto";
+import "validate/validate.proto";
+
+message InsightComparisonConfiguration {
+  // The id of the first time series to compare against.
+  string lhs_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The id of the second time series to compare against.
+  string rhs_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+message TopKConfiguration {
+  // For testing purposes this will allow us to play with different top K algorithms without extra API changes.
+  string algorithm_name = 1 [(validate.rules).string = {max_len: 255}];
+}
+
+message SankeyConfiguration {
+  // The number of top K paths to use to render the sankey chart.
+  // Defaults to 100 if not provided.
+  uint64 top_k_paths = 1;
+
+  // The size of the compaction target to use for the sankey chart. If the size of the charts
+  // exceeds this value, `other` nodes will be inserted to reduce the size of the chart. Defaults to
+  // 20 if not provided.
+  uint64 compaction_target = 2;
+}
+
+message CounterConfiguration {
+  // The aggregation to use when presenting counter values in a table.
+  .bitdrift.public.shared.explorations.v1.Counter.CounterAggregationType aggregation_type = 1 [(validate.rules).enum = {defined_only: true}];
+}
+
+message RateConfiguration {
+  // The aggregation to use when presenting rate values in a table.
+  .bitdrift.public.shared.explorations.v1.Rate.RateAggregationType aggregation_type = 1 [(validate.rules).enum = {defined_only: true}];
+}
+
+message ChartRequest {
+  // The identifier of the chart to fetch data for.
+  .bitdrift.public.unary.charts.v1.ChartIdentifier chart_id = 1 [(validate.rules).message = {required: true}];
+
+  // Optional configuration for any histogram values within the chart.
+  .bitdrift.public.unary.charts.v1.HistogramConfiguration histogram_configuration = 2;
+
+  // Optional configuration to indicate that this chart should compare two
+  // insights time series.
+  .bitdrift.public.unary.dashboards.v1.InsightComparisonConfiguration insight_comparison_configuration = 3;
+
+  // Optional configuration for the top K grouping to use for this chart.
+  .bitdrift.public.unary.dashboards.v1.TopKConfiguration top_k_configuration = 5;
+
+  // Optional limit strategy to use for this chart. Currently only supported for line charts.
+  // If this is omitted, a default value of limiting by a top k of 5 entries is used.
+  .bitdrift.public.unary.charts.v1.LimitStrategy limit_strategy = 6;
+
+  // Optional configuration for the sankey chart.
+  .bitdrift.public.unary.dashboards.v1.SankeyConfiguration sankey_configuration = 7;
+
+  // Counter configuration for the chart. Currently this is only used for resolving which table
+  // type to show in the case of a group by query.
+  .bitdrift.public.unary.dashboards.v1.CounterConfiguration counter_configuration = 8;
+
+  // Rate configuration for the chart. Currently this is only used for resolving which table
+  // type to show in the case of a group by query.
+  .bitdrift.public.unary.dashboards.v1.RateConfiguration rate_configuration = 9;
+
+  // Override the display mode for this chart.
+  // Uses the same oneof structure as RuleChartConfiguration.display_mode.
+  // If unset it will use the display mode defined in the workflow's rule chart configuration.
+  oneof display_mode {
+    .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesDisplayMode time_series_display_mode = 10;
+
+    .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TableDisplayMode table_display_mode = 11;
+
+    // This is only valid if all time series in the chart are histograms.
+    .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HistogramBarChartDisplayMode histogram_bar_chart_display_mode = 12;
+  }
+}
+
+message GetChartsDataRequest {
+  // List of all charts to fetch data for.
+  repeated .bitdrift.public.unary.dashboards.v1.ChartRequest charts = 1 [(validate.rules).repeated = {
+    min_items: 1
+    max_items: 100
+  }];
+
+  .bitdrift.public.unary.common.v1.TimeRange time_range = 8;
+
+  // If this is empty, the platform filter for the workflow backing each chart will be used.
+  repeated .bitdrift.public.shared.platform.v1.Platform platform_filter = 6 [(validate.rules).repeated.max_items = 25];
+
+  // Optional filter to apply on top of the platform filter. This is AND against the platform
+  // filter (either supplied or the one from the workflow backing each chart).
+  .bitdrift.public.shared.explorations.v1.AndFilter and_filter = 7;
+}
+
+// Used for line charts, they're just a list of time series.
+message LineChartResponse {
+  // The time series to render in the chart.
+  repeated .bitdrift.public.shared.explorations.v1.TimeSeries time_series = 1;
+}
+
+message TableChartResponse {
+  // The tables to render for this chart.
+  repeated .bitdrift.public.unary.dashboards.v1.Table tables = 1;
+}
+
+message Table {
+  // Headers for the columns of each group by field (for example, "country", "device_type",
+  // etc.). If there are no group by fields this will be empty.
+  repeated string group_column_key_names = 1;
+
+  // Headers for the columns that contain aggregated values (for example P99, Min, etc.).
+  repeated string value_column_key_names = 2;
+
+  // Each row in the table represents one unique combination of group-by columns.
+  repeated .bitdrift.public.unary.dashboards.v1.TableRow rows = 3;
+
+  // The unique devices for the entire table based on the TrackUnique configuration.
+  optional uint64 unique_devices = 4;
+
+  // The title of table, which is derived from the TimeSeries title in the rule chart config.
+  string title = 5;
+
+  // The total count of cardinality overflows for this time series that occurred during the
+  // query time period.
+  .bitdrift.public.shared.explorations.v1.CardinalityOverflows cardinality_overflows = 6;
+}
+
+message TableValue {
+  // The numeric value for this cell.
+  double value = 1;
+
+  // For rate tables, returns the numerator and denominator values that yielded this value.
+  .bitdrift.public.shared.explorations.v1.RateDetails rate_details = 2;
+}
+
+message TableRow {
+  // Values that match `group_column_key_names`.
+  repeated string group_column_values = 1;
+
+  // Values that match `value_column_key_names`.
+  repeated .bitdrift.public.unary.dashboards.v1.TableValue aggregated_values = 2;
+
+  // The unique devices count based on the TrackUnique configuration.
+  optional uint64 unique_devices = 3;
+}
+
+message HistogramBarChartResponse {
+  message Bucket {
+    // The beginning of the range for this bucket, inclusive.
+    double begin = 1;
+
+    // The end of the range for this bucket, exclusive.
+    double end = 2;
+
+    // The count of values that fall within this bucket's range.
+    uint64 count = 3;
+  }
+
+  message PerGroupBy {
+    // The value of the dimension that this group represents.
+    repeated string dimensions = 1;
+
+    // The list of buckets for this histogram bar chart.
+    repeated .bitdrift.public.unary.dashboards.v1.HistogramBarChartResponse.Bucket buckets = 2;
+
+    // The unique devices for the entire table based on the TrackUnique configuration.
+    optional uint64 unique_devices = 3;
+  }
+
+  message PerTimeSeries {
+    // Headers for the columns of each group by field (for example, "country", "device_type",
+    // etc.). If there are no group by fields this will be empty.
+    repeated string dimension_names = 1;
+
+    // The title of the histogram data, which is derived from the TimeSeries title in the rule chart
+    // config.
+    string title = 2;
+
+    // The total count of cardinality overflows for this time series that occurred during the
+    // query time period.
+    .bitdrift.public.shared.explorations.v1.CardinalityOverflows cardinality_overflows = 3;
+
+    // A set of buckets for every group by combination for this time series. If there are no group
+    // by fields, there will be a single entry in this list.
+    repeated .bitdrift.public.unary.dashboards.v1.HistogramBarChartResponse.PerGroupBy per_group_by = 4;
+  }
+
+  // Histogram data for each time series in the chart.
+  repeated .bitdrift.public.unary.dashboards.v1.HistogramBarChartResponse.PerTimeSeries per_time_series = 1;
+}
+
+message ChartData {
+  // The chart that this data belongs to.
+  .bitdrift.public.unary.charts.v1.ChartIdentifier chart_id = 1 [(validate.rules).message = {required: true}];
+
+  oneof chart_response {
+    option (validate.required) = true;
+    // Line-chart data for the chart.
+    .bitdrift.public.unary.dashboards.v1.LineChartResponse line_data = 3;
+
+    // Table data for the chart.
+    .bitdrift.public.unary.dashboards.v1.TableChartResponse table_data = 8;
+
+    // Histogram-bar-chart data for the chart.
+    .bitdrift.public.unary.dashboards.v1.HistogramBarChartResponse histogram_bar_chart_response = 10;
+
+    // Returned if there was an error retrieving the data for the chart. The FE should indicate
+    // some form of loading error and make this error available in console for debugging.
+    string error = 6;
+  }
+}
+
+message GetChartsDataResponse {
+  // Data for each of the requested data. The order of the data will match the
+  // order of the chart ids in the request.
+  repeated .bitdrift.public.unary.dashboards.v1.ChartData data = 1;
+}
+
+service DashboardService {
+  // Gets chart data for a list of charts.
+  rpc GetChartsData(.bitdrift.public.unary.dashboards.v1.GetChartsDataRequest) returns (.bitdrift.public.unary.dashboards.v1.GetChartsDataResponse);
+}

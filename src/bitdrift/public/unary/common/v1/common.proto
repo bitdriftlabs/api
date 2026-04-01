@@ -1,0 +1,100 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.common.v1;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message Owner {
+  // The email address of this owner.
+  string email = 1 [(validate.rules).string = {max_len: 255}];
+
+  // The raw ID of this owner.
+  string id = 2 [(validate.rules).string = {max_len: 100}];
+
+  optional string name = 3 [(validate.rules).string = {max_len: 100}];
+}
+
+message Sort {
+  enum Direction {
+    ASC = 0;
+    DESC = 1;
+  }
+
+  // The field to sort by.
+  string field = 1 [(validate.rules).string = {max_len: 100}];
+
+  // The direction to sort by.
+  .bitdrift.public.unary.common.v1.Sort.Direction direction = 2 [(validate.rules).enum = {defined_only: true}];
+}
+
+enum Operator {
+  // The operator supports a list of the elements on the right side.
+  // The API supports a single string as the value on the right side of the
+  // operator so we follow a convention when you can provide multiple values
+  // in a single string by separating them with a '~~' string.
+  // When a list of values is provided, this is equivalent to a logical IN
+  EQUAL = 0;
+  // The operator supports a list of the elements on the right side.
+  // The API supports a single string as the value on the right side of the
+  // operator so we follow a convention when you can provide multiple values
+  // in a single string by separating them with a '~~' string.
+  // When a list of values is provided, this is equivalent to a logical NOT IN
+  NOT_EQUAL = 1;
+  GREATER_THAN = 2;
+  GREATER_THAN_OR_EQUAL = 3;
+  LESS_THAN = 4;
+  LESS_THAN_OR_EQUAL = 5;
+  // A simplified regex syntax, where '*' is the wildcard character and '?'
+  // matches a single character and there are no other special characters.
+  //
+  // Matches are always made against the entire string.
+  // If the string contains only a leading and trailing wildcard, this will be evaluated as CONTAINS.
+  WILDCARD = 6;
+  // A negation of the WILDCARD operator.
+  NOT_WILDCARD = 7;
+  // Explicitly matches the field against a list of values, with a logical IN.
+  // The API supports a single string as the value on the right side of the
+  // operator so we follow a convention when you can provide multiple values
+  // in a single string by separating them with a '~~' string.
+  IN = 9;
+  // A negation of the IN operator.
+  NOT_IN = 10;
+}
+
+message TimeRange {
+  message FixedTimeRange {
+    // The start time of the time range.
+    .google.protobuf.Timestamp start_time = 1 [(validate.rules).message = {required: true}];
+
+    // The end time of the time range.
+    .google.protobuf.Timestamp end_time = 2 [(validate.rules).message = {required: true}];
+  }
+
+  message RelativeTimeRange {
+    // The duration back from 'now' for the start of the time range.
+    .google.protobuf.Duration duration = 1 [(validate.rules).message = {required: true}];
+
+    // An optional offset to apply to both the start and end times.
+    .google.protobuf.Duration offset = 2;
+  }
+
+  oneof time_range_type {
+    option (validate.required) = true;
+    // A fixed time range with explicit start and end times. This will ignore any look back delay
+    // settings.
+    .bitdrift.public.unary.common.v1.TimeRange.FixedTimeRange fixed_time_range = 1;
+
+    // A relative time range, defined as a duration back from 'now', minus any look back delay.
+    // If this is 15 minutes, and the lookback delay is 5 minutes, this represents the time range
+    // from 20 minutes ago to 5 minutes ago.
+    .bitdrift.public.unary.common.v1.TimeRange.RelativeTimeRange relative_time_range = 2;
+  }
+}

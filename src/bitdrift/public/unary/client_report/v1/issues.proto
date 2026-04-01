@@ -1,0 +1,395 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.client_report.v1;
+
+import "bitdrift/public/shared/platform/v1/platform.proto";
+import "bitdrift/public/unary/client_report/v1/crash.proto";
+import "bitdrift/public/unary/common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+// An advanced filter that allows for complex filtering of issue groups.
+// Each condition can specify a left-hand side (lhs), an operator, a right-hand side (rhs),
+// and a match type. The match type determines how the rhs is interpreted (e.g., as a string, integer, semver, or double).
+// This is useful for filtering issue groups based on specific attributes or properties.
+// The conditions are applied in a logical AND fashion, meaning that all conditions must be satisfied for an issue group to match the filter.
+//
+// The conditions contained within each OrCondition are ORed together, and the overall list of OrConditions are ANDed together.
+// i.e. [condition1 OR condition2] AND [condition3] AND [condition4]
+//
+// AdvancedFilter {
+//  andConditions:
+//   [
+//     OrCondition{
+//       orConditions: [
+//         Condition{lhs: "app_id", operator: EQUAL, rhs: "com.example.app"},
+//         Condition{lhs: "app_id", operator: EQUAL, rhs: "com.example.app2"}
+//       ]
+//     },
+//     OrCondition{orConditions: [Condition{lhs: "platform", operator: EQUAL, rhs: "ANDROID"}]}
+//   ]
+// }
+message AdvancedFilter {
+  message Condition {
+    string lhs = 1 [(validate.rules).string = {max_len: 100}];
+
+    .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
+
+    string rhs = 3 [(validate.rules).string = {max_len: 255}];
+  }
+
+  message OrCondition {
+    // The conditions that are ORed together.
+    repeated .bitdrift.public.unary.client_report.v1.AdvancedFilter.Condition or_conditions = 1 [(validate.rules).repeated = {max_items: 100}];
+  }
+
+  repeated .bitdrift.public.unary.client_report.v1.AdvancedFilter.OrCondition and_conditions = 1 [(validate.rules).repeated = {max_items: 100}];
+}
+
+message FeatureFlagFilter {
+  string name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The variant of the feature flag to filter by. If not specified, all variants are included.
+  optional string variant = 2 [(validate.rules).string = {max_len: 100}];
+
+  // Only include issues that are exclusively associated with this feature flag (and variant, if specified). This implies that
+  // this feature flag was always active when the issue occurred.
+  bool exclusive = 3;
+}
+
+// Limits what issues are being queried for an endpoint. For issue group queries, this limits which issues are considered when listing issue groups.
+message IssueQuery {
+  .bitdrift.public.unary.common.v1.TimeRange time_range = 7;
+
+  // The platforms to filter by.
+  repeated .bitdrift.public.shared.platform.v1.Platform platforms = 3 [(validate.rules).repeated = {max_items: 100}];
+
+  // The advanced filters to apply to the issue query.
+  .bitdrift.public.unary.client_report.v1.AdvancedFilter advanced_filters = 4;
+
+  // The group ID(s) to filter by. Only issues belonging to these group IDs will be returned.
+  repeated string grouping_key = 5 [(validate.rules).repeated = {max_items: 100}];
+
+  // The feature flag filters to apply to the issue query. Only issues that had the specified feature flags active will be returned.
+  repeated .bitdrift.public.unary.client_report.v1.FeatureFlagFilter feature_flag_filters = 6 [(validate.rules).repeated = {max_items: 100}];
+}
+
+enum IssueGroupStatus {
+  NEW = 0;
+  IN_PROGRESS = 3;
+  FIXED = 4;
+  REOPENED = 5;
+  IGNORED = 6;
+  SNOOZED = 7;
+}
+
+// Limits what issue groups are being queried for an endpoint.
+message IssueGroupQuery {
+  // The assignee(s) of an issue group to filter by.
+  repeated .bitdrift.public.unary.common.v1.Owner assignee = 1 [(validate.rules).repeated = {max_items: 100}];
+
+  // The status(es) of issue groups to filter by.
+  repeated .bitdrift.public.unary.client_report.v1.IssueGroupStatus issue_group_status = 2 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      enum: {defined_only: true}
+    }
+  }];
+}
+
+// An aggregate of the number of instances of the issue group.
+// With the count being the sum of instances within a time window.
+message Event {
+  // The timestamp at which the time window begins.
+  .google.protobuf.Timestamp period_start = 1 [(validate.rules).message = {required: true}];
+
+  // The number of instances within the time window.
+  uint64 count = 2;
+}
+
+message IssueGroup {
+  message Metadata {
+    // The type of the issue group metadata. i.e. Crash, ANR, Exception, etc.
+    string type = 1;
+
+    // The reason behind the issue group metadata. i.e. OutOfMemoryError, NullPointerException, etc.
+    string reason = 2;
+
+    // Additional context about the issue group metadata. i.e. file name, function name, etc. This is used
+    // as part of the issue grouping key.
+    optional string context = 3;
+
+    // The details of the issue group metadata. i.e. stack trace, error message, etc. This is *not* used
+    // as part of the issue grouping key. This will be the details associated with one of the issues in
+    // the group and is not necessarily representative of the entire group.
+    optional string details = 4;
+
+    // The platform and app_id associated with the issue group.
+    .bitdrift.public.shared.platform.v1.Platform platform = 5 [(validate.rules).message = {required: true}];
+  }
+
+  message Stats {
+    // The first time the issue group was seen within the time range.
+    .google.protobuf.Timestamp first_seen = 1 [(validate.rules).message = {required: true}];
+
+    // The last time the issue group was seen within the time range.
+    .google.protobuf.Timestamp last_seen = 2 [(validate.rules).message = {required: true}];
+
+    // The first time any report was seen for this issue group.
+    .google.protobuf.Timestamp first_report_seen = 6 [(validate.rules).message = {required: true}];
+
+    // The number of unique users that have experienced this issue.
+    uint64 user_count = 3;
+
+    repeated .bitdrift.public.unary.client_report.v1.Event events = 4;
+
+    // The number of unique sessions in which this issue was reported
+    uint64 session_count = 5;
+  }
+
+  // The unique identifier for the issue group.
+  string id = 1;
+
+  // The metadata for the issue group.
+  .bitdrift.public.unary.client_report.v1.IssueGroup.Metadata metadata = 2;
+
+  // The platform on which the issue group occurred.
+  // Once we support React Native for issues/crashes, we may encounter issues that span multiple platforms.
+  // Most of the time we expect this to be a single platform.
+  repeated .bitdrift.public.shared.platform.v1.Platform platform = 3;
+
+  // The stats for the issue group _BEFORE_ filters are applied.
+  .bitdrift.public.unary.client_report.v1.IssueGroup.Stats stats = 4;
+
+  // The assignees of the issue group.
+  repeated .bitdrift.public.unary.common.v1.Owner assignees = 5;
+
+  // The status of the issue group.
+  .bitdrift.public.unary.client_report.v1.IssueGroupStatus status = 6;
+
+  // The stats for the issue group _AFTER_ filters are applied.
+  .bitdrift.public.unary.client_report.v1.IssueGroup.Stats filtered_stats = 7;
+
+  // The latest version/version code of the application when marked as fixed
+  oneof resolution_version {
+    string version = 8;
+
+    // android-specific version field
+    int64 version_code = 9;
+  }
+}
+
+message GetIssueGroupRequest {
+  // The unique identifier for the issue group.
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  .bitdrift.public.unary.client_report.v1.IssueQuery issue_query = 6;
+}
+
+message GetIssueGroupResponse {
+  // The issue group.
+  .bitdrift.public.unary.client_report.v1.IssueGroup issue_group = 1 [(validate.rules).message = {required: true}];
+}
+
+message ListIssueGroupsRequest {
+  // Used to paginate through results. To get the next page result, set this to
+  // the desired starting offset. For example, setting to 10 will start with the
+  // 10th record. The default value is 0.
+  optional uint32 offset = 1;
+
+  // This defines the upper bound of the number of items returned. The maximum
+  // value supported is 100, meaning that we’ll never return more than
+  // max(items.count, limit, 100).
+  optional uint32 limit = 2 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
+
+  // Sort the list of issues based on the given list of fields. The order of the fields
+  // in this list determines the order in which sort is applied.
+  repeated .bitdrift.public.unary.common.v1.Sort sort_by = 4 [(validate.rules).repeated = {max_items: 100}];
+
+  .bitdrift.public.unary.client_report.v1.IssueQuery issue_query = 5;
+
+  .bitdrift.public.unary.client_report.v1.IssueGroupQuery issue_group_query = 6;
+}
+
+message ListIssueGroupsResponse {
+  // The issue groups.
+  repeated .bitdrift.public.unary.client_report.v1.IssueGroup issue_groups = 1;
+
+  uint32 total_issue_groups = 2;
+}
+
+message GetIssueRequest {
+  // The unique identifier for the issue.
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The unique identifier for the issue group this issue belongs to.
+  string issue_group_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message Issue {
+  // The reason for the issue. This should match the reason in the issue group.
+  string reason = 1 [(validate.rules).string = {min_len: 1}];
+
+  // The grouping context for the crash. This should match the grouping context in the issue group.
+  string context = 2 [(validate.rules).string = {min_len: 1}];
+
+  // The extra details for the issue. This will not necessarily match the details in the issue group.
+  string details = 3 [(validate.rules).string = {min_len: 1}];
+
+  // When the issue occurred.
+  .google.protobuf.Timestamp time = 4 [(validate.rules).message = {required: true}];
+
+  // Information about the device that the issue occurred on.
+  .bitdrift.public.shared.platform.v1.Platform platform = 5 [(validate.rules).message = {required: true}];
+
+  string app_id = 6 [(validate.rules).message = {required: true}];
+
+  string app_version = 7 [(validate.rules).message = {required: true}];
+
+  string build_id = 8 [(validate.rules).message = {required: true}];
+
+  string model = 9 [(validate.rules).message = {required: true}];
+
+  bool foreground = 15;
+
+  string network_type = 16 [(validate.rules).string = {min_len: 1}];
+
+  string radio_type = 17 [(validate.rules).string = {min_len: 1}];
+
+  string locale = 18 [(validate.rules).string = {min_len: 1}];
+
+  string report_type = 19 [(validate.rules).string = {min_len: 1}];
+
+  .bitdrift.public.unary.client_report.v1.Report report = 12 [(validate.rules).message = {required: true}];
+
+  // The unique identifier for the issue.
+  string id = 13 [(validate.rules).string = {min_len: 1}];
+
+  // The unique id of the session that this issue occurred within.
+  optional string session_id = 14 [(validate.rules).string = {min_len: 1}];
+}
+
+message GetIssueResponse {
+  .bitdrift.public.unary.client_report.v1.Issue issue = 12;
+
+  enum Status {
+    FOUND = 0;
+    // No reference to the issue was found.
+    NOT_FOUND = 1;
+    // The issue is still pending processing (or something went wrong).
+    PENDING = 2;
+    // The issue was processed but an error occurred during processing which prevents the stacktrace from being available.
+    // Note that we don't expose the failure reason as this is not useful to the user.
+    FAILED = 3;
+  }
+
+  // The status of the issue. If set to FOUND, the issue was found and the details are available.
+  .bitdrift.public.unary.client_report.v1.GetIssueResponse.Status status = 13 [(validate.rules).enum = {defined_only: true}];
+}
+
+message ListIssuesRequest {
+  message ListIssuesFilters {
+    message Platform {
+      // The platform of an issue group to filter by.
+      repeated .bitdrift.public.shared.platform.v1.Platform value = 1 [(validate.rules).repeated = {max_items: 100}];
+    }
+
+    message TimeRange {
+      .bitdrift.public.unary.common.v1.TimeRange time_range = 3;
+    }
+
+    oneof type {
+      option (validate.required) = true;
+      // Filters on the platform of issues.
+      .bitdrift.public.unary.client_report.v1.ListIssuesRequest.ListIssuesFilters.Platform platform = 1;
+
+      // Filters on the time range of issues.
+      .bitdrift.public.unary.client_report.v1.ListIssuesRequest.ListIssuesFilters.TimeRange time_range = 2;
+
+      // Filters on the advanced filters of issues.
+      .bitdrift.public.unary.client_report.v1.AdvancedFilter advanced_filters = 6;
+    }
+  }
+
+  // The unique identifier for the issue group this issue belongs to.
+  string issue_group_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // Used to paginate through results. To get the next page result, set this to
+  // the desired starting offset. For example, setting to 10 will start with the
+  // 10th record. The default value is 0.
+  uint32 offset = 2;
+
+  // This defines the upper bound of the number of items returned. The maximum
+  // value supported is 100, meaning that we’ll never return more than
+  // max(items.count, limit, 100).
+  optional uint32 limit = 3 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
+
+  // Filter the list of issues based on the current user's relationship to
+  // the issue. This is a logical AND. If no filters are supplied, all
+  // issues are returned.
+  repeated .bitdrift.public.unary.client_report.v1.ListIssuesRequest.ListIssuesFilters filters = 4 [(validate.rules).repeated = {max_items: 100}];
+
+  // Sort the list of issues based on the given list of fields. The order of the fields
+  // in this list determines the order in which sort is applied.
+  repeated .bitdrift.public.unary.common.v1.Sort sort_by = 5 [(validate.rules).repeated = {max_items: 100}];
+
+  .bitdrift.public.unary.client_report.v1.IssueQuery issue_query = 6;
+}
+
+message ListIssuesResponse {
+  // The issue groups.
+  repeated .bitdrift.public.unary.client_report.v1.Issue issues = 1;
+
+  uint32 total_issues = 2;
+}
+
+message GetIssueFeatureFlagsRequest {
+  // The unique identifier for the issue.
+  string issue_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message GetIssueFeatureFlagsResponse {
+  message FeatureFlag {
+    // The name of the feature flag.
+    string name = 1 [(validate.rules).string = {min_len: 1}];
+
+    // The variant of the feature flag, if applicable.
+    optional string variant = 2 [(validate.rules).string = {min_len: 1}];
+
+    // The last time the feature flag was modified prior to the issue occurring.
+    .google.protobuf.Timestamp modified_at = 3 [(validate.rules).message = {required: true}];
+  }
+
+  // The feature flags active when the issue occurred.
+  repeated .bitdrift.public.unary.client_report.v1.GetIssueFeatureFlagsResponse.FeatureFlag feature_flags = 1;
+}
