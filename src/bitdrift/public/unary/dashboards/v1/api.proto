@@ -238,7 +238,8 @@ message GetChartsDataResponse {
   repeated .bitdrift.public.unary.dashboards.v1.ChartData data = 1;
 }
 
+// Provides access to dashboards and chart data, including layout and time series metrics.
 service DashboardService {
-  // Gets chart data for a list of charts.
+  // Retrieves chart data for one or more charts.
   rpc GetChartsData(.bitdrift.public.unary.dashboards.v1.GetChartsDataRequest) returns (.bitdrift.public.unary.dashboards.v1.GetChartsDataResponse);
 }

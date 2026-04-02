@@ -10,14 +10,20 @@ package bitdrift.public.unary.client_report.v1;
 
 import "bitdrift/public/unary/client_report/v1/issues.proto";
 
+// Manages crash and issue tracking, including issue groups, individual issues, and feature flag analysis.
 service ClientReportService {
+  // Lists issue groups matching the specified filter criteria.
   rpc ListIssueGroups(.bitdrift.public.unary.client_report.v1.ListIssueGroupsRequest) returns (.bitdrift.public.unary.client_report.v1.ListIssueGroupsResponse);
 
+  // Retrieves a single issue group by ID.
   rpc GetIssueGroup(.bitdrift.public.unary.client_report.v1.GetIssueGroupRequest) returns (.bitdrift.public.unary.client_report.v1.GetIssueGroupResponse);
 
+  // Retrieves a single issue by ID.
   rpc GetIssue(.bitdrift.public.unary.client_report.v1.GetIssueRequest) returns (.bitdrift.public.unary.client_report.v1.GetIssueResponse);
 
+  // Lists issues matching the specified filter criteria.
   rpc ListIssues(.bitdrift.public.unary.client_report.v1.ListIssuesRequest) returns (.bitdrift.public.unary.client_report.v1.ListIssuesResponse);
 
+  // Retrieves the feature flags associated with an issue.
   rpc GetIssueFeatureFlags(.bitdrift.public.unary.client_report.v1.GetIssueFeatureFlagsRequest) returns (.bitdrift.public.unary.client_report.v1.GetIssueFeatureFlagsResponse);
 }

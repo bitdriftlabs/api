@@ -11,7 +11,7 @@ package bitdrift.public.unary.admin.v1;
 import "bitdrift/public/unary/admin/v1/connector.proto";
 import "bitdrift/public/unary/admin/v1/keys.proto";
 
-// AdminService defines unary RPCs for administrative actions that can be performed by users with the appropriate permissions. These include managing Slack app installations, notification groups, views, API/SDK keys, users, teams, and connectors.
+// Manages administrative settings including Slack integrations, notification groups, views, API/SDK keys, users, teams, and connectors.
 service AdminService {
   // Lists the API and SDK keys available to the authenticated user.
   rpc GetKeys(.bitdrift.public.unary.admin.v1.GetKeysRequest) returns (.bitdrift.public.unary.admin.v1.GetKeysResponse);
@@ -22,12 +22,12 @@ service AdminService {
   // Revokes an API key or SDK key by ID.
   rpc RevokeKey(.bitdrift.public.unary.admin.v1.RevokeKeyRequest) returns (.bitdrift.public.unary.admin.v1.RevokeKeyResponse);
 
-  // Gets all connectors for the calling account.
+  // Lists all connectors for the organization.
   rpc GetConnectors(.bitdrift.public.unary.admin.v1.GetConnectorsRequest) returns (.bitdrift.public.unary.admin.v1.GetConnectorsResponse);
 
-  // Upsert a connector for the calling account.
+  // Creates or updates a connector for the organization.
   rpc UpsertConnector(.bitdrift.public.unary.admin.v1.UpsertConnectorRequest) returns (.bitdrift.public.unary.admin.v1.UpsertConnectorResponse);
 
-  // Delete a connector for the calling account.
+  // Deletes a connector by ID.
   rpc DeleteConnector(.bitdrift.public.unary.admin.v1.DeleteConnectorRequest) returns (.bitdrift.public.unary.admin.v1.DeleteConnectorResponse);
 }

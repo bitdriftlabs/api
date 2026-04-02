@@ -100,7 +100,7 @@ message ChartMetadata {
       // selection, sort order).
       optional .bitdrift.public.unary.charts.v1.LimitStrategy limit_strategy = 4;
 
-      // Optional top K algorithm variant to use for this time series.
+      // The top K algorithm to use for this time series to determine which K time series are selected for group by time series.
       optional .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.TopKAlgorithm top_k_algorithm = 5 [(validate.rules).enum = {defined_only: true}];
 
       // Configuration for exporting data to a connector.
