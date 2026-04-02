@@ -6,11 +6,11 @@
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 syntax = "proto3";
 
-package bitdrift.public.unary.explorations.v1;
+package bitdrift.public.unary.workflows.v1;
 
 import "bitdrift/public/unary/charts/v1/chart_metadata.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
-import "bitdrift/public/unary/explorations/v1/workflow.proto";
+import "bitdrift/public/unary/workflows/v1/workflow.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
@@ -20,38 +20,38 @@ import "validate/validate.proto";
 // journeys and collecting telemetry around them. A workflow is made up of a series of
 // flows that describe the user journey and rules that specify when users transition
 // between flows.
-service ExplorationService {
+service WorkflowService {
   // Retrieves a workflow by ID.
   //
   // Also updates the last viewed time of the workflow for the current user.
-  rpc GetWorkflow(.bitdrift.public.unary.explorations.v1.GetWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.GetWorkflowResponse);
+  rpc GetWorkflow(.bitdrift.public.unary.workflows.v1.GetWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.GetWorkflowResponse);
 
   // Lists all workflows available to the authenticated user.
-  rpc ListWorkflows(.bitdrift.public.unary.explorations.v1.ListWorkflowsRequest) returns (.bitdrift.public.unary.explorations.v1.ListWorkflowsResponse);
+  rpc ListWorkflows(.bitdrift.public.unary.workflows.v1.ListWorkflowsRequest) returns (.bitdrift.public.unary.workflows.v1.ListWorkflowsResponse);
 
   // Creates a new workflow.
-  rpc CreateWorkflow(.bitdrift.public.unary.explorations.v1.CreateWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.CreateWorkflowResponse);
+  rpc CreateWorkflow(.bitdrift.public.unary.workflows.v1.CreateWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.CreateWorkflowResponse);
 
   // Updates a workflow, replacing the existing configuration with the provided definition.
-  rpc UpdateWorkflow(.bitdrift.public.unary.explorations.v1.UpdateWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.UpdateWorkflowResponse);
+  rpc UpdateWorkflow(.bitdrift.public.unary.workflows.v1.UpdateWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.UpdateWorkflowResponse);
 
   // Renames a workflow without modifying any other fields.
-  rpc RenameWorkflow(.bitdrift.public.unary.explorations.v1.RenameWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.RenameWorkflowResponse);
+  rpc RenameWorkflow(.bitdrift.public.unary.workflows.v1.RenameWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.RenameWorkflowResponse);
 
   // Deletes a workflow permanently.
   //
   // This removes the workflow and its configuration from the system. This operation
   // is irreversible.
-  rpc DeleteWorkflow(.bitdrift.public.unary.explorations.v1.DeleteWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.DeleteWorkflowResponse);
+  rpc DeleteWorkflow(.bitdrift.public.unary.workflows.v1.DeleteWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.DeleteWorkflowResponse);
 
   // Deploys a workflow, making it active and able to receive traffic.
   //
   // Deploying creates a new immutable version of the workflow configuration that
   // is recorded in the deployment history.
-  rpc DeployWorkflow(.bitdrift.public.unary.explorations.v1.DeployWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.DeployWorkflowResponse);
+  rpc DeployWorkflow(.bitdrift.public.unary.workflows.v1.DeployWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.DeployWorkflowResponse);
 
   // Stops a running workflow.
-  rpc StopWorkflow(.bitdrift.public.unary.explorations.v1.StopWorkflowRequest) returns (.bitdrift.public.unary.explorations.v1.StopWorkflowResponse);
+  rpc StopWorkflow(.bitdrift.public.unary.workflows.v1.StopWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.StopWorkflowResponse);
 
   // Creates or updates chart metadata for a workflow.
   //
@@ -102,7 +102,7 @@ message FetchCapturedSessionsResponse {
   }
 
   // The captured sessions that matched the request.
-  repeated .bitdrift.public.unary.explorations.v1.FetchCapturedSessionsResponse.CapturedSession captured_sessions = 2;
+  repeated .bitdrift.public.unary.workflows.v1.FetchCapturedSessionsResponse.CapturedSession captured_sessions = 2;
 
   // The full count if all items were returned without pagination. This is artificially limited to
   // the daily flush limit multiplied by the number of days in the time range, rounded up.
@@ -112,5 +112,5 @@ message FetchCapturedSessionsResponse {
 // Queries data collected by workflow actions, such as captured sessions.
 service WorkflowDataService {
   // Fetches captured sessions matching the given criteria, optionally scoped to a specific action.
-  rpc FetchCapturedSessions(.bitdrift.public.unary.explorations.v1.FetchCapturedSessionsRequest) returns (.bitdrift.public.unary.explorations.v1.FetchCapturedSessionsResponse);
+  rpc FetchCapturedSessions(.bitdrift.public.unary.workflows.v1.FetchCapturedSessionsRequest) returns (.bitdrift.public.unary.workflows.v1.FetchCapturedSessionsResponse);
 }

@@ -6,7 +6,7 @@
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 syntax = "proto3";
 
-package bitdrift.public.unary.client_report.v1;
+package bitdrift.public.unary.issues.v1;
 
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
@@ -30,9 +30,9 @@ message SourceFile {
 
 message Frame {
   // The result of the symbolication process.
-  .bitdrift.public.unary.client_report.v1.FrameType frame_type = 1 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.unary.issues.v1.FrameType frame_type = 1 [(validate.rules).enum = {defined_only: true}];
 
-  .bitdrift.public.unary.client_report.v1.SourceFile source_file = 2;
+  .bitdrift.public.unary.issues.v1.SourceFile source_file = 2;
 
   // The method or function name of the frame.
   optional string symbol_name = 3;
@@ -74,7 +74,7 @@ message Frame {
 
   // The status of the frame after symbolication.
   // This can be used to determine if the frame was successfully symbolicated or not.
-  .bitdrift.public.unary.client_report.v1.Frame.FrameStatus status = 12 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.unary.issues.v1.Frame.FrameStatus status = 12 [(validate.rules).enum = {defined_only: true}];
 
   // contextual info about the frame
   repeated string state = 13;
@@ -92,7 +92,7 @@ message Report {
 
     string details = 2 [(validate.rules).string = {min_len: 1}];
 
-    repeated .bitdrift.public.unary.client_report.v1.Frame frames = 3 [(validate.rules).repeated = {min_items: 1}];
+    repeated .bitdrift.public.unary.issues.v1.Frame frames = 3 [(validate.rules).repeated = {min_items: 1}];
   }
 
   message AppMetrics {
@@ -130,7 +130,7 @@ message Report {
 
     string model = 3 [(validate.rules).string = {min_len: 1}];
 
-    .bitdrift.public.unary.client_report.v1.Report.DeviceMetrics.Architecture architecture = 4 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.issues.v1.Report.DeviceMetrics.Architecture architecture = 4 [(validate.rules).enum = {defined_only: true}];
 
     // OS metrics
     string os = 5 [(validate.rules).string = {min_len: 1}];
@@ -138,7 +138,7 @@ message Report {
     string os_version = 6 [(validate.rules).string = {min_len: 1}];
 
     // Power metrics
-    .bitdrift.public.unary.client_report.v1.Report.DeviceMetrics.PowerState power_state = 7 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.issues.v1.Report.DeviceMetrics.PowerState power_state = 7 [(validate.rules).enum = {defined_only: true}];
 
     uint32 battery_level = 8 [(validate.rules).uint32 = {
       gte: 0
@@ -171,23 +171,23 @@ message Report {
       optional int32 quality_of_service = 6;
 
       // The frames of the stacktrace.
-      repeated .bitdrift.public.unary.client_report.v1.Frame frames = 7 [(validate.rules).message = {required: true}];
+      repeated .bitdrift.public.unary.issues.v1.Frame frames = 7 [(validate.rules).message = {required: true}];
     }
 
     uint32 total_threads = 1;
 
-    repeated .bitdrift.public.unary.client_report.v1.Report.ThreadDetails.Thread threads = 2;
+    repeated .bitdrift.public.unary.issues.v1.Report.ThreadDetails.Thread threads = 2;
   }
 
-  repeated .bitdrift.public.unary.client_report.v1.Report.Error errors = 1;
+  repeated .bitdrift.public.unary.issues.v1.Report.Error errors = 1;
 
-  .bitdrift.public.unary.client_report.v1.Report.DeviceMetrics device_metrics = 2;
+  .bitdrift.public.unary.issues.v1.Report.DeviceMetrics device_metrics = 2;
 
   // State of the thread when the event was reported.
-  .bitdrift.public.unary.client_report.v1.Report.ThreadDetails thread_details = 3;
+  .bitdrift.public.unary.issues.v1.Report.ThreadDetails thread_details = 3;
 
-  .bitdrift.public.unary.client_report.v1.Report.AppMetrics app_metrics = 4;
+  .bitdrift.public.unary.issues.v1.Report.AppMetrics app_metrics = 4;
 
   // Additional report fields captured from the client report payload.
-  repeated .bitdrift.public.unary.client_report.v1.Report.Field fields = 5;
+  repeated .bitdrift.public.unary.issues.v1.Report.Field fields = 5;
 }

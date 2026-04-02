@@ -59,10 +59,16 @@ message ChartMetadata {
             max_len: 255
           }];
 
+          // The CloudWatch metric name to emit within the configured namespace.
+          string metric_name = 2 [(validate.rules).string = {
+            min_len: 1
+            max_len: 255
+          }];
+
           // A set of fixed dimensions to include with every metric emitted to Cloudwatch. These
           // dimensions will be added in addition to any dimensions specified by the time series
           // query.
-          map<string, string> fixed_dimensions = 2 [(validate.rules).map.max_pairs = 10];
+          map<string, string> fixed_dimensions = 3 [(validate.rules).map.max_pairs = 10];
         }
 
         // The name of the connector to which data will be exported. The connector should have

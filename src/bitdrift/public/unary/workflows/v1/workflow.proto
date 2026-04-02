@@ -6,11 +6,11 @@
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 syntax = "proto3";
 
-package bitdrift.public.unary.explorations.v1;
+package bitdrift.public.unary.workflows.v1;
 
 import "bitdrift/public/shared/platform/v1/platform.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
-import "bitdrift/public/unary/explorations/v1/workflow_metadata.proto";
+import "bitdrift/public/unary/workflows/v1/workflow_metadata.proto";
 import "bitdrift_public/protobuf/workflow/v1/save_field.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -19,7 +19,7 @@ import "validate/validate.proto";
 message GroupBy {
   message StateValue {
     // The scope of the state value. See `StateScope` for more details about what the different scopes are available.
-    .bitdrift.public.unary.explorations.v1.StateScope scope = 1 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.workflows.v1.StateScope scope = 1 [(validate.rules).enum = {defined_only: true}];
 
     // The key of the state value. This is used to look up the value in the state map based on the provided scope.
     string key = 2 [(validate.rules).string = {max_len: 100}];
@@ -36,12 +36,12 @@ message GroupBy {
       bool log_body = 2;
 
       // Setting this instructs the engine to read a value out of the state map based on the provided scope and key and use that as a dimension for the generated metric. The key becomes the resulting metric dimension name.
-      .bitdrift.public.unary.explorations.v1.GroupBy.StateValue state_value = 3;
+      .bitdrift.public.unary.workflows.v1.GroupBy.StateValue state_value = 3;
     }
   }
 
   // Values to group by. This generates additional dimensions for the generated insights and allows for more granular filtering in dashboards. For example, if you have a metric of error count with a group by value of error type, the collected metrics will include an error type dimension.
-  repeated .bitdrift.public.unary.explorations.v1.GroupBy.Value values = 6 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.workflows.v1.GroupBy.Value values = 6 [(validate.rules).repeated = {max_items: 100}];
 }
 
 message Workflow {
@@ -68,16 +68,16 @@ message Workflow {
   // as independent paths through the workflow graph. Each step contains one match rule. Steps can
   // also contain exit conditions that allow resetting to the initial step in the flow based on
   // match rules or timeouts.
-  repeated .bitdrift.public.unary.explorations.v1.Flow flows = 27 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.workflows.v1.Flow flows = 27 [(validate.rules).repeated = {max_items: 100}];
 
   // The actions that make up this workflow. Each action is associated with one or more match IDs
   // that are embedded in the steps of the flows. Individual actions may have restrictions on what
   // referential match IDs they can be associated with. See the documentation for each action type
   // for more details.
-  repeated .bitdrift.public.unary.explorations.v1.ActionRule actions = 28 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.workflows.v1.ActionRule actions = 28 [(validate.rules).repeated = {max_items: 100}];
 
   // The current deployment state of the workflow.
-  .bitdrift.public.unary.explorations.v1.Workflow.WorkflowState state = 7 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.unary.workflows.v1.Workflow.WorkflowState state = 7 [(validate.rules).enum = {defined_only: true}];
 
   // Creation date of the workflow.
   .google.protobuf.Timestamp created_at = 8;
@@ -116,7 +116,7 @@ message Flow {
   }
 
   // The steps that make up this flow.
-  repeated .bitdrift.public.unary.explorations.v1.Step steps = 1 [(validate.rules).repeated = {
+  repeated .bitdrift.public.unary.workflows.v1.Step steps = 1 [(validate.rules).repeated = {
     min_items: 1
     max_items: 100
   }];
@@ -124,13 +124,13 @@ message Flow {
   oneof flow_execution_type {
     // Any match on the initial step causes the flow to reset. This is the default if not
     // specified.
-    .bitdrift.public.unary.explorations.v1.Flow.ExclusiveFlow exclusive = 2;
+    .bitdrift.public.unary.workflows.v1.Flow.ExclusiveFlow exclusive = 2;
 
     // Multiple "runs" of the flow can occur in parallel. Runs are replaced FIFO if the active
     // runs exceeds max_active_runs. A new run that matches and extracts the same field values
     // on the initial step as an existing active run will replace the existing run. This
     // execution mode is primarily used for flows that correlate on a specific field value.
-    .bitdrift.public.unary.explorations.v1.Flow.ParallelFlow parallel = 3;
+    .bitdrift.public.unary.workflows.v1.Flow.ParallelFlow parallel = 3;
   }
 }
 
@@ -148,24 +148,24 @@ message Step {
       }];
 
       // The timeout rule.
-      .bitdrift.public.unary.explorations.v1.Rule.RuleTimeout timeout_rule = 2;
+      .bitdrift.public.unary.workflows.v1.Rule.RuleTimeout timeout_rule = 2;
     }
 
     oneof exit_condition_type {
       // Exits on a match condition.
-      .bitdrift.public.unary.explorations.v1.MatchRule match_rule = 1;
+      .bitdrift.public.unary.workflows.v1.MatchRule match_rule = 1;
 
       // Exits on a timeout condition.
-      .bitdrift.public.unary.explorations.v1.Step.ExitCondition.TimeoutExit timeout = 2;
+      .bitdrift.public.unary.workflows.v1.Step.ExitCondition.TimeoutExit timeout = 2;
     }
   }
 
   // The step's match rule. This rule must be satisfied to advance to the next step in the flow.
-  .bitdrift.public.unary.explorations.v1.MatchRule match_rule = 1;
+  .bitdrift.public.unary.workflows.v1.MatchRule match_rule = 1;
 
   // Zero or more exit conditions for the step. If an exit condition is met, the flow resets to the
   // start of the flow.
-  repeated .bitdrift.public.unary.explorations.v1.Step.ExitCondition exit_conditions = 2 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.workflows.v1.Step.ExitCondition exit_conditions = 2 [(validate.rules).repeated = {max_items: 100}];
 
   // Describes an optional loop condition that allows looping back to a previous step in the flow.
   // Must point to the match ID in the same step or a step earlier in the flow. Specifying a looping
@@ -192,15 +192,15 @@ message MatchRule {
 
   oneof match_condition_type {
     // A match defined by the user.
-    .bitdrift.public.unary.explorations.v1.GenericMatch generic_match = 2;
+    .bitdrift.public.unary.workflows.v1.GenericMatch generic_match = 2;
 
     // An out-of-the-box match for common events that don't require custom field extraction. This is
     // used for common app events like app launch, app background, etc.
-    .bitdrift.public.unary.explorations.v1.OotbMatch ootb_match = 3;
+    .bitdrift.public.unary.workflows.v1.OotbMatch ootb_match = 3;
 
     // A state change match that looks for changes in the value of a particular state key. This is
     // used for matching on changes in state like connectivity, battery level, etc.
-    .bitdrift.public.unary.explorations.v1.StateChangeMatch state_change_match = 4;
+    .bitdrift.public.unary.workflows.v1.StateChangeMatch state_change_match = 4;
   }
 
   // The % chance that a match will occur if the condition matches. This is the numerator of the
@@ -211,20 +211,20 @@ message MatchRule {
 
 message StateChangeMatch {
   // Match conditions for the previous state. Leave empty to only match on the new value.
-  .bitdrift.public.unary.explorations.v1.StateCondition from = 1;
+  .bitdrift.public.unary.workflows.v1.StateCondition from = 1;
 
   // Match conditions for the updated state. Leave empty to only match on the old value.
-  .bitdrift.public.unary.explorations.v1.StateCondition to = 2;
+  .bitdrift.public.unary.workflows.v1.StateCondition to = 2;
 
   // The scope of the state value being observed.
-  .bitdrift.public.unary.explorations.v1.StateScope scope = 3 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.unary.workflows.v1.StateScope scope = 3 [(validate.rules).enum = {defined_only: true}];
 
   // The key of the state value within the given scope.
   string key = 4 [(validate.rules).string = {max_len: 100}];
 
   // Additional match conditions for this OOTB event. This is an AND in addition to the
   // previously defined event.
-  .bitdrift.public.unary.explorations.v1.GenericMatch generic_match = 5;
+  .bitdrift.public.unary.workflows.v1.GenericMatch generic_match = 5;
 }
 
 message OotbMatch {
@@ -335,25 +335,25 @@ message OotbMatch {
   oneof condition_type {
     option (validate.required) = true;
     // A cross-platform OOTB condition that applies to all supported platforms.
-    .bitdrift.public.unary.explorations.v1.OotbMatch.GenericOotbConditionType.GenericOotbConditionType generic_condition = 1 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.workflows.v1.OotbMatch.GenericOotbConditionType.GenericOotbConditionType generic_condition = 1 [(validate.rules).enum = {defined_only: true}];
 
     // An Android-specific OOTB condition.
-    .bitdrift.public.unary.explorations.v1.OotbMatch.AndroidOotbConditionType.AndroidOotbConditionType android_condition = 2 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.workflows.v1.OotbMatch.AndroidOotbConditionType.AndroidOotbConditionType android_condition = 2 [(validate.rules).enum = {defined_only: true}];
 
     // An Apple-specific OOTB condition.
-    .bitdrift.public.unary.explorations.v1.OotbMatch.AppleOotbConditionType.AppleOotbConditionType apple_condition = 3 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.workflows.v1.OotbMatch.AppleOotbConditionType.AppleOotbConditionType apple_condition = 3 [(validate.rules).enum = {defined_only: true}];
   }
 
   // Additional match conditions for this OOTB event. This is an AND in addition to the
   // previously defined event.
-  .bitdrift.public.unary.explorations.v1.GenericMatch generic_match = 4;
+  .bitdrift.public.unary.workflows.v1.GenericMatch generic_match = 4;
 }
 
 message GenericMatch {
   message GenericMatchCondition {
     message StateKey {
       // The scope of the state key to look up.
-      .bitdrift.public.unary.explorations.v1.StateScope scope = 1 [(validate.rules).enum = {defined_only: true}];
+      .bitdrift.public.unary.workflows.v1.StateScope scope = 1 [(validate.rules).enum = {defined_only: true}];
 
       // The key within the given scope to read the value from.
       string key = 2 [(validate.rules).string = {max_len: 100}];
@@ -370,11 +370,11 @@ message GenericMatch {
       string log_field_json_path = 3 [(validate.rules).string = {max_len: 255}];
 
       // A state value specified by the scope and key.
-      .bitdrift.public.unary.explorations.v1.GenericMatch.GenericMatchCondition.StateKey state_key = 4;
+      .bitdrift.public.unary.workflows.v1.GenericMatch.GenericMatchCondition.StateKey state_key = 4;
     }
 
     // The operator of the conditional.
-    .bitdrift.public.unary.explorations.v1.Operator operator = 5 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.workflows.v1.Operator operator = 5 [(validate.rules).enum = {defined_only: true}];
 
     // Right hand side of the conditional. This is the value we want to match
     // against. Depending on the operator this might be a number, a version, a
@@ -400,21 +400,21 @@ message GenericMatch {
   // A list of two or more matchers. Used to allow using a list within a oneof for and/or matching.
   message MatcherList {
     // The child matchers to evaluate together.
-    repeated .bitdrift.public.unary.explorations.v1.GenericMatch matchers = 1 [(validate.rules).repeated = {max_items: 100}];
+    repeated .bitdrift.public.unary.workflows.v1.GenericMatch matchers = 1 [(validate.rules).repeated = {max_items: 100}];
   }
 
   oneof matcher {
     // A single predicate to evaluate.
-    .bitdrift.public.unary.explorations.v1.GenericMatch.GenericMatchCondition base_matcher = 1;
+    .bitdrift.public.unary.workflows.v1.GenericMatch.GenericMatchCondition base_matcher = 1;
 
     // A list of predicates to be OR-ed together.
-    .bitdrift.public.unary.explorations.v1.GenericMatch.MatcherList or_matcher = 2;
+    .bitdrift.public.unary.workflows.v1.GenericMatch.MatcherList or_matcher = 2;
 
     // A list of predicates to be AND-ed together.
-    .bitdrift.public.unary.explorations.v1.GenericMatch.MatcherList and_matcher = 3;
+    .bitdrift.public.unary.workflows.v1.GenericMatch.MatcherList and_matcher = 3;
 
     // An inversion of a predicate.
-    .bitdrift.public.unary.explorations.v1.GenericMatch.GenericMatchCondition not_matcher = 4;
+    .bitdrift.public.unary.workflows.v1.GenericMatch.GenericMatchCondition not_matcher = 4;
   }
 }
 
@@ -431,22 +431,22 @@ message ActionRule {
 
   oneof action_rule_type {
     // A metric chart action.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration metric_chart_rule = 2;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration metric_chart_rule = 2;
 
     // A flush action.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleFlushConfiguration flush_rule = 3;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleFlushConfiguration flush_rule = 3;
 
     // A funnel action.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleFunnelConfiguration funnel_rule = 4;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleFunnelConfiguration funnel_rule = 4;
 
     // A sankey diagram action.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleSankeyDiagramConfiguration sankey_diagram_rule = 5;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleSankeyDiagramConfiguration sankey_diagram_rule = 5;
 
     // A measure time action.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleMeasureTime measure_time_rule = 7;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleMeasureTime measure_time_rule = 7;
 
     // If specified the current session will begin trace sampling.
-    .bitdrift.public.unary.explorations.v1.RuleStartTracing start_tracing_rule = 8;
+    .bitdrift.public.unary.workflows.v1.RuleStartTracing start_tracing_rule = 8;
   }
 }
 
@@ -472,7 +472,7 @@ message Rule {
 
   message RuleStateChangeConfiguration {
     // The state change that must be observed to match this rule.
-    .bitdrift.public.unary.explorations.v1.LegacyStateChangeMatch state_changes = 1;
+    .bitdrift.public.unary.workflows.v1.LegacyStateChangeMatch state_changes = 1;
 
     // An array of conditionals that need to match in order to advance in the
     // graph. The first dimension of the conditionals array is the OR'ed, the
@@ -490,7 +490,7 @@ message Rule {
     // no way to pass log fields to state changes.
     //
     // `log` and `log_level` are not available in this context.
-    repeated .bitdrift.public.unary.explorations.v1.Conditional conditionals = 2 [(validate.rules).repeated = {max_items: 100}];
+    repeated .bitdrift.public.unary.workflows.v1.Conditional conditionals = 2 [(validate.rules).repeated = {max_items: 100}];
   }
 
   message RuleOOTBConfiguration {
@@ -501,7 +501,7 @@ message Rule {
     // Operating system this rule is meant to match. The combination of the os
     // and the event_id defines the conditionals that are going to be computed
     // for this rule.
-    .bitdrift.public.unary.explorations.v1.Rule.OperatingSystem os = 2 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.workflows.v1.Rule.OperatingSystem os = 2 [(validate.rules).enum = {defined_only: true}];
 
     // An array of conditionals that need to match in order to advance in the
     // graph. The first dimension of the conditionals array is the OR'ed, the
@@ -513,7 +513,7 @@ message Rule {
     // ]
     //
     // ...means (A==a AND B==b) OR (A==c)
-    repeated .bitdrift.public.unary.explorations.v1.Conditional conditionals = 3 [(validate.rules).repeated = {max_items: 100}];
+    repeated .bitdrift.public.unary.workflows.v1.Conditional conditionals = 3 [(validate.rules).repeated = {max_items: 100}];
   }
 
   message RuleFlushConfiguration {
@@ -554,10 +554,10 @@ message Rule {
       // and computing the ratio server-side.
       message Rate {
         // The data reference to use for the rate numerator.
-        .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.DataReference numerator = 1 [(validate.rules).message = {required: true}];
+        .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.DataReference numerator = 1 [(validate.rules).message = {required: true}];
 
         // The data reference to use for the rate denominator.
-        .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.DataReference denominator = 2 [(validate.rules).message = {required: true}];
+        .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.DataReference denominator = 2 [(validate.rules).message = {required: true}];
 
         // The server-generated ID for this rate metric. This can be used to
         // query for the metric.
@@ -571,7 +571,7 @@ message Rule {
         // will select a limited number of time series based on a top K lookup
         // of the most relevant time series. If the group by is not set, the
         // generated chart will show the time series as a single line.
-        .bitdrift.public.unary.explorations.v1.GroupBy group_by = 5;
+        .bitdrift.public.unary.workflows.v1.GroupBy group_by = 5;
       }
 
       // A histogram metric that is going to be generated for this time series.
@@ -579,14 +579,14 @@ message Rule {
       // extracted value, aggregated server-side.
       message Histogram {
         // The data reference whose values will be recorded in the histogram.
-        .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.DataReference value = 1 [(validate.rules).message = {required: true}];
+        .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.DataReference value = 1 [(validate.rules).message = {required: true}];
 
         // An optional group by configuration for the time series. The chart
         // will select a limited number of time series based on a top K lookup
         // of the most relevant time series. If the group by is not set, the
         // generated chart will show the time series with one line per (P50,
         // P90, P99) percentile.
-        .bitdrift.public.unary.explorations.v1.GroupBy group_by = 2;
+        .bitdrift.public.unary.workflows.v1.GroupBy group_by = 2;
 
         // The server-generated ID for this histogram metric. This can be used
         // to query for the metric.
@@ -597,13 +597,13 @@ message Rule {
       // is done by emitting a counter with the extracted value.
       message Count {
         // The data reference whose values will be emitted into the counter.
-        .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.DataReference value = 1 [(validate.rules).message = {required: true}];
+        .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.DataReference value = 1 [(validate.rules).message = {required: true}];
 
         // An optional group by configuration for the time series. The chart
         // will select a limited number of time series based on a top K lookup
         // of the most relevant time series. If the group by is not set, the
         // generated chart will show the time series as a single line.
-        .bitdrift.public.unary.explorations.v1.GroupBy group_by = 2;
+        .bitdrift.public.unary.workflows.v1.GroupBy group_by = 2;
 
         // The server-generated ID for this count metric. This can be used to
         // query for the metric.
@@ -616,7 +616,7 @@ message Rule {
       // is implicit.
       message AverageCount {
         // The data reference to use for the average count numerator.
-        .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.DataReference numerator = 1 [(validate.rules).message = {required: true}];
+        .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.DataReference numerator = 1 [(validate.rules).message = {required: true}];
 
         // The server-generated ID for this rate metric. This can be used to
         // query for the metric.
@@ -630,7 +630,7 @@ message Rule {
         // will select a limited number of time series based on a top K lookup
         // of the most relevant time series. If the group by is not set, the
         // generated chart will show the time series as a single line.
-        .bitdrift.public.unary.explorations.v1.GroupBy group_by = 5;
+        .bitdrift.public.unary.workflows.v1.GroupBy group_by = 5;
       }
 
       message TrackUnique {
@@ -644,16 +644,16 @@ message Rule {
       oneof type {
         option (validate.required) = true;
         // A rate metric time series.
-        .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.TimeSeries.Rate rate = 1;
+        .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries.Rate rate = 1;
 
         // A histogram metric time series.
-        .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.TimeSeries.Histogram histogram = 2;
+        .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries.Histogram histogram = 2;
 
         // A count metric time series.
-        .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.TimeSeries.Count count = 3;
+        .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries.Count count = 3;
 
         // An average count metric time series.
-        .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.TimeSeries.AverageCount average_count = 10;
+        .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries.AverageCount average_count = 10;
       }
 
       // This is the normalized ID for the time series. It is the ID that ends up being used in
@@ -661,11 +661,11 @@ message Rule {
       string aggregated_id = 8 [(validate.rules).string = {max_len: 100}];
 
       // Whether to track unique contributions to each aggregation interval for this time series.
-      .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.TimeSeries.TrackUnique track_unique = 9;
+      .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries.TrackUnique track_unique = 9;
     }
 
     // Explicit lists of time series to generate for this rule.
-    repeated .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration.TimeSeries time_series = 4 [(validate.rules).repeated = {max_items: 100}];
+    repeated .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries time_series = 4 [(validate.rules).repeated = {max_items: 100}];
   }
 
   message RuleSankeyDiagramConfiguration {
@@ -697,7 +697,7 @@ message Rule {
     // information that remains stable between updates.
     //
     // All target nodes *must* be within the same flow.
-    repeated .bitdrift.public.unary.explorations.v1.Rule.RuleSankeyDiagramConfiguration.Node nodes = 1 [(validate.rules).repeated = {max_items: 100}];
+    repeated .bitdrift.public.unary.workflows.v1.Rule.RuleSankeyDiagramConfiguration.Node nodes = 1 [(validate.rules).repeated = {max_items: 100}];
 
     // The server-generated ID for this rule action. This uniquely identifies the Sankey diagram
     // in a way which is consistent between workflows that define the same Sankey diagram.
@@ -708,7 +708,7 @@ message Rule {
     // Operating system this rule is meant to match. The combination of the os
     // and the conditionals defines the conditionals that are going to be
     // computed for this rule.
-    .bitdrift.public.unary.explorations.v1.Rule.OperatingSystem os = 1 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.workflows.v1.Rule.OperatingSystem os = 1 [(validate.rules).enum = {defined_only: true}];
 
     // An array of conditionals that need to match in order to advance in the
     // graph. The first dimension of the conditionals array is the OR'ed, the
@@ -720,7 +720,7 @@ message Rule {
     // ]
     //
     // ...means (A==a AND B==b) OR (A==c)
-    repeated .bitdrift.public.unary.explorations.v1.Conditional conditionals = 2 [(validate.rules).repeated = {max_items: 100}];
+    repeated .bitdrift.public.unary.workflows.v1.Conditional conditionals = 2 [(validate.rules).repeated = {max_items: 100}];
   }
 
   message RuleFunnelConfiguration {
@@ -738,7 +738,7 @@ message Rule {
   message RuleMeasureTime {
     message MeasureTimeCondition {
       // The operator to use when evaluating the duration threshold.
-      .bitdrift.public.unary.explorations.v1.Operator operator = 2 [(validate.rules).enum.defined_only = true];
+      .bitdrift.public.unary.workflows.v1.Operator operator = 2 [(validate.rules).enum.defined_only = true];
 
       // The duration threshold to use when evaluating the condition.
       .google.protobuf.Duration duration_threshold = 3 [(validate.rules).message = {required: true}];
@@ -774,7 +774,7 @@ message Rule {
 
     // An optional condition to check when time measurement is complete. If specified, actions that
     // target the match_id of this rule will only be triggered if the condition is met.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleMeasureTime.MeasureTimeCondition measure_time_condition = 8;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleMeasureTime.MeasureTimeCondition measure_time_condition = 8;
   }
 
   // This is valid anywhere a generic match or OOTB match rule is allowed, including attached to
@@ -791,7 +791,7 @@ message Rule {
     uint32 duration = 1 [(validate.rules).uint32.gt = 0];
 
     // The unit for the timeout duration value.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleTimeout.DurationUnit duration_unit = 2 [(validate.rules).enum.defined_only = true];
+    .bitdrift.public.unary.workflows.v1.Rule.RuleTimeout.DurationUnit duration_unit = 2 [(validate.rules).enum.defined_only = true];
   }
 
   // Rule identifier. It must be unique across the workflow it belongs to.
@@ -802,41 +802,41 @@ message Rule {
   oneof configuration {
     option (validate.required) = true;
     // Represents the rule for logs we provide out of the box in our SDKs.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleOOTBConfiguration ootb = 3;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleOOTBConfiguration ootb = 3;
 
     // Represents a rule that can match logs, filtering the body or fields.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleMatchConfiguration match = 4;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleMatchConfiguration match = 4;
 
     // This is an action rule that can be used to collect metrics and display
     // them in a chart.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleMetricChartConfiguration chart = 5;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration chart = 5;
 
     // This is an action rule that flushes the circular buffers to the server.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleFlushConfiguration flush = 6;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleFlushConfiguration flush = 6;
 
     // This is an action rule that can be used to collect metrics in every step
     // of the workflow and display them in a funnel chart.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleFunnelConfiguration funnel = 7;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleFunnelConfiguration funnel = 7;
 
     // This represents a rule that can be used as the start of the workflow,
     // allowing multiple initial conditions for the workflow to be specified.
     // This rule is neither a matcher nor an action: it just provides a starting
     // point for the workflow.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleStartConfiguration start = 9;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleStartConfiguration start = 9;
 
     // An action rule used to collect dynamic paths visited by a workflow,
     // along with statistics on the frequency of visits for each path.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleSankeyDiagramConfiguration sankey_diagram = 10;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleSankeyDiagramConfiguration sankey_diagram = 10;
 
     // An action rule used to generate a log with the time difference between to
     // other nodes.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleMeasureTime measure_time = 12;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleMeasureTime measure_time = 12;
 
     // Timeout rule transition.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleTimeout timeout = 16;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleTimeout timeout = 16;
 
     // A rule that matches on state changes.
-    .bitdrift.public.unary.explorations.v1.Rule.RuleStateChangeConfiguration state_change = 17;
+    .bitdrift.public.unary.workflows.v1.Rule.RuleStateChangeConfiguration state_change = 17;
   }
 }
 
@@ -890,10 +890,10 @@ enum Operator {
 
 message StateCondition {
   // The type used to interpret the value for comparison.
-  .bitdrift.public.unary.explorations.v1.MatchType match_type = 1 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.unary.workflows.v1.MatchType match_type = 1 [(validate.rules).enum = {defined_only: true}];
 
   // The comparison operator.
-  .bitdrift.public.unary.explorations.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.unary.workflows.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
 
   // The value to compare against.
   string value = 3 [(validate.rules).string = {max_len: 255}];
@@ -901,13 +901,13 @@ message StateCondition {
 
 message LegacyStateChangeMatch {
   // Match conditions for the previous state. Leave empty to only match on the new value.
-  .bitdrift.public.unary.explorations.v1.StateCondition from = 1;
+  .bitdrift.public.unary.workflows.v1.StateCondition from = 1;
 
   // Match conditions for the updated state. Leave empty to only match on the old value.
-  .bitdrift.public.unary.explorations.v1.StateCondition to = 2;
+  .bitdrift.public.unary.workflows.v1.StateCondition to = 2;
 
   // The scope of the state value being observed.
-  .bitdrift.public.unary.explorations.v1.StateScope scope = 3 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.unary.workflows.v1.StateScope scope = 3 [(validate.rules).enum = {defined_only: true}];
 
   // The key of the state value within the given scope.
   string key = 4 [(validate.rules).string = {max_len: 100}];
@@ -925,10 +925,10 @@ message Conditional {
 
     // If lhs_scope is not set, `lhs` is assumed to be a field in the log or
     // the message if the lhs is 'log'.
-    .bitdrift.public.unary.explorations.v1.StateScope lhs_state_scope = 11 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.workflows.v1.StateScope lhs_state_scope = 11 [(validate.rules).enum = {defined_only: true}];
 
     // The operator of the conditional.
-    .bitdrift.public.unary.explorations.v1.Operator operator = 3 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.workflows.v1.Operator operator = 3 [(validate.rules).enum = {defined_only: true}];
 
     // Right hand side of the conditional. This is the value we want to match
     // against. Depending on the operator this might be a number, a version, a
@@ -936,7 +936,7 @@ message Conditional {
     string rhs = 4 [(validate.rules).string = {max_len: 1024}];
 
     // The type to which the right hand side (rhs) will be interpreted as.
-    .bitdrift.public.unary.explorations.v1.MatchType match_type = 5 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.workflows.v1.MatchType match_type = 5 [(validate.rules).enum = {defined_only: true}];
 
     // Whether the left hand side (lhs) is a json path string entered manually
     // by the user.
@@ -944,7 +944,7 @@ message Conditional {
   }
 
   // In this dimension, we chain all conditions with ANDs.
-  repeated .bitdrift.public.unary.explorations.v1.Conditional.Condition conditions = 1 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.workflows.v1.Conditional.Condition conditions = 1 [(validate.rules).repeated = {max_items: 100}];
 }
 
 message Violation {
@@ -967,13 +967,13 @@ message GetWorkflowRequest {
 
 message GetWorkflowResponse {
   // The workflow that was retrieved in full.
-  .bitdrift.public.unary.explorations.v1.Workflow workflow = 1;
+  .bitdrift.public.unary.workflows.v1.Workflow workflow = 1;
 
   // The metadata for the workflow.
-  .bitdrift.public.unary.explorations.v1.WorkflowMetadata metadata = 3;
+  .bitdrift.public.unary.workflows.v1.WorkflowMetadata metadata = 3;
 
   // The chart metadata that applies to this workflow.
-  repeated .bitdrift.public.unary.explorations.v1.PerRuleChartMetadata per_rule_chart_metadata = 4;
+  repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 4;
 }
 
 message Filter {
@@ -988,16 +988,16 @@ message Filter {
   oneof type {
     option (validate.required) = true;
     // Filters on whether the current user owns the entity.
-    .bitdrift.public.unary.explorations.v1.Filter.Owned owned = 1;
+    .bitdrift.public.unary.workflows.v1.Filter.Owned owned = 1;
 
     // Filters on whether the current user does not own the entity.
-    .bitdrift.public.unary.explorations.v1.Filter.Unowned unowned = 2;
+    .bitdrift.public.unary.workflows.v1.Filter.Unowned unowned = 2;
 
     // Filters on whether the current user has favorited the entity.
-    .bitdrift.public.unary.explorations.v1.Filter.Favorites favorites = 3;
+    .bitdrift.public.unary.workflows.v1.Filter.Favorites favorites = 3;
 
     // Filters on whether the entity is active.
-    .bitdrift.public.unary.explorations.v1.Filter.Active active = 4;
+    .bitdrift.public.unary.workflows.v1.Filter.Active active = 4;
   }
 }
 
@@ -1018,7 +1018,7 @@ message ListWorkflowsRequest {
   // Filter the list of workflows based on the current user's relationship to
   // the workflow. This is a logical OR. If no filters are supplied, all
   // workflows are returned.
-  repeated .bitdrift.public.unary.explorations.v1.Filter filters = 3 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.workflows.v1.Filter filters = 3 [(validate.rules).repeated = {max_items: 100}];
 
   // Sort the list of workflows based on the given list of fields. The order of the fields
   // in this list determines the order in which sort is applied.
@@ -1032,11 +1032,11 @@ message ListWorkflowsRequest {
 message ListWorkflowsResponse {
   message Item {
     // The workflow returned for this list item.
-    .bitdrift.public.unary.explorations.v1.Workflow workflow = 1;
+    .bitdrift.public.unary.workflows.v1.Workflow workflow = 1;
   }
 
   // An array of workflow objects. See Workflow for details about the object.
-  repeated .bitdrift.public.unary.explorations.v1.ListWorkflowsResponse.Item items = 1;
+  repeated .bitdrift.public.unary.workflows.v1.ListWorkflowsResponse.Item items = 1;
 
   // The total number of workflows (regardless of pagination).
   uint32 total_workflows = 2;
@@ -1053,14 +1053,14 @@ message CreateWorkflowRequest {
   string exploration_id = 1 [(validate.rules).string = {max_len: 100}];
 
   // The workflow configuration to create.
-  .bitdrift.public.unary.explorations.v1.Workflow workflow = 2;
+  .bitdrift.public.unary.workflows.v1.Workflow workflow = 2;
 
   // Optional metadata to attach to the workflow.
-  .bitdrift.public.unary.explorations.v1.WorkflowMetadata metadata = 3;
+  .bitdrift.public.unary.workflows.v1.WorkflowMetadata metadata = 3;
 
   // Optional chart metadata to attach. This is useful inline with workflow updates to provide
   // defaults for rules with charts attached.
-  repeated .bitdrift.public.unary.explorations.v1.PerRuleChartMetadata per_rule_chart_metadata = 5 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 5 [(validate.rules).repeated = {max_items: 100}];
 }
 
 message CreateWorkflowResponse {
@@ -1075,15 +1075,15 @@ message UpdateWorkflowRequest {
 
   // The updated workflow. This should be the entire workflow with all changes applied, not just the
   // delta. The server will apply the changes and return the fully updated workflow in the response.
-  .bitdrift.public.unary.explorations.v1.Workflow workflow = 3;
+  .bitdrift.public.unary.workflows.v1.Workflow workflow = 3;
 
   // Optional updated metadata to attach to the workflow. Metadata can always be changed while
   // the workflow is deployed.
-  .bitdrift.public.unary.explorations.v1.WorkflowMetadata metadata = 4;
+  .bitdrift.public.unary.workflows.v1.WorkflowMetadata metadata = 4;
 
   // Optional chart metadata to attach. This is useful inline with workflow updates to provide
   // defaults for rules with charts attached.
-  repeated .bitdrift.public.unary.explorations.v1.PerRuleChartMetadata per_rule_chart_metadata = 6 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 6 [(validate.rules).repeated = {max_items: 100}];
 }
 
 message UpdateWorkflowResponse {
@@ -1102,7 +1102,7 @@ message UpdateWorkflowResponse {
 
     oneof violation_type {
       // A chart was modified in a way that would invalidate an attached alert.
-      .bitdrift.public.unary.explorations.v1.UpdateWorkflowResponse.BlockingViolation.ModifiedChartHasAlert modified_chart_has_alert = 1;
+      .bitdrift.public.unary.workflows.v1.UpdateWorkflowResponse.BlockingViolation.ModifiedChartHasAlert modified_chart_has_alert = 1;
     }
   }
 
@@ -1110,16 +1110,16 @@ message UpdateWorkflowResponse {
   // violations, this will be the state of the workflow before the update. Most violations are
   // held until deployment time as we expect the user to have broken workflows during development,
   // but some need user action right away.
-  .bitdrift.public.unary.explorations.v1.Workflow workflow = 1;
+  .bitdrift.public.unary.workflows.v1.Workflow workflow = 1;
 
   // The updated metadata with all server-generated fields.
-  .bitdrift.public.unary.explorations.v1.WorkflowMetadata metadata = 4;
+  .bitdrift.public.unary.workflows.v1.WorkflowMetadata metadata = 4;
 
   // The chart metadata that applies to this workflow.
-  repeated .bitdrift.public.unary.explorations.v1.PerRuleChartMetadata per_rule_chart_metadata = 6;
+  repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 6;
 
   // If non-empty, the operation failed. These are violations that need to be resolved before the workflow can be updated.
-  repeated .bitdrift.public.unary.explorations.v1.UpdateWorkflowResponse.BlockingViolation violations = 3;
+  repeated .bitdrift.public.unary.workflows.v1.UpdateWorkflowResponse.BlockingViolation violations = 3;
 }
 
 message RenameWorkflowRequest {
@@ -1132,13 +1132,13 @@ message RenameWorkflowRequest {
 
 message RenameWorkflowResponse {
   // The renamed workflow with all server-generated fields.
-  .bitdrift.public.unary.explorations.v1.Workflow workflow = 1;
+  .bitdrift.public.unary.workflows.v1.Workflow workflow = 1;
 
   // The metadata after rename.
-  .bitdrift.public.unary.explorations.v1.WorkflowMetadata metadata = 3;
+  .bitdrift.public.unary.workflows.v1.WorkflowMetadata metadata = 3;
 
   // The chart metadata that applies to this workflow.
-  repeated .bitdrift.public.unary.explorations.v1.PerRuleChartMetadata per_rule_chart_metadata = 4;
+  repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 4;
 }
 
 message DeleteWorkflowRequest {
@@ -1153,7 +1153,7 @@ message DeleteWorkflowResponse {
   }
 
   // If non-empty, the operation failed. These are violations that need to be resolved before the workflow can be deleted.
-  repeated .bitdrift.public.unary.explorations.v1.DeleteWorkflowResponse.Violation violations = 1;
+  repeated .bitdrift.public.unary.workflows.v1.DeleteWorkflowResponse.Violation violations = 1;
 }
 
 message DeployWorkflowRequest {
@@ -1164,16 +1164,16 @@ message DeployWorkflowRequest {
 message DeployWorkflowResponse {
   // If non-empty, the deploy failed due to the configuration not being
   // convertible to a valid client workflow.
-  repeated .bitdrift.public.unary.explorations.v1.Violation violations = 1;
+  repeated .bitdrift.public.unary.workflows.v1.Violation violations = 1;
 
   // The mutated workflow after deployment.
-  .bitdrift.public.unary.explorations.v1.Workflow workflow = 2;
+  .bitdrift.public.unary.workflows.v1.Workflow workflow = 2;
 
   // The metadata after deployment.
-  .bitdrift.public.unary.explorations.v1.WorkflowMetadata metadata = 3;
+  .bitdrift.public.unary.workflows.v1.WorkflowMetadata metadata = 3;
 
   // The chart metadata that applies to this workflow.
-  repeated .bitdrift.public.unary.explorations.v1.PerRuleChartMetadata per_rule_chart_metadata = 4;
+  repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 4;
 }
 
 message StopWorkflowRequest {
@@ -1183,11 +1183,11 @@ message StopWorkflowRequest {
 
 message StopWorkflowResponse {
   // The mutated idle workflow.
-  .bitdrift.public.unary.explorations.v1.Workflow workflow = 1;
+  .bitdrift.public.unary.workflows.v1.Workflow workflow = 1;
 
   // The metadata after stopping.
-  .bitdrift.public.unary.explorations.v1.WorkflowMetadata metadata = 2;
+  .bitdrift.public.unary.workflows.v1.WorkflowMetadata metadata = 2;
 
   // The chart metadata that applies to this workflow.
-  repeated .bitdrift.public.unary.explorations.v1.PerRuleChartMetadata per_rule_chart_metadata = 3;
+  repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 3;
 }

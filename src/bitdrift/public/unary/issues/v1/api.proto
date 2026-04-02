@@ -1,0 +1,29 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.issues.v1;
+
+import "bitdrift/public/unary/issues/v1/issues.proto";
+
+// Manages crash and issue tracking, including issue groups, individual issues, and feature flag analysis.
+service IssueService {
+  // Lists issue groups matching the specified filter criteria.
+  rpc ListIssueGroups(.bitdrift.public.unary.issues.v1.ListIssueGroupsRequest) returns (.bitdrift.public.unary.issues.v1.ListIssueGroupsResponse);
+
+  // Retrieves a single issue group by ID.
+  rpc GetIssueGroup(.bitdrift.public.unary.issues.v1.GetIssueGroupRequest) returns (.bitdrift.public.unary.issues.v1.GetIssueGroupResponse);
+
+  // Retrieves a single issue by ID.
+  rpc GetIssue(.bitdrift.public.unary.issues.v1.GetIssueRequest) returns (.bitdrift.public.unary.issues.v1.GetIssueResponse);
+
+  // Lists issues matching the specified filter criteria.
+  rpc ListIssues(.bitdrift.public.unary.issues.v1.ListIssuesRequest) returns (.bitdrift.public.unary.issues.v1.ListIssuesResponse);
+
+  // Retrieves the feature flags associated with an issue.
+  rpc GetIssueFeatureFlags(.bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsRequest) returns (.bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsResponse);
+}

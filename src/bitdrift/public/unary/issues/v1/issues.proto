@@ -6,11 +6,11 @@
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 syntax = "proto3";
 
-package bitdrift.public.unary.client_report.v1;
+package bitdrift.public.unary.issues.v1;
 
 import "bitdrift/public/shared/platform/v1/platform.proto";
-import "bitdrift/public/unary/client_report/v1/crash.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
+import "bitdrift/public/unary/issues/v1/crash.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
@@ -46,10 +46,10 @@ message AdvancedFilter {
 
   message OrCondition {
     // The conditions that are ORed together.
-    repeated .bitdrift.public.unary.client_report.v1.AdvancedFilter.Condition or_conditions = 1 [(validate.rules).repeated = {max_items: 100}];
+    repeated .bitdrift.public.unary.issues.v1.AdvancedFilter.Condition or_conditions = 1 [(validate.rules).repeated = {max_items: 100}];
   }
 
-  repeated .bitdrift.public.unary.client_report.v1.AdvancedFilter.OrCondition and_conditions = 1 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.issues.v1.AdvancedFilter.OrCondition and_conditions = 1 [(validate.rules).repeated = {max_items: 100}];
 }
 
 message FeatureFlagFilter {
@@ -74,13 +74,13 @@ message IssueQuery {
   repeated .bitdrift.public.shared.platform.v1.Platform platforms = 3 [(validate.rules).repeated = {max_items: 100}];
 
   // The advanced filters to apply to the issue query.
-  .bitdrift.public.unary.client_report.v1.AdvancedFilter advanced_filters = 4;
+  .bitdrift.public.unary.issues.v1.AdvancedFilter advanced_filters = 4;
 
   // The group ID(s) to filter by. Only issues belonging to these group IDs will be returned.
   repeated string grouping_key = 5 [(validate.rules).repeated = {max_items: 100}];
 
   // The feature flag filters to apply to the issue query. Only issues that had the specified feature flags active will be returned.
-  repeated .bitdrift.public.unary.client_report.v1.FeatureFlagFilter feature_flag_filters = 6 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.issues.v1.FeatureFlagFilter feature_flag_filters = 6 [(validate.rules).repeated = {max_items: 100}];
 }
 
 enum IssueGroupStatus {
@@ -98,7 +98,7 @@ message IssueGroupQuery {
   repeated .bitdrift.public.unary.common.v1.Owner assignee = 1 [(validate.rules).repeated = {max_items: 100}];
 
   // The status(es) of issue groups to filter by.
-  repeated .bitdrift.public.unary.client_report.v1.IssueGroupStatus issue_group_status = 2 [(validate.rules).repeated = {
+  repeated .bitdrift.public.unary.issues.v1.IssueGroupStatus issue_group_status = 2 [(validate.rules).repeated = {
     max_items: 100
     items: {
       enum: {defined_only: true}
@@ -150,7 +150,7 @@ message IssueGroup {
     // The number of unique users that have experienced this issue.
     uint64 user_count = 3;
 
-    repeated .bitdrift.public.unary.client_report.v1.Event events = 4;
+    repeated .bitdrift.public.unary.issues.v1.Event events = 4;
 
     // The number of unique sessions in which this issue was reported
     uint64 session_count = 5;
@@ -160,7 +160,7 @@ message IssueGroup {
   string id = 1;
 
   // The metadata for the issue group.
-  .bitdrift.public.unary.client_report.v1.IssueGroup.Metadata metadata = 2;
+  .bitdrift.public.unary.issues.v1.IssueGroup.Metadata metadata = 2;
 
   // The platform on which the issue group occurred.
   // Once we support React Native for issues/crashes, we may encounter issues that span multiple platforms.
@@ -168,16 +168,16 @@ message IssueGroup {
   repeated .bitdrift.public.shared.platform.v1.Platform platform = 3;
 
   // The stats for the issue group _BEFORE_ filters are applied.
-  .bitdrift.public.unary.client_report.v1.IssueGroup.Stats stats = 4;
+  .bitdrift.public.unary.issues.v1.IssueGroup.Stats stats = 4;
 
   // The assignees of the issue group.
   repeated .bitdrift.public.unary.common.v1.Owner assignees = 5;
 
   // The status of the issue group.
-  .bitdrift.public.unary.client_report.v1.IssueGroupStatus status = 6;
+  .bitdrift.public.unary.issues.v1.IssueGroupStatus status = 6;
 
   // The stats for the issue group _AFTER_ filters are applied.
-  .bitdrift.public.unary.client_report.v1.IssueGroup.Stats filtered_stats = 7;
+  .bitdrift.public.unary.issues.v1.IssueGroup.Stats filtered_stats = 7;
 
   // The latest version/version code of the application when marked as fixed
   oneof resolution_version {
@@ -195,12 +195,12 @@ message GetIssueGroupRequest {
     max_len: 100
   }];
 
-  .bitdrift.public.unary.client_report.v1.IssueQuery issue_query = 6;
+  .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 6;
 }
 
 message GetIssueGroupResponse {
   // The issue group.
-  .bitdrift.public.unary.client_report.v1.IssueGroup issue_group = 1 [(validate.rules).message = {required: true}];
+  .bitdrift.public.unary.issues.v1.IssueGroup issue_group = 1 [(validate.rules).message = {required: true}];
 }
 
 message ListIssueGroupsRequest {
@@ -221,14 +221,14 @@ message ListIssueGroupsRequest {
   // in this list determines the order in which sort is applied.
   repeated .bitdrift.public.unary.common.v1.Sort sort_by = 4 [(validate.rules).repeated = {max_items: 100}];
 
-  .bitdrift.public.unary.client_report.v1.IssueQuery issue_query = 5;
+  .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 5;
 
-  .bitdrift.public.unary.client_report.v1.IssueGroupQuery issue_group_query = 6;
+  .bitdrift.public.unary.issues.v1.IssueGroupQuery issue_group_query = 6;
 }
 
 message ListIssueGroupsResponse {
   // The issue groups.
-  repeated .bitdrift.public.unary.client_report.v1.IssueGroup issue_groups = 1;
+  repeated .bitdrift.public.unary.issues.v1.IssueGroup issue_groups = 1;
 
   uint32 total_issue_groups = 2;
 }
@@ -281,7 +281,7 @@ message Issue {
 
   string report_type = 19 [(validate.rules).string = {min_len: 1}];
 
-  .bitdrift.public.unary.client_report.v1.Report report = 12 [(validate.rules).message = {required: true}];
+  .bitdrift.public.unary.issues.v1.Report report = 12 [(validate.rules).message = {required: true}];
 
   // The unique identifier for the issue.
   string id = 13 [(validate.rules).string = {min_len: 1}];
@@ -291,7 +291,7 @@ message Issue {
 }
 
 message GetIssueResponse {
-  .bitdrift.public.unary.client_report.v1.Issue issue = 12;
+  .bitdrift.public.unary.issues.v1.Issue issue = 12;
 
   enum Status {
     FOUND = 0;
@@ -305,7 +305,7 @@ message GetIssueResponse {
   }
 
   // The status of the issue. If set to FOUND, the issue was found and the details are available.
-  .bitdrift.public.unary.client_report.v1.GetIssueResponse.Status status = 13 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.unary.issues.v1.GetIssueResponse.Status status = 13 [(validate.rules).enum = {defined_only: true}];
 }
 
 message ListIssuesRequest {
@@ -322,13 +322,13 @@ message ListIssuesRequest {
     oneof type {
       option (validate.required) = true;
       // Filters on the platform of issues.
-      .bitdrift.public.unary.client_report.v1.ListIssuesRequest.ListIssuesFilters.Platform platform = 1;
+      .bitdrift.public.unary.issues.v1.ListIssuesRequest.ListIssuesFilters.Platform platform = 1;
 
       // Filters on the time range of issues.
-      .bitdrift.public.unary.client_report.v1.ListIssuesRequest.ListIssuesFilters.TimeRange time_range = 2;
+      .bitdrift.public.unary.issues.v1.ListIssuesRequest.ListIssuesFilters.TimeRange time_range = 2;
 
       // Filters on the advanced filters of issues.
-      .bitdrift.public.unary.client_report.v1.AdvancedFilter advanced_filters = 6;
+      .bitdrift.public.unary.issues.v1.AdvancedFilter advanced_filters = 6;
     }
   }
 
@@ -354,18 +354,18 @@ message ListIssuesRequest {
   // Filter the list of issues based on the current user's relationship to
   // the issue. This is a logical AND. If no filters are supplied, all
   // issues are returned.
-  repeated .bitdrift.public.unary.client_report.v1.ListIssuesRequest.ListIssuesFilters filters = 4 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.issues.v1.ListIssuesRequest.ListIssuesFilters filters = 4 [(validate.rules).repeated = {max_items: 100}];
 
   // Sort the list of issues based on the given list of fields. The order of the fields
   // in this list determines the order in which sort is applied.
   repeated .bitdrift.public.unary.common.v1.Sort sort_by = 5 [(validate.rules).repeated = {max_items: 100}];
 
-  .bitdrift.public.unary.client_report.v1.IssueQuery issue_query = 6;
+  .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 6;
 }
 
 message ListIssuesResponse {
   // The issue groups.
-  repeated .bitdrift.public.unary.client_report.v1.Issue issues = 1;
+  repeated .bitdrift.public.unary.issues.v1.Issue issues = 1;
 
   uint32 total_issues = 2;
 }
@@ -391,5 +391,5 @@ message GetIssueFeatureFlagsResponse {
   }
 
   // The feature flags active when the issue occurred.
-  repeated .bitdrift.public.unary.client_report.v1.GetIssueFeatureFlagsResponse.FeatureFlag feature_flags = 1;
+  repeated .bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsResponse.FeatureFlag feature_flags = 1;
 }
