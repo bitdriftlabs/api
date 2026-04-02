@@ -1021,7 +1021,10 @@ message ListWorkflowsRequest {
   repeated .bitdrift.public.unary.workflows.v1.Filter filters = 3 [(validate.rules).repeated = {max_items: 100}];
 
   // Sort the list of workflows based on the given list of fields. The order of the fields
-  // in this list determines the order in which sort is applied.
+  // in this list determines the order in which sort is applied. Permitted values: "id", "name",
+  // "created_at", "current_user_last_viewed", "owned", "user_priority",
+  // "current_user_favorited", "exploration_name", "owner_user_id", "owner_email", and
+  // "deployed".
   repeated .bitdrift.public.unary.common.v1.Sort sort_by = 4 [(validate.rules).repeated = {max_items: 100}];
 
   // Filter the list of workflows based on the platform(s) that that workflow
