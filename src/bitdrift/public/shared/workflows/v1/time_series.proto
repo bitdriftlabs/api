@@ -6,7 +6,7 @@
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 syntax = "proto3";
 
-package bitdrift.public.shared.explorations.v1;
+package bitdrift.public.shared.workflows.v1;
 
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -22,7 +22,7 @@ message LabelPair {
 
 message AndFilter {
   // Labels that must all match for a record to be included.
-  repeated .bitdrift.public.shared.explorations.v1.LabelPair filter = 1 [(validate.rules).repeated.max_items = 100];
+  repeated .bitdrift.public.shared.workflows.v1.LabelPair filter = 1 [(validate.rules).repeated.max_items = 100];
 }
 
 message RateDetails {
@@ -43,7 +43,7 @@ message DataPoint {
 
   // For rate data points, this field contains the numerator and denominator values
   // to allow the frontend to render the absolute values in addition to the rate.
-  optional .bitdrift.public.shared.explorations.v1.RateDetails rate_details = 3;
+  optional .bitdrift.public.shared.workflows.v1.RateDetails rate_details = 3;
 
   // The unique devices count for this data point based on the TrackUnique configuration.
   optional uint64 unique_devices = 4;
@@ -79,10 +79,10 @@ message TimeSeries {
   string id = 1 [(validate.rules).string = {min_len: 1}];
 
   // The labels associated with this time series.
-  repeated .bitdrift.public.shared.explorations.v1.LabelPair labels = 2;
+  repeated .bitdrift.public.shared.workflows.v1.LabelPair labels = 2;
 
   // The data points in this time series.
-  repeated .bitdrift.public.shared.explorations.v1.DataPoint data = 3;
+  repeated .bitdrift.public.shared.workflows.v1.DataPoint data = 3;
 
   // The aggregation window used for this stream. When streaming data, this is only set on the
   // first response for a given time series.
@@ -92,7 +92,7 @@ message TimeSeries {
   // to the user explaining what the time series represents.
   //
   // Note that this may not be set via all APIs.
-  optional .bitdrift.public.shared.explorations.v1.Legend legend = 5;
+  optional .bitdrift.public.shared.workflows.v1.Legend legend = 5;
 
   // A simple title for the time series. This is a more compact version of the legend that can used
   // where the legend is too verbose.
@@ -112,7 +112,7 @@ message TimeSeries {
 
   // The total count of cardinality overflows for this time series that occurred during the
   // query time period.
-  .bitdrift.public.shared.explorations.v1.CardinalityOverflows cardinality_overflows = 9;
+  .bitdrift.public.shared.workflows.v1.CardinalityOverflows cardinality_overflows = 9;
 }
 
 message Counter {
@@ -130,7 +130,7 @@ message Counter {
   }];
 
   // The aggregation to use when presenting this counter in a table.
-  .bitdrift.public.shared.explorations.v1.Counter.CounterAggregationType table_aggregation_type = 2 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.shared.workflows.v1.Counter.CounterAggregationType table_aggregation_type = 2 [(validate.rules).enum = {defined_only: true}];
 }
 
 message Rate {
@@ -153,5 +153,5 @@ message Rate {
   }];
 
   // The aggregation to use when presenting this rate in a table.
-  .bitdrift.public.shared.explorations.v1.Rate.RateAggregationType table_aggregation_type = 3 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.shared.workflows.v1.Rate.RateAggregationType table_aggregation_type = 3 [(validate.rules).enum = {defined_only: true}];
 }

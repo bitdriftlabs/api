@@ -8,8 +8,8 @@ syntax = "proto3";
 
 package bitdrift.public.unary.dashboards.v1;
 
-import "bitdrift/public/shared/explorations/v1/time_series.proto";
 import "bitdrift/public/shared/platform/v1/platform.proto";
+import "bitdrift/public/shared/workflows/v1/time_series.proto";
 import "bitdrift/public/unary/charts/v1/chart_id.proto";
 import "bitdrift/public/unary/charts/v1/chart_metadata.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
@@ -47,12 +47,12 @@ message SankeyConfiguration {
 
 message CounterConfiguration {
   // The aggregation to use when presenting counter values in a table.
-  .bitdrift.public.shared.explorations.v1.Counter.CounterAggregationType aggregation_type = 1 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.shared.workflows.v1.Counter.CounterAggregationType aggregation_type = 1 [(validate.rules).enum = {defined_only: true}];
 }
 
 message RateConfiguration {
   // The aggregation to use when presenting rate values in a table.
-  .bitdrift.public.shared.explorations.v1.Rate.RateAggregationType aggregation_type = 1 [(validate.rules).enum = {defined_only: true}];
+  .bitdrift.public.shared.workflows.v1.Rate.RateAggregationType aggregation_type = 1 [(validate.rules).enum = {defined_only: true}];
 }
 
 message ChartRequest {
@@ -111,13 +111,13 @@ message GetChartsDataRequest {
 
   // Optional filter to apply on top of the platform filter. This is AND against the platform
   // filter (either supplied or the one from the workflow backing each chart).
-  .bitdrift.public.shared.explorations.v1.AndFilter and_filter = 7;
+  .bitdrift.public.shared.workflows.v1.AndFilter and_filter = 7;
 }
 
 // Used for line charts, they're just a list of time series.
 message LineChartResponse {
   // The time series to render in the chart.
-  repeated .bitdrift.public.shared.explorations.v1.TimeSeries time_series = 1;
+  repeated .bitdrift.public.shared.workflows.v1.TimeSeries time_series = 1;
 }
 
 message TableChartResponse {
@@ -144,7 +144,7 @@ message Table {
 
   // The total count of cardinality overflows for this time series that occurred during the
   // query time period.
-  .bitdrift.public.shared.explorations.v1.CardinalityOverflows cardinality_overflows = 6;
+  .bitdrift.public.shared.workflows.v1.CardinalityOverflows cardinality_overflows = 6;
 }
 
 message TableValue {
@@ -152,7 +152,7 @@ message TableValue {
   double value = 1;
 
   // For rate tables, returns the numerator and denominator values that yielded this value.
-  .bitdrift.public.shared.explorations.v1.RateDetails rate_details = 2;
+  .bitdrift.public.shared.workflows.v1.RateDetails rate_details = 2;
 }
 
 message TableRow {
@@ -200,7 +200,7 @@ message HistogramBarChartResponse {
 
     // The total count of cardinality overflows for this time series that occurred during the
     // query time period.
-    .bitdrift.public.shared.explorations.v1.CardinalityOverflows cardinality_overflows = 3;
+    .bitdrift.public.shared.workflows.v1.CardinalityOverflows cardinality_overflows = 3;
 
     // A set of buckets for every group by combination for this time series. If there are no group
     // by fields, there will be a single entry in this list.

@@ -6,7 +6,7 @@
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 syntax = "proto3";
 
-package bitdrift.public.unary.explorations.v1;
+package bitdrift.public.unary.workflows.v1;
 
 import "bitdrift/public/unary/charts/v1/chart_metadata.proto";
 import "google/protobuf/duration.proto";
@@ -27,10 +27,10 @@ message WorkflowMetadata {
     oneof condition {
       option (validate.required) = true;
       // The deployment expires after a fixed time.
-      .bitdrift.public.unary.explorations.v1.WorkflowMetadata.DeploymentExpiration.FixedTime fixed_time = 1;
+      .bitdrift.public.unary.workflows.v1.WorkflowMetadata.DeploymentExpiration.FixedTime fixed_time = 1;
 
       // The deployment expires if the last seen time is older than the specified time.
-      .bitdrift.public.unary.explorations.v1.WorkflowMetadata.DeploymentExpiration.LastSeen last_seen = 2;
+      .bitdrift.public.unary.workflows.v1.WorkflowMetadata.DeploymentExpiration.LastSeen last_seen = 2;
 
       // Disables expiration for the deployment.
       bool disabled = 3;
@@ -48,10 +48,10 @@ message WorkflowMetadata {
 
   // The expiration condition for the workflow's deployment. Otherwise known as TTL. If not set
   // the deployment never expires.
-  .bitdrift.public.unary.explorations.v1.WorkflowMetadata.DeploymentExpiration deployment_expiration = 1;
+  .bitdrift.public.unary.workflows.v1.WorkflowMetadata.DeploymentExpiration deployment_expiration = 1;
 
   // Metadata that applies to specific rules.
-  repeated .bitdrift.public.unary.explorations.v1.WorkflowMetadata.PerRuleMetadata per_rule_metadata = 2 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.workflows.v1.WorkflowMetadata.PerRuleMetadata per_rule_metadata = 2 [(validate.rules).repeated = {max_items: 100}];
 }
 
 message PerRuleChartMetadata {
