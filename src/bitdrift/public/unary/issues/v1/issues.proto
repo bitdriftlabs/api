@@ -217,8 +217,10 @@ message ListIssueGroupsRequest {
     lte: 100
   }];
 
-  // Sort the list of issues based on the given list of fields. The order of the fields
-  // in this list determines the order in which sort is applied.
+  // Sort the list of issue groups based on the given list of fields. The order of the fields
+  // in this list determines the order in which sort is applied. Permitted values: "age",
+  // "start_time", "end_time", "reason", "context", "detail", "total_value", "unique_count",
+  // "session_count", and "platform".
   repeated .bitdrift.public.unary.common.v1.Sort sort_by = 4 [(validate.rules).repeated = {max_items: 100}];
 
   .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 5;
@@ -357,7 +359,8 @@ message ListIssuesRequest {
   repeated .bitdrift.public.unary.issues.v1.ListIssuesRequest.ListIssuesFilters filters = 4 [(validate.rules).repeated = {max_items: 100}];
 
   // Sort the list of issues based on the given list of fields. The order of the fields
-  // in this list determines the order in which sort is applied.
+  // in this list determines the order in which sort is applied. Permitted values:
+  // "occurred_at", "reason", "context", and "detail".
   repeated .bitdrift.public.unary.common.v1.Sort sort_by = 5 [(validate.rules).repeated = {max_items: 100}];
 
   .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 6;
