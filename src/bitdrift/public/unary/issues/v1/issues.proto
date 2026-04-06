@@ -15,8 +15,9 @@ import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 // An advanced filter that allows for complex filtering of issue groups.
-// Each condition can specify a left-hand side (lhs), an operator, a right-hand side (rhs),
-// and a match type. The match type determines how the rhs is interpreted (e.g., as a string, integer, semver, or double).
+// Each condition can specify a filter key, an operator, and a right-hand side (rhs) value.
+// Depending on the selected field and operator, the rhs can represent a string, a semantic
+// version, or another documented field-specific value.
 // This is useful for filtering issue groups based on specific attributes or properties.
 // The conditions are applied in a logical AND fashion, meaning that all conditions must be satisfied for an issue group to match the filter.
 //
@@ -28,16 +29,32 @@ import "validate/validate.proto";
 //   [
 //     OrCondition{
 //       orConditions: [
-//         Condition{lhs: "app_id", operator: EQUAL, rhs: "com.example.app"},
-//         Condition{lhs: "app_id", operator: EQUAL, rhs: "com.example.app2"}
+//         Condition{lhsTyped: LHS_TYPED_APP_ID, operator: EQUAL, rhs: "com.example.app"},
+//         Condition{lhsTyped: LHS_TYPED_APP_ID, operator: EQUAL, rhs: "com.example.app2"}
 //       ]
 //     },
-//     OrCondition{orConditions: [Condition{lhs: "platform", operator: EQUAL, rhs: "ANDROID"}]}
+//     OrCondition{orConditions: [Condition{lhsTyped: LHS_TYPED_PLATFORM, operator: EQUAL, rhs: "ANDROID"}]}
 //   ]
 // }
 message AdvancedFilter {
   message Condition {
-    string lhs = 1 [(validate.rules).string = {max_len: 100}];
+    enum LhsTyped {
+      LHS_TYPED_UNSPECIFIED = 0;
+      LHS_TYPED_APP_ID = 1;
+      LHS_TYPED_PLATFORM = 2;
+      LHS_TYPED_APP_VERSION = 3;
+      LHS_TYPED_OS_VERSION = 4;
+      LHS_TYPED_MODEL = 5;
+      LHS_TYPED_REASON = 6;
+      LHS_TYPED_CONTEXT = 7;
+      LHS_TYPED_REPORT_TYPE = 8;
+    }
+
+    // The filter key to match against.
+    .bitdrift.public.unary.issues.v1.AdvancedFilter.Condition.LhsTyped lhs_typed = 4 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
 
     .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {
       defined_only: true
