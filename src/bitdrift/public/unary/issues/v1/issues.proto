@@ -39,7 +39,10 @@ message AdvancedFilter {
   message Condition {
     string lhs = 1 [(validate.rules).string = {max_len: 100}];
 
-    .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
+    .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
 
     string rhs = 3 [(validate.rules).string = {max_len: 255}];
   }
@@ -204,6 +207,24 @@ message GetIssueGroupResponse {
 }
 
 message ListIssueGroupsRequest {
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      MOST_RECENT_OCCURRENCE = 1;
+      EARLIEST_OCCURRENCE = 2;
+      FIRST_REPORTED = 3;
+      IMPACTED_USERS = 4;
+      IMPACTED_SESSIONS = 5;
+      ISSUE_REASON = 6;
+    }
+
+    // Selects which caller-visible issue group attribute to order by.
+    .bitdrift.public.unary.issues.v1.ListIssueGroupsRequest.Sort.SortKey key = 1 [(validate.rules).enum = {defined_only: true}];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
   // Used to paginate through results. To get the next page result, set this to
   // the desired starting offset. For example, setting to 10 will start with the
   // 10th record. The default value is 0.
@@ -217,15 +238,12 @@ message ListIssueGroupsRequest {
     lte: 100
   }];
 
-  // Sort the list of issue groups based on the given list of fields. The order of the fields
-  // in this list determines the order in which sort is applied. Permitted values: "age",
-  // "start_time", "end_time", "reason", "context", "detail", "total_value", "unique_count",
-  // "session_count", and "platform".
-  repeated .bitdrift.public.unary.common.v1.Sort sort_by = 4 [(validate.rules).repeated = {max_items: 100}];
-
   .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 5;
 
   .bitdrift.public.unary.issues.v1.IssueGroupQuery issue_group_query = 6;
+
+  // Orders issue groups by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.issues.v1.ListIssueGroupsRequest.Sort sort = 7 [(validate.rules).repeated = {max_items: 100}];
 }
 
 message ListIssueGroupsResponse {
@@ -311,6 +329,20 @@ message GetIssueResponse {
 }
 
 message ListIssuesRequest {
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      OCCURRED_AT = 1;
+      ISSUE_REASON = 2;
+    }
+
+    // Selects which caller-visible issue attribute to order by.
+    .bitdrift.public.unary.issues.v1.ListIssuesRequest.Sort.SortKey key = 1 [(validate.rules).enum = {defined_only: true}];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
   message ListIssuesFilters {
     message Platform {
       // The platform of an issue group to filter by.
@@ -358,12 +390,10 @@ message ListIssuesRequest {
   // issues are returned.
   repeated .bitdrift.public.unary.issues.v1.ListIssuesRequest.ListIssuesFilters filters = 4 [(validate.rules).repeated = {max_items: 100}];
 
-  // Sort the list of issues based on the given list of fields. The order of the fields
-  // in this list determines the order in which sort is applied. Permitted values:
-  // "occurred_at", "reason", "context", and "detail".
-  repeated .bitdrift.public.unary.common.v1.Sort sort_by = 5 [(validate.rules).repeated = {max_items: 100}];
-
   .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 6;
+
+  // Orders issues by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.issues.v1.ListIssuesRequest.Sort sort = 7 [(validate.rules).repeated = {max_items: 100}];
 }
 
 message ListIssuesResponse {

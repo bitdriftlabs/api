@@ -32,4 +32,6 @@ enum Permission {
   ISSUE_ASSIGN = 12;
   // Allows managing connectors.
   CONNECTOR_ADMIN = 14;
+  // Allows reading debug file metadata.
+  DEBUG_FILE_READ = 15;
 }

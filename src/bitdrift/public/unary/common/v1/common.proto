@@ -22,18 +22,24 @@ message Owner {
   optional string name = 3 [(validate.rules).string = {max_len: 100}];
 }
 
-message Sort {
-  enum Direction {
-    ASC = 0;
-    DESC = 1;
-  }
+enum SortDirection {
+  ASCENDING = 0;
+  DESCENDING = 1;
+}
 
-  // The field to sort by. Permitted values are endpoint-specific and are documented on each
-  // request's sort_by field.
-  string field = 1 [(validate.rules).string = {max_len: 100}];
+message Pagination {
+  // Used to paginate through results. To get the next page result, set this to
+  // the desired starting offset. For example, setting to 10 will start with the
+  // 10th record. The default value is 0.
+  optional uint32 offset = 1;
 
-  // The direction to sort by.
-  .bitdrift.public.unary.common.v1.Sort.Direction direction = 2 [(validate.rules).enum = {defined_only: true}];
+  // This defines the upper bound of the number of items returned. The maximum
+  // value supported is 100, meaning that we’ll never return more than
+  // min(items.count, limit, 100).
+  optional uint32 limit = 2 [
+    (validate.rules).uint32.gt = 0,
+    (validate.rules).uint32.lte = 100
+  ];
 }
 
 enum Operator {
