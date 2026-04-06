@@ -8,6 +8,7 @@ syntax = "proto3";
 
 package bitdrift.public.unary.timeline.v1;
 
+import "bitdrift/public/shared/platform/v1/platform.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
@@ -20,9 +21,29 @@ message GetSessionInfoRequest {
 }
 
 message GetSessionInfoResponse {
+  // The model of the device.
+  string device_model = 2;
+
+  // The user id associated with the session.
+  // This one is a special case, where we rely on the SDK being configured to return this.
+  // There may be other special cases like this in the future.
+  optional string user_id = 4;
+
   // The start time of the session.
   .google.protobuf.Timestamp start_time = 5;
 
   // The end time of the session.
   .google.protobuf.Timestamp end_time = 6;
+
+  // The device ID associated with the session.
+  string device_id = 8;
+
+  // The platform and app information associated with the session.
+  .bitdrift.public.shared.platform.v1.Platform platform = 9;
+
+  // The operating system of the device.
+  string os = 10;
+
+  // The version of the operating system of the device.
+  string os_version = 11;
 }

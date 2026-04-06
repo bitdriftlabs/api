@@ -29,11 +29,6 @@ message InsightComparisonConfiguration {
   }];
 }
 
-message TopKConfiguration {
-  // For testing purposes this will allow us to play with different top K algorithms without extra API changes.
-  string algorithm_name = 1 [(validate.rules).string = {max_len: 255}];
-}
-
 message SankeyConfiguration {
   // The number of top K paths to use to render the sankey chart.
   // Defaults to 100 if not provided.
@@ -65,9 +60,6 @@ message ChartRequest {
   // Optional configuration to indicate that this chart should compare two
   // insights time series.
   .bitdrift.public.unary.dashboards.v1.InsightComparisonConfiguration insight_comparison_configuration = 3;
-
-  // Optional configuration for the top K grouping to use for this chart.
-  .bitdrift.public.unary.dashboards.v1.TopKConfiguration top_k_configuration = 5;
 
   // Optional limit strategy to use for this chart. Currently only supported for line charts.
   // If this is omitted, a default value of limiting by a top k of 5 entries is used.

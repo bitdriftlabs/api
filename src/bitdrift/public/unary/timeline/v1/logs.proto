@@ -74,11 +74,11 @@ message GetSessionLogsRequest {
   // The type of logs to query. If not specified, all normal logs will be returned.
   .bitdrift.public.unary.timeline.v1.LogType log_type = 1;
 
-  // The start time of the query.
-  .google.protobuf.Timestamp start_time = 2 [(validate.rules).message = {required: true}];
+  // The start time of the query. If not specified, the query will start from the beginning of the session.
+  .google.protobuf.Timestamp start_time = 2;
 
-  // The end time of the query.
-  .google.protobuf.Timestamp end_time = 3 [(validate.rules).message = {required: true}];
+  // The end time of the query. If not specified, the query will end at the end of the session.
+  .google.protobuf.Timestamp end_time = 3;
 
   // The page number and the number of items per page. The server will use this
   // to paginate the results.

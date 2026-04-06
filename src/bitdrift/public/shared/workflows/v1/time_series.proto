@@ -122,15 +122,6 @@ message Counter {
     MIN = 2;
     MAX = 3;
   }
-
-  // The counter to query.
-  string id = 1 [(validate.rules).string = {
-    min_len: 1
-    max_len: 255
-  }];
-
-  // The aggregation to use when presenting this counter in a table.
-  .bitdrift.public.shared.workflows.v1.Counter.CounterAggregationType table_aggregation_type = 2 [(validate.rules).enum = {defined_only: true}];
 }
 
 message Rate {
@@ -139,19 +130,4 @@ message Rate {
     MIN = 1;
     MAX = 2;
   }
-
-  // The numerator counter to query.
-  string numerator_id = 1 [(validate.rules).string = {
-    min_len: 1
-    max_len: 255
-  }];
-
-  // The denominator counter to query.
-  string denominator_id = 2 [(validate.rules).string = {
-    min_len: 1
-    max_len: 255
-  }];
-
-  // The aggregation to use when presenting this rate in a table.
-  .bitdrift.public.shared.workflows.v1.Rate.RateAggregationType table_aggregation_type = 3 [(validate.rules).enum = {defined_only: true}];
 }

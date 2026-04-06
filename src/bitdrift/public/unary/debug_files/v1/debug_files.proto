@@ -1,0 +1,129 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.debug_files.v1;
+
+import "bitdrift/public/unary/common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+enum DebugFileType {
+  DEBUG_FILE_TYPE_UNSPECIFIED = 0;
+  PROGUARD = 1;
+  DEBUG_FILE = 2;
+}
+
+enum DebugFileProcessingState {
+  DEBUG_FILE_PROCESSING_STATE_UNSPECIFIED = 0;
+  PENDING = 1;
+  PROCESSED = 2;
+  FAILED = 3;
+}
+
+enum DebugFilePlatform {
+  DEBUG_FILE_PLATFORM_UNSPECIFIED = 0;
+  APPLE = 1;
+  ANDROID = 2;
+}
+
+message DebugFileAppScope {
+  // The platform associated with the app build.
+  .bitdrift.public.unary.debug_files.v1.DebugFilePlatform platform = 1 [(validate.rules).enum = {defined_only: true}];
+
+  // The application identifier associated with this app scope.
+  string app_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The application version associated with this app scope.
+  string app_version = 3 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The application build identifier associated with this app scope.
+  string app_build_id = 4 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+message ListDebugFilesRequest {
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      CREATED_AT = 1;
+      UPDATED_AT = 2;
+    }
+
+    // Selects which caller-visible debug file attribute to order by.
+    .bitdrift.public.unary.debug_files.v1.ListDebugFilesRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // A structured way to provide pagination information.
+  .bitdrift.public.unary.common.v1.Pagination pagination = 1;
+
+  // Filters debug files by file type.
+  optional .bitdrift.public.unary.debug_files.v1.DebugFileType type = 2 [(validate.rules).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
+
+  // Filters debug files by processing state.
+  optional .bitdrift.public.unary.debug_files.v1.DebugFileProcessingState processing_state = 3 [(validate.rules).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
+
+  // Filters debug files by the uploaded file hash.
+  optional string file_hash = 4 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // Filters debug files by a matching app scope.
+  repeated .bitdrift.public.unary.debug_files.v1.DebugFileAppScope app_scopes = 5 [(validate.rules).repeated = {max_items: 100}];
+
+  // Orders debug files by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.debug_files.v1.ListDebugFilesRequest.Sort sort = 6 [(validate.rules).repeated = {max_items: 10}];
+}
+
+message DebugFile {
+  // The debug file type.
+  .bitdrift.public.unary.debug_files.v1.DebugFileType type = 2 [(validate.rules).enum = {defined_only: true}];
+
+  // The current processing state of the debug file.
+  .bitdrift.public.unary.debug_files.v1.DebugFileProcessingState processing_state = 3 [(validate.rules).enum = {defined_only: true}];
+
+  // The SHA-256 hash of the uploaded file.
+  string file_hash = 5 [(validate.rules).string = {max_len: 255}];
+
+  // The time the debug file record was created.
+  .google.protobuf.Timestamp created_at = 7 [(validate.rules).message = {required: true}];
+
+  // The time the debug file record was last updated.
+  .google.protobuf.Timestamp updated_at = 8 [(validate.rules).message = {required: true}];
+
+  // The app scopes associated with this debug file.
+  repeated .bitdrift.public.unary.debug_files.v1.DebugFileAppScope app_scopes = 9 [(validate.rules).repeated = {max_items: 100}];
+}
+
+message ListDebugFilesResponse {
+  // The debug files that matched the request.
+  repeated .bitdrift.public.unary.debug_files.v1.DebugFile debug_files = 1;
+
+  // The total number of debug files that matched the request.
+  uint32 total_count = 2;
+}
