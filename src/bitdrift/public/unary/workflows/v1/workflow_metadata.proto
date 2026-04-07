@@ -52,6 +52,9 @@ message WorkflowMetadata {
 
   // Metadata that applies to specific rules.
   repeated .bitdrift.public.unary.workflows.v1.WorkflowMetadata.PerRuleMetadata per_rule_metadata = 2 [(validate.rules).repeated = {max_items: 100}];
+
+  // A long-form description for the workflow.
+  string description = 32 [(validate.rules).string = {max_len: 1000}];
 }
 
 message PerRuleChartMetadata {
