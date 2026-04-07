@@ -51,15 +51,9 @@ message AdvancedFilter {
     }
 
     // The filter key to match against.
-    .bitdrift.public.unary.issues.v1.AdvancedFilter.Condition.LhsTyped lhs_typed = 4 [(validate.rules).enum = {
-      defined_only: true
-      not_in: [0]
-    }];
+    .bitdrift.public.unary.issues.v1.AdvancedFilter.Condition.LhsTyped lhs_typed = 4 [(validate.rules).enum = {defined_only: true}];
 
-    .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {
-      defined_only: true
-      not_in: [0]
-    }];
+    .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
 
     string rhs = 3 [(validate.rules).string = {max_len: 255}];
   }
