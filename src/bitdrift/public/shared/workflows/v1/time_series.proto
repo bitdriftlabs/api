@@ -41,8 +41,8 @@ message DataPoint {
   // The accumulated value of the data point for a given aggregation window.
   double value = 2;
 
-  // For rate data points, this field contains the numerator and denominator values
-  // to allow the frontend to render the absolute values in addition to the rate.
+  // For rate data points, includes the numerator and denominator values so
+  // clients can render the underlying counts alongside the rate.
   optional .bitdrift.public.shared.workflows.v1.RateDetails rate_details = 3;
 
   // The unique devices count for this data point based on the TrackUnique configuration.
@@ -55,25 +55,24 @@ message Legend {
 }
 
 message CardinalityOverflows {
-  // Overflowed the total limit for the action ID, including platform and app ID.
+  // The number of records that exceeded the total cardinality limit for the
+  // action ID, including platform and app ID.
   uint64 total_overflows = 1;
 
-  // Overflowed only the group by limit for the action ID. This can include both client overflows
-  // as well as server overflows.
+  // The number of records that exceeded only the group-by limit for the action
+  // ID. This can include both client-side and server-side overflows.
   uint64 group_by_overflows = 2;
 
-  // If this is true, during query time the query engine detected very large cardinality during
-  // a group by query. Even with ingestion limits, it's still possible if the data is
-  // problematic and we are querying over a very large window. In order to avoid OOM during TopK
-  // processing, the query engine will fall back to a collapsed group by query which will return
-  // a single time series. The FE should display an indication that this happened as well as
-  // the ability to view example cardinality.
+  // If true, the query detected very high cardinality for a group-by request
+  // and returned a collapsed result to avoid excessive memory use. Clients
+  // should indicate that the group-by was collapsed and may offer example
+  // cardinality details.
   bool query_group_by_collapsed = 3;
 }
 
 message TimeSeries {
-  // The id associated with this time series. This is used together with the labels
-  // to uniquely identify a time series.
+  // The ID associated with this time series. Use it with the labels to
+  // uniquely identify a time series.
   //
   // For workflow-backed time series, this maps back to one or more action IDs.
   string id = 1 [(validate.rules).string = {min_len: 1}];
@@ -88,14 +87,14 @@ message TimeSeries {
   // first response for a given time series.
   .google.protobuf.Duration aggregation_window = 4;
 
-  // The Legend associated with this time series. This is a formatted string that can be presented
-  // to the user explaining what the time series represents.
+  // The legend for this time series. This formatted string can be shown to
+  // explain what the time series represents.
   //
   // Note that this may not be set via all APIs.
   optional .bitdrift.public.shared.workflows.v1.Legend legend = 5;
 
-  // A simple title for the time series. This is a more compact version of the legend that can used
-  // where the legend is too verbose.
+  // A simple title for the time series. This is a more compact version of the
+  // legend that can be used when the legend is too verbose.
   //
   // Note that this may not be set via all APIs.
   optional string title = 6;
@@ -103,8 +102,8 @@ message TimeSeries {
   // The unique devices count for the entire series based on the TrackUnique configuration.
   optional uint64 unique_devices = 7;
 
-  // This is the aggregated rollup for the entire series. It's meaning is dependent on the type of
-  // series.
+  // The aggregated rollup for the entire series. Its meaning depends on the
+  // type of series.
   // - counter: The sum of all data points.
   // - rate: The sum of all numerator data points / the sum of all denominator data points.
   // - histogram: The quantile over the entire range.

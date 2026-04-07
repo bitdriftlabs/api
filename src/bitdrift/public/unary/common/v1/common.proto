@@ -16,7 +16,7 @@ message Owner {
   // The email address of this owner.
   string email = 1 [(validate.rules).string = {max_len: 255}];
 
-  // The raw ID of this owner.
+  // The unique ID of this owner.
   string id = 2 [(validate.rules).string = {max_len: 100}];
 
   optional string name = 3 [(validate.rules).string = {max_len: 100}];
@@ -28,13 +28,11 @@ enum SortDirection {
 }
 
 message Pagination {
-  // Used to paginate through results. To get the next page result, set this to
-  // the desired starting offset. For example, setting to 10 will start with the
-  // 10th record. The default value is 0.
+  // The starting offset for pagination. For example, set this to 10 to start
+  // with the 10th record. Defaults to 0.
   optional uint32 offset = 1;
 
-  // This defines the upper bound of the number of items returned. The maximum
-  // value supported is 100, meaning that we’ll never return more than
+  // The maximum number of items to return. The server returns at most
   // min(items.count, limit, 100).
   optional uint32 limit = 2 [
     (validate.rules).uint32.gt = 0,

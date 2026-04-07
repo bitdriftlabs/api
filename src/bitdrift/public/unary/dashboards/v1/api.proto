@@ -31,13 +31,13 @@ message InsightComparisonConfiguration {
 }
 
 message SankeyConfiguration {
-  // The number of top K paths to use to render the sankey chart.
+  // The number of top-K paths to use when rendering the Sankey chart.
   // Defaults to 100 if not provided.
   uint64 top_k_paths = 1;
 
-  // The size of the compaction target to use for the sankey chart. If the size of the charts
-  // exceeds this value, `other` nodes will be inserted to reduce the size of the chart. Defaults to
-  // 20 if not provided.
+  // The compaction target size for the Sankey chart. If the chart exceeds this
+  // value, `other` nodes are inserted to reduce the chart size. Defaults to 20
+  // if not provided.
   uint64 compaction_target = 2;
 }
 
@@ -62,8 +62,8 @@ message ChartRequest {
   // insights time series.
   .bitdrift.public.unary.dashboards.v1.InsightComparisonConfiguration insight_comparison_configuration = 3;
 
-  // Optional limit strategy to use for this chart. Currently only supported for line charts.
-  // If this is omitted, a default value of limiting by a top k of 5 entries is used.
+  // Optional limit strategy to use for this chart. Currently supported only
+  // for line charts. If omitted, a default top-K limit of 5 entries is used.
   .bitdrift.public.unary.charts.v1.LimitStrategy limit_strategy = 6;
 
   // Optional configuration for the sankey chart.
@@ -102,8 +102,8 @@ message GetChartsDataRequest {
   // If this is empty, the platform filter for the workflow backing each chart will be used.
   repeated .bitdrift.public.shared.platform.v1.Platform platform_filter = 6 [(validate.rules).repeated.max_items = 25];
 
-  // Optional filter to apply on top of the platform filter. This is AND against the platform
-  // filter (either supplied or the one from the workflow backing each chart).
+  // Optional filter to apply on top of the platform filter. This filter is
+  // combined with the platform filter using a logical AND.
   .bitdrift.public.shared.workflows.v1.AndFilter and_filter = 7;
 }
 
@@ -219,8 +219,7 @@ message ChartData {
     // Histogram-bar-chart data for the chart.
     .bitdrift.public.unary.dashboards.v1.HistogramBarChartResponse histogram_bar_chart_response = 10;
 
-    // Returned if there was an error retrieving the data for the chart. The FE should indicate
-    // some form of loading error and make this error available in console for debugging.
+    // Contains an error message when chart data could not be retrieved.
     string error = 6;
   }
 }
@@ -232,16 +231,22 @@ message GetChartsDataResponse {
 }
 
 message GetUniqueAppIdsRequest {
-  // If not set default is now - 30d.
+  // The start of the time range to inspect. Defaults to 30 days before the
+  // current time when unset.
   .google.protobuf.Timestamp start_time = 1;
 
-  // If not set default is now.
+  // The end of the time range to inspect. Defaults to the current time when
+  // unset.
   .google.protobuf.Timestamp end_time = 2;
 
+  // Optional platform selection criteria used to limit which platforms and apps
+  // are included in the response.
   repeated .bitdrift.public.shared.platform.v1.Platform platform_filter = 4 [(validate.rules).repeated.max_items = 10];
 }
 
 message GetUniqueAppIdsResponse {
+  // The distinct platform, app ID, and app version combinations observed in the
+  // requested time range.
   repeated .bitdrift.public.shared.platform.v1.Platform platforms = 6;
 }
 
@@ -250,6 +255,7 @@ service DashboardService {
   // Retrieves chart data for one or more charts.
   rpc GetChartsData(.bitdrift.public.unary.dashboards.v1.GetChartsDataRequest) returns (.bitdrift.public.unary.dashboards.v1.GetChartsDataResponse);
 
-  // Fetch the unique OS/app_id/app_versions for a given time range and filter conditions.
+  // Returns the distinct platform, app ID, and app version combinations seen in
+  // the specified time range.
   rpc GetUniqueAppIds(.bitdrift.public.unary.dashboards.v1.GetUniqueAppIdsRequest) returns (.bitdrift.public.unary.dashboards.v1.GetUniqueAppIdsResponse);
 }

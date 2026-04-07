@@ -62,8 +62,8 @@ service WorkflowService {
 }
 
 message FetchCapturedSessionsRequest {
-  // The action id for which insights are requested. If this is empty, this will perform a global
-  // query against all captured sessions.
+  // The action ID whose captured sessions should be returned. If empty, returns
+  // captured sessions across all actions.
   string action_id = 1 [(validate.rules).string = {max_len: 100}];
 
   // The start time and end time of the captured sessions.
@@ -104,8 +104,8 @@ message FetchCapturedSessionsResponse {
   // The captured sessions that matched the request.
   repeated .bitdrift.public.unary.workflows.v1.FetchCapturedSessionsResponse.CapturedSession captured_sessions = 2;
 
-  // The full count if all items were returned without pagination. This is artificially limited to
-  // the daily flush limit multiplied by the number of days in the time range, rounded up.
+  // The total number of matching sessions before pagination, subject to
+  // service limits.
   uint32 full_count = 3;
 }
 

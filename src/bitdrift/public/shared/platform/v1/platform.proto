@@ -10,24 +10,25 @@ package bitdrift.public.shared.platform.v1;
 
 import "validate/validate.proto";
 
-// Used to represent available or target platforms. This can either be used either to provide a top
-// level platform to a workflow or dashboard, or to filter certain requests i.e. listing workflows
-// filtered by platform. Complex app version info is used to provide secondary filters for
-// dashboards or workflow rules.
+// Represents platforms that workflows and dashboards can target or filter by.
+//
+// Use this message to select platforms for workflow configuration or to filter
+// requests such as listing workflows. App version information provides
+// additional filtering within each platform.
 message Platform {
   message AppVersions {
-    // The app id.
+    // The app ID.
     string app_id = 1 [(validate.rules).string = {max_len: 255}];
 
-    // The known app versions for a given app id.
+    // The known app versions for a given app ID.
     repeated string app_versions = 2 [(validate.rules).repeated = {max_items: 100}];
   }
 
   // Represents app selection criteria within a platform filter.
-  // At the moment every platform filter can narrow by app information.
+  // Each platform filter can optionally narrow results by app information.
   message App {
-    // App identifier. Either a simple app id, or a combination of app id and associated app
-    // versions.
+    // App selection criteria. Specify either an app ID alone or an app ID with
+    // associated app versions.
     oneof value {
       option (validate.required) = true;
       // Filters by app ID only.

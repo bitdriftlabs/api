@@ -14,15 +14,16 @@ import "bitdrift/public/unary/issues/v1/crash.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
-// An advanced filter that allows for complex filtering of issue groups.
-// Each condition can specify a filter key, an operator, and a right-hand side (rhs) value.
-// Depending on the selected field and operator, the rhs can represent a string, a semantic
-// version, or another documented field-specific value.
-// This is useful for filtering issue groups based on specific attributes or properties.
-// The conditions are applied in a logical AND fashion, meaning that all conditions must be satisfied for an issue group to match the filter.
+// Defines advanced filtering for issue groups.
 //
-// The conditions contained within each OrCondition are ORed together, and the overall list of OrConditions are ANDed together.
-// i.e. [condition1 OR condition2] AND [condition3] AND [condition4]
+// Each condition specifies a filter key, an operator, and a right-hand-side
+// value. Depending on the selected field and operator, the right-hand side can
+// represent a string, a semantic version, or another documented field-specific
+// value.
+//
+// Conditions within each OrCondition are ORed together, and the list of
+// OrConditions is ANDed together. For example:
+// [condition1 OR condition2] AND [condition3] AND [condition4]
 //
 // AdvancedFilter {
 //  andConditions:
@@ -132,19 +133,20 @@ message Event {
 
 message IssueGroup {
   message Metadata {
-    // The type of the issue group metadata. i.e. Crash, ANR, Exception, etc.
+    // The issue group type, such as Crash, ANR, or Exception.
     string type = 1;
 
-    // The reason behind the issue group metadata. i.e. OutOfMemoryError, NullPointerException, etc.
+    // The issue group reason, such as OutOfMemoryError or
+    // NullPointerException.
     string reason = 2;
 
-    // Additional context about the issue group metadata. i.e. file name, function name, etc. This is used
-    // as part of the issue grouping key.
+    // Additional issue group context, such as a file name or function name.
+    // This value is used as part of the grouping key.
     optional string context = 3;
 
-    // The details of the issue group metadata. i.e. stack trace, error message, etc. This is *not* used
-    // as part of the issue grouping key. This will be the details associated with one of the issues in
-    // the group and is not necessarily representative of the entire group.
+    // Detailed issue data, such as a stack trace or error message. This value
+    // is not used as part of the grouping key. It comes from one issue in the
+    // group and may not represent the entire group.
     optional string details = 4;
 
     // The platform and app_id associated with the issue group.
@@ -236,14 +238,12 @@ message ListIssueGroupsRequest {
     .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
   }
 
-  // Used to paginate through results. To get the next page result, set this to
-  // the desired starting offset. For example, setting to 10 will start with the
-  // 10th record. The default value is 0.
+  // The starting offset for pagination. For example, set this to 10 to start
+  // with the 10th record. Defaults to 0.
   optional uint32 offset = 1;
 
-  // This defines the upper bound of the number of items returned. The maximum
-  // value supported is 100, meaning that we’ll never return more than
-  // max(items.count, limit, 100).
+  // The maximum number of items to return. The server returns at most
+  // min(items.count, limit, 100) items.
   optional uint32 limit = 2 [(validate.rules).uint32 = {
     gte: 1
     lte: 100

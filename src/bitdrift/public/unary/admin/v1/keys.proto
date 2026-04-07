@@ -13,14 +13,14 @@ import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 message SdkKeyResponse {
-  // The actual key, base64 encoded.
+  // The generated key, base64 encoded.
   string key = 1;
 
   // The app/bundle ID regex that the key is associated with.
   string bundle_id_regex = 2;
 
-  // An optional postfix for the app ID associated with the key. This will be appended to the
-  // real app_id during the handshake.
+  // An optional postfix for the app ID associated with the key. The server
+  // appends this to the base app ID during authentication.
   optional string app_id_postfix = 3;
 }
 
@@ -29,8 +29,8 @@ message ApiKeyResponse {
   // cannot be recovered if lost.
   string fingerprint = 1;
 
-  // The actual key, base64 encoded. This is *only* returned when the key is created and will be
-  // empty on subsequent responses.
+  // The generated key, base64 encoded. This value is returned only when the
+  // key is created and is empty on subsequent responses.
   string key = 2;
 
   // The permissions that the key has.
@@ -78,8 +78,8 @@ message CreateKeyRequest {
       max_len: 2048
     }];
 
-    // An optional postfix for the app ID associated with the key. This will be appended to the
-    // real app_id during the handshake.
+    // An optional postfix for the app ID associated with the key. The server
+    // appends this to the base app ID during authentication.
     optional string app_id_postfix = 2 [(validate.rules).string = {max_len: 255}];
   }
 

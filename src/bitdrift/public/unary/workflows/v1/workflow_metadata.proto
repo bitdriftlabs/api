@@ -41,8 +41,7 @@ message WorkflowMetadata {
     // The rule ID this metadata applies to.
     string rule_id = 1 [(validate.rules).string = {max_len: 100}];
 
-    // The rule's title. This is used to display the rule in the workflow graph.
-    // Used to increase workflow's readability.
+    // The rule title displayed in the workflow graph.
     string title = 2 [(validate.rules).string = {max_len: 255}];
   }
 

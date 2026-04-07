@@ -25,10 +25,9 @@ message ChartIdentifier {
       max_len: 255
     }];
 
-    // Optional aggregated action ID to further resolve the chart to a specific time series.
-    // Currently this is only used (and required) when the FE is fetching example cardinality for
-    // a specific time series. In the future it might be used to filter the chart to a specific
-    // time series for generic display if desired when sent in the data request.
+    // Optionally narrows the chart to a specific time series within the chart
+    // definition. This is currently required when retrieving example
+    // cardinality for a specific time series.
     optional string aggregated_action_id = 4 [(validate.rules).string = {max_len: 255}];
   }
 
@@ -48,9 +47,9 @@ message LimitStrategy {}
 
 message HistogramConfiguration {
   // Pins the histograms within this chart to a specific percentile. This is
-  // required for charts that have histograms with a top K grouping as we don't
-  // support querying the cartestian product of (values, percentiles) with top
-  // K.
+  // required for charts that have histograms with a top-K grouping because we
+  // do not support querying the Cartesian product of (values, percentiles)
+  // with top-K.
   //
   // This must be set to one of the percentiles in the ChartMetadata for the
   // chart if percentiles are defined.
