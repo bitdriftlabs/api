@@ -13,6 +13,7 @@ import "bitdrift/public/shared/workflows/v1/time_series.proto";
 import "bitdrift/public/unary/charts/v1/chart_id.proto";
 import "bitdrift/public/unary/charts/v1/chart_metadata.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 message InsightComparisonConfiguration {
@@ -230,8 +231,25 @@ message GetChartsDataResponse {
   repeated .bitdrift.public.unary.dashboards.v1.ChartData data = 1;
 }
 
+message GetUniqueAppIdsRequest {
+  // If not set default is now - 30d.
+  .google.protobuf.Timestamp start_time = 1;
+
+  // If not set default is now.
+  .google.protobuf.Timestamp end_time = 2;
+
+  repeated .bitdrift.public.shared.platform.v1.Platform platform_filter = 4 [(validate.rules).repeated.max_items = 10];
+}
+
+message GetUniqueAppIdsResponse {
+  repeated .bitdrift.public.shared.platform.v1.Platform platforms = 6;
+}
+
 // Provides access to dashboards and chart data, including layout and time series metrics.
 service DashboardService {
   // Retrieves chart data for one or more charts.
   rpc GetChartsData(.bitdrift.public.unary.dashboards.v1.GetChartsDataRequest) returns (.bitdrift.public.unary.dashboards.v1.GetChartsDataResponse);
+
+  // Fetch the unique OS/app_id/app_versions for a given time range and filter conditions.
+  rpc GetUniqueAppIds(.bitdrift.public.unary.dashboards.v1.GetUniqueAppIdsRequest) returns (.bitdrift.public.unary.dashboards.v1.GetUniqueAppIdsResponse);
 }
