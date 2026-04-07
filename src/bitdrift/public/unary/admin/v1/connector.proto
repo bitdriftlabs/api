@@ -48,7 +48,7 @@ message UpsertConnectorResponse {}
 message GetConnectorsRequest {}
 
 message GetConnectorsResponse {
-  // The connectors configured for the calling shard.
+  // The connectors configured for the organization.
   repeated .bitdrift.public.unary.admin.v1.ConnectorConfig connectors = 1;
 }
 

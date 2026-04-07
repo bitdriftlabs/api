@@ -10,7 +10,7 @@ package bitdrift.public.unary.debug_files.v1;
 
 import "bitdrift/public/unary/debug_files/v1/debug_files.proto";
 
-// Manage debug files that belong to the authenticated organization.
+// Manages debug files for the authenticated organization.
 service DebugFileService {
   // Lists debug files matching the specified filter criteria.
   rpc ListDebugFiles(.bitdrift.public.unary.debug_files.v1.ListDebugFilesRequest) returns (.bitdrift.public.unary.debug_files.v1.ListDebugFilesResponse);

@@ -57,7 +57,9 @@ message HydrateSessionResponse {
   // Whether the hydration request is successful.
   bool success = 2;
 
-  // The last hydration state of the session. This is useful when the hydration request is ignored because the session is already hydrated or is currently hydrating.
+  // The most recent hydration state for the session. This is useful when the
+  // request is ignored because the session is already hydrated or currently
+  // hydrating.
   .bitdrift.public.unary.timeline.v1.HydrationState last_hydration_state = 3;
 }
 

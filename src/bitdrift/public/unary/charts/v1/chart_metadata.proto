@@ -52,7 +52,7 @@ message ChartMetadata {
       // Configuration for exporting data to a connector.
       message ConnectorExportConfig {
         message CloudwatchConnectorExportConfig {
-          // The Cloudwatch namespace to which data will be exported. This will be appended to
+          // The CloudWatch namespace to which data will be exported. This will be appended to
           // 'bitdrift/'.
           string namespace = 1 [(validate.rules).string = {
             min_len: 1
@@ -65,7 +65,7 @@ message ChartMetadata {
             max_len: 255
           }];
 
-          // A set of fixed dimensions to include with every metric emitted to Cloudwatch. These
+          // A set of fixed dimensions to include with every metric emitted to CloudWatch. These
           // dimensions will be added in addition to any dimensions specified by the time series
           // query.
           map<string, string> fixed_dimensions = 3 [(validate.rules).map.max_pairs = 10];
@@ -81,13 +81,14 @@ message ChartMetadata {
 
         oneof connector_type {
           option (validate.required) = true;
-          // Configuration specific to Cloudwatch connectors. Cloudwatch export is only valid for
-          // time series that are backed by counters. The configuration will fail if the time series
-          // uses histogram data. For metrics that have a numerator and denominator, the export
-          // configuration will actually export 2 cloudwatch metrics: one for the numerator and one
-          // for the denominator. The user is responsible for interpreting these two metrics
-          // correctly. If a numerator and denominator are exported, the supplied namespace will be
-          // appended with "/numerator" and "/denominator" for the respective metrics.
+          // Configuration specific to CloudWatch connectors. CloudWatch export
+          // is valid only for counter-backed time series. The configuration
+          // fails if the time series uses histogram data. For metrics with a
+          // numerator and denominator, the export configuration emits two
+          // CloudWatch metrics: one for the numerator and one for the
+          // denominator. If both are exported, the supplied namespace is
+          // appended with "/numerator" and "/denominator" for the respective
+          // metrics.
           .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.CloudwatchConnectorExportConfig cloudwatch_connector_export_config = 2;
         }
       }
@@ -149,7 +150,7 @@ message ChartMetadata {
   }
 
   message Summary {
-    // / A description string that will be displayed alongside the chart as a help text.
+    // A description displayed alongside the chart as help text.
     string description = 1 [(validate.rules).string = {max_len: 500}];
   }
 

@@ -26,19 +26,19 @@ message Log {
     map<string, bitdrift_public.protobuf.logging.v1.Data> fields = 1;
   }
 
-  // The log fields of the log. This is a map of key-value pairs that store additional information captured with the log.
+  // Additional key-value fields captured with the log.
   .bitdrift.public.unary.timeline.v1.Log.LogFields fields = 3;
 
-  // The listener IDs associated with the log. This is used to link the log to specific workflows that captured the log.
+  // The listener IDs for workflows that captured the log.
   repeated string listener_ids = 5;
 
   // The severity level of the log.
   .bitdrift.public.unary.timeline.v1.Log.LogLevel log_level = 6;
 
-  // The type of the log. This is used to categorize logs and can be used for filtering and display purposes.
+  // The log type. Use it to categorize logs for filtering and display.
   .bitdrift_public.protobuf.logging.v1.LogType log_type = 7;
 
-  // The main log message of the log.
+  // The primary log message.
   string message = 8;
 
   // The recorded timestamp of the log.
