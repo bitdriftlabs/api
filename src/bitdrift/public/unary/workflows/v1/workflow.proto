@@ -881,6 +881,8 @@ message ListWorkflowsResponse {
   message Item {
     // The workflow returned for this list item.
     .bitdrift.public.unary.workflows.v1.Workflow workflow = 1;
+
+    .bitdrift.public.unary.workflows.v1.WorkflowMetadata metadata = 5;
   }
 
   // An array of workflow objects. See Workflow for details about the object.
