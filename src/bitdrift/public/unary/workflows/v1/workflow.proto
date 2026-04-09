@@ -18,32 +18,39 @@ import "validate/validate.proto";
 
 message GroupBy {
   message StateValue {
-    // The scope of the state value. See `StateScope` for more details about what the different scopes are available.
+    // The scope of the state value to read when producing the group-by dimension.
     .bitdrift.public.unary.workflows.v1.StateScope scope = 1 [(validate.rules).enum = {
       defined_only: true
       not_in: [0]
     }];
 
-    // The key of the state value. This is used to look up the value in the state map based on the provided scope.
+    // The key of the state value to read within the selected scope.
     string key = 2 [(validate.rules).string = {max_len: 100}];
   }
 
-  // A Value to group by. This specifies what additional dimension is included based on extracting additional state from the log that triggers the rule. Each possible values indicates the source the the data used for the dimension. See individual fields for more details.
+  // One additional dimension to attach to emitted metrics for a chart time series. Exactly one
+  // source must be chosen. Each emitted metric will include the extracted value under the
+  // resulting dimension name so that value is available alongside the charted series.
   message Value {
+    // The source used to populate this group-by dimension.
     oneof group_by_type {
       option (validate.required) = true;
-      // Setting this instructs the engine to look up the value of the field by the given name in the log that triggered the rule and use that as a dimension for the generated metric. The field key becomes the resulting metric dimension name.
+      // The value of the named log field from the event that produced the metric. The field name
+      // also becomes the dimension name on the emitted metric.
       string field_key = 1 [(validate.rules).string = {max_len: 100}];
 
-      // Setting this instructs the engine to use the log body as a dimension for the generated metric.
+      // The full log message body as the dimension value. This only applies to log events.
       bool log_body = 2;
 
-      // Setting this instructs the engine to read a value out of the state map based on the provided scope and key and use that as a dimension for the generated metric. The key becomes the resulting metric dimension name.
+      // A value read from state using the provided scope and key. The key becomes the dimension
+      // name on the emitted metric.
       .bitdrift.public.unary.workflows.v1.GroupBy.StateValue state_value = 3;
     }
   }
 
-  // Values to group by. This generates additional dimensions for the generated insights and allows for more granular filtering in dashboards. For example, if you have a metric of error count with a group by value of error type, the collected metrics will include an error type dimension.
+  // Additional dimensions to collect for each emitted metric. Each entry adds one dimension. For
+  // example, grouping an error-count time series by `error_type` makes that error type value
+  // available alongside the charted metric data.
   repeated .bitdrift.public.unary.workflows.v1.GroupBy.Value values = 6 [(validate.rules).repeated = {max_items: 100}];
 }
 
@@ -139,26 +146,29 @@ message Flow {
 
 // A single step within a flow.
 message Step {
-  // A step exit condition. When an exit condition is met, flow execution resets to the start of
-  // the flow and will wait to match the initial step again.
+  // A condition that ends the current run of the flow from this step without advancing to the next
+  // step. When an exit condition is met, the current run is discarded and the flow waits to match
+  // the first step again.
   message ExitCondition {
     message TimeoutExit {
-      // The ID of the timeout which can be referred to by actions. Must be unique within the
-      // workflow.
+      // The ID of this timeout exit. Must be unique within the workflow. This ID can be referenced
+      // by actions that accept timeout IDs.
       string id = 1 [(validate.rules).string = {
         min_len: 1
         max_len: 100
       }];
 
-      // The timeout rule.
+      // The timeout condition for this exit path. Timeout exits are terminal: when the timeout
+      // elapses, the current run ends instead of advancing to another step.
       .bitdrift.public.unary.workflows.v1.Rule.RuleTimeout timeout_rule = 2;
     }
 
+    // Exactly one way for the step to exit early.
     oneof exit_condition_type {
-      // Exits on a match condition.
+      // Exit the current run if this match rule fires while the step is active.
       .bitdrift.public.unary.workflows.v1.MatchRule match_rule = 1;
 
-      // Exits on a timeout condition.
+      // Exit the current run if this timeout elapses while the step is active.
       .bitdrift.public.unary.workflows.v1.Step.ExitCondition.TimeoutExit timeout = 2;
     }
   }
@@ -166,8 +176,8 @@ message Step {
   // The step's match rule. This rule must be satisfied to advance to the next step in the flow.
   .bitdrift.public.unary.workflows.v1.MatchRule match_rule = 1;
 
-  // Zero or more exit conditions for the step. If an exit condition is met, the flow resets to the
-  // start of the flow.
+  // Zero or more early-exit conditions for the step. If any exit condition is met, the current
+  // run ends and the flow resets to wait for the first step again.
   repeated .bitdrift.public.unary.workflows.v1.Step.ExitCondition exit_conditions = 2 [(validate.rules).repeated = {max_items: 100}];
 
   // Describes an optional loop condition that allows looping back to a previous step in the flow.
@@ -194,7 +204,8 @@ message MatchRule {
   }];
 
   oneof match_condition_type {
-    // A match defined by the user.
+    // A caller-defined match built from predicates over log fields, log body, saved fields, or
+    // state values.
     .bitdrift.public.unary.workflows.v1.GenericMatch generic_match = 2;
 
     // An out-of-the-box match for common events that don't require custom field extraction. This is
@@ -421,40 +432,42 @@ message GenericMatch {
   }
 }
 
-// An action rule.
+// An action rule defines workflow output or side-effect behavior such as charts, session capture,
+// or tracing.
 message ActionRule {
-  // ID of this action rule. Must be unique within the workflow. This may be referenced by other
-  // APIs and will be documented as such. In special cases it may also be referenced by other
-  // actions. For example, a chart and flush action can refer to the rule_id of a measure time
-  // action.
+  // ID of this action rule. Must be unique within the workflow. Other APIs may refer to this ID,
+  // and some actions also reference it. For example, chart and flush actions can refer to the
+  // `rule_id` of a measure time action.
   string rule_id = 1 [(validate.rules).string = {
     min_len: 1
     max_len: 100
   }];
 
+  // Exactly one action configuration.
   oneof action_rule_type {
-    // A metric chart action.
+    // Emits one or more time series that are rendered as a chart.
     .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration metric_chart_rule = 2;
 
-    // A flush action.
+    // Triggers session capture by flushing buffered logs for the current session.
     .bitdrift.public.unary.workflows.v1.Rule.RuleFlushConfiguration flush_rule = 3;
 
-    // A funnel action.
+    // Produces a funnel chart across ordered match rules in a single flow.
     .bitdrift.public.unary.workflows.v1.Rule.RuleFunnelConfiguration funnel_rule = 4;
 
-    // A sankey diagram action.
+    // Produces a Sankey diagram across match rules in a single flow.
     .bitdrift.public.unary.workflows.v1.Rule.RuleSankeyDiagramConfiguration sankey_diagram_rule = 5;
 
-    // A measure time action.
+    // Measures elapsed time between two match rules in a flow and can feed other actions.
     .bitdrift.public.unary.workflows.v1.Rule.RuleMeasureTime measure_time_rule = 7;
 
-    // If specified the current session will begin trace sampling.
+    // Starts trace sampling for the current session when the referenced match rule fires.
     .bitdrift.public.unary.workflows.v1.RuleStartTracing start_tracing_rule = 8;
   }
 }
 
+// A trace-start action.
 message RuleStartTracing {
-  // The match ID that when matched will trigger the start of trace sampling.
+  // The match ID that triggers trace sampling for the current session.
   string match_id = 1 [(validate.rules).string = {
     min_len: 1
     max_len: 100
@@ -462,6 +475,8 @@ message RuleStartTracing {
 }
 
 message Rule {
+  // A flush action instructs the client to flush its local log buffer and continue streaming logs
+  // for the current session. This is also known as session capture.
   message RuleFlushConfiguration {
     // The server-generated ID for this rule action. This can be used to query
     // for sessions that arrive at this rule action.
@@ -470,19 +485,21 @@ message Rule {
     // The effective daily capture limit currently applied to this rule.
     uint32 applied_daily_limit = 8;
 
-    // Points to a step's match ID that will trigger session capture when this flush rule is hit.
+    // The match ID of the step that triggers session capture.
     string match_id = 10 [(validate.rules).string = {max_len: 100}];
   }
 
+  // A metrics action defines one or more time series that are computed from workflow matches and
+  // emitted with the metadata needed to combine them into a chart server-side.
   message RuleMetricChartConfiguration {
-    // A reference to data extracted from a previous rule in the workflow path.
+    // A reference to the match ID and field extraction that provides the value for a single time series.
     message DataReference {
-      // Points to a step's match ID to extract the value from. If extraction type is measured_time,
-      // this must point to a Measure Time rule.
+      // The match ID that provides the value for this data reference. If extraction type is
+      // `measured_time`, this must point to a Measure Time rule.
       string match_id = 3 [(validate.rules).string = {max_len: 100}];
 
-      // The value extracted from the log message that advanced the rule. If the oneof is not set,
-      // the value 1 is extracted every time, effectively counting the number of occurrences.
+      // The value extracted from the log message that matched this step. If the oneof is not set,
+      // the value `1` is used, effectively counting the number of matching events.
       oneof extraction_type {
         // The name of the field to extract the value from.
         string name = 2 [(validate.rules).string = {max_len: 100}];
@@ -586,18 +603,20 @@ message Rule {
         }
       }
 
+      // Exactly one metric shape for this time series.
       oneof type {
         option (validate.required) = true;
-        // A rate metric time series.
+        // Emits a numerator and denominator and renders their ratio as a percentage-based time
+        // series.
         .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries.Rate rate = 1;
 
-        // A histogram metric time series.
+        // Records numeric samples and renders percentile lines such as P50, P90, and P99.
         .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries.Histogram histogram = 2;
 
-        // A count metric time series.
+        // Emits counts for matching events or extracted values.
         .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries.Count count = 3;
 
-        // An average count metric time series.
+        // Emits an average based on a numerator series and an implicit denominator count.
         .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries.AverageCount average_count = 10;
       }
 
@@ -609,21 +628,28 @@ message Rule {
       .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries.TrackUnique track_unique = 9;
     }
 
-    // Explicit lists of time series to generate for this rule.
+    // The time series that should be generated for this chart.
     repeated .bitdrift.public.unary.workflows.v1.Rule.RuleMetricChartConfiguration.TimeSeries time_series = 4 [(validate.rules).repeated = {max_items: 100}];
   }
 
+  // A Sankey diagram action combines multiple steps in a single flow user journey into a single
+  // diagram that shows which paths are taken through the flow.
   message RuleSankeyDiagramConfiguration {
-    // Configuration for creating Sankey diagram nodes in response to workflow state updates.
-    // Each node corresponds to a matching rule.
+    // Each node corresponds to a match rule in the flow and supplies the value recorded when that
+    // node is visited.
     message Node {
-      // ID of the corresponding matching rule.
+      // ID of the corresponding match rule. It must resolve to a known match ID, and all node IDs
+      // in a single Sankey diagram must belong to the same flow.
       string id = 1 [(validate.rules).string = {
         min_len: 1
         max_len: 100
       }];
 
-      // The value to extract for a given node.
+      // The value recorded for this node. Workflow validation rejects nodes that omit this field,
+      // and `fixed` / `extract_field` must be non-empty when used.
+      //
+      // Nodes in the loop section of the Sankey must use `extract_field`. Nodes outside the loop
+      // section must use `fixed`.
       oneof node_value {
         // The fixed value.
         string fixed = 2 [(validate.rules).string = {max_len: 255}];
@@ -641,7 +667,9 @@ message Rule {
     // by the server during workflow updates, allowing the frontend to store
     // information that remains stable between updates.
     //
-    // All target nodes *must* be within the same flow.
+    // All target nodes must be within the same flow. The loop section is the portion of the flow
+    // covered by a loop back-edge; nodes in that section are treated as extracted dynamic values,
+    // while nodes before or after it are fixed labels.
     repeated .bitdrift.public.unary.workflows.v1.Rule.RuleSankeyDiagramConfiguration.Node nodes = 1 [(validate.rules).repeated = {max_items: 100}];
 
     // The server-generated ID for this rule action. This uniquely identifies the Sankey diagram
@@ -649,9 +677,12 @@ message Rule {
     string id = 2 [(validate.rules).string = {max_len: 100}];
   }
 
+  // A funnel action combines data from multiple steps in a single flow into one chart that shows
+  // drop-off between steps. Each funnel step corresponds to a match rule in the flow, identified by
+  // its match ID.
   message RuleFunnelConfiguration {
-    // The server-generated IDs for this funnel. This is generated by the server
-    // and may change during updates.
+    // The server-generated metric IDs for this funnel. There is one ID per referenced match ID, in
+    // the same order as `match_ids`.
     repeated string ids = 2 [(validate.rules).repeated = {max_items: 100}];
 
     // The match IDs in the workflow that correspond to the steps of the funnel. All match IDs must
@@ -668,21 +699,18 @@ message Rule {
       .google.protobuf.Duration duration_threshold = 3 [(validate.rules).message = {required: true}];
     }
 
-    // A unique identifier for this node that will be included in the generated message body.
+    // A unique identifier for this action that will be included in the generated message body.
     string name = 1 [(validate.rules).string = {max_len: 255}];
 
-    // The start match ID of the step to start measuring from. Must be in the same flow as the end
-    // match ID.
+    // The match ID where the measurement starts. It must be in the same flow as `end_match_id`.
     string start_match_id = 6 [(validate.rules).string = {max_len: 100}];
 
-    // The end match ID of the step to end measuring at. Must be in the same flow as the start match
-    // ID.
+    // The match ID where the measurement ends. It must be in the same flow as `start_match_id`.
     string end_match_id = 7 [(validate.rules).string = {max_len: 100}];
 
-    // Allows the ability to measure time between two rules with a common
-    // correlation id. This is useful when the start and end can be racey and we end up
-    // measuring time between unrelated events. An example of this is when you measure
-    // download time and you get events like:
+    // Correlates the start and end matches using a shared field value. This is useful when the
+    // start and end can be racy and we might otherwise measure time between unrelated events. For
+    // example:
     //
     //  - Download started, id=A
     //  - Download started, id=B
@@ -692,8 +720,7 @@ message Rule {
     // Without this we'd be measuring the time between B started and A completed.
     optional string correlation_field_name = 4 [(validate.rules).string = {max_len: 100}];
 
-    // Supplies optional fields that will be extracted from the log when the time measurement is
-    // completed.
+    // Additional fields to extract from the end match when the time measurement completes.
     repeated string additional_extracted_fields = 5 [(validate.rules).repeated = {max_items: 100}];
 
     // An optional condition to check when time measurement is complete. If specified, actions that
@@ -701,8 +728,9 @@ message Rule {
     .bitdrift.public.unary.workflows.v1.Rule.RuleMeasureTime.MeasureTimeCondition measure_time_condition = 8;
   }
 
-  // This is valid anywhere a generic match or OOTB match rule is allowed, including attached to
-  // start with the caveat that we only allow a single timeout outbound from any origin.
+  // A timeout-based exit that can be attached anywhere a step can define exit conditions. Timeout
+  // exits are terminal and do not advance to another step. A single step can define at most one
+  // timeout exit.
   message RuleTimeout {
     enum DurationUnit {
       MILLISECONDS = 0;
@@ -711,10 +739,10 @@ message Rule {
       HOURS = 3;
     }
 
-    // The timeout duration for this rule.
+    // The length of time to wait before the timeout exit fires.
     uint32 duration = 1 [(validate.rules).uint32.gt = 0];
 
-    // The unit for the timeout duration value.
+    // The unit for `duration`.
     .bitdrift.public.unary.workflows.v1.Rule.RuleTimeout.DurationUnit duration_unit = 2 [(validate.rules).enum.defined_only = true];
   }
 }
@@ -722,7 +750,6 @@ message Rule {
 enum StateScope {
   UNKNOWN = 0;
   FEATURE_FLAG_EXPOSURE = 1;
-  GLOBAL_STATE = 2;
 }
 
 enum MatchType {
@@ -768,13 +795,15 @@ enum Operator {
 }
 
 message StateCondition {
-  // The type used to interpret the value for comparison.
+  // The type used to interpret both the observed state value and the provided `value` before
+  // comparison.
   .bitdrift.public.unary.workflows.v1.MatchType match_type = 1 [(validate.rules).enum = {defined_only: true}];
 
-  // The comparison operator.
+  // The comparison operator to apply after converting values according to `match_type`.
   .bitdrift.public.unary.workflows.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
 
-  // The value to compare against.
+  // The comparison value, encoded as a string. Its format must match `match_type`. For example,
+  // use `1.2.3` for `SEMVER` or `42` for `INT`.
   string value = 3 [(validate.rules).string = {max_len: 255}];
 }
 
