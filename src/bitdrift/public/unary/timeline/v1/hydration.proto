@@ -12,11 +12,14 @@ import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 enum HydrationStatus {
+  // Not used.
   DRY = 0;
+  // The session is currently being hydrated by an active hydration process.
   HYDRATING = 1;
+  // The session has been successfully hydrated by a completed hydration process.
   HYDRATED = 2;
+  // The hydration process has failed.
   FAILED = 3;
-  UNKNOWN = 4;
 }
 
 message HydrationState {

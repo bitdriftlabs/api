@@ -15,9 +15,13 @@ import "bitdrift/public/unary/timeline/v1/logs.proto";
 // Provides access to session timeline data, including logs, metadata, and hydration state.
 service TimelineService {
   // Retrieves the logs for a session.
+  //
+  // Returns the gRPC NOT_FOUND status if the session has not been hydrated yet.
   rpc GetSessionLogs(.bitdrift.public.unary.timeline.v1.GetSessionLogsRequest) returns (.bitdrift.public.unary.timeline.v1.GetSessionLogsResponse);
 
   // Retrieves metadata and attributes for a session.
+  //
+  // Returns the gRPC NOT_FOUND status if the session has not been hydrated yet.
   rpc GetSessionInfo(.bitdrift.public.unary.timeline.v1.GetSessionInfoRequest) returns (.bitdrift.public.unary.timeline.v1.GetSessionInfoResponse);
 
   // Triggers hydration of a session.
@@ -27,5 +31,8 @@ service TimelineService {
   rpc HydrateSession(.bitdrift.public.unary.timeline.v1.HydrateSessionRequest) returns (.bitdrift.public.unary.timeline.v1.HydrateSessionResponse);
 
   // Retrieves the hydration status of a session.
+  //
+  // Returns the gRPC NOT_FOUND status if hydration has not been triggered for the
+  // session yet.
   rpc GetHydrationStatus(.bitdrift.public.unary.timeline.v1.GetHydrationStatusRequest) returns (.bitdrift.public.unary.timeline.v1.GetHydrationStatusResponse);
 }
