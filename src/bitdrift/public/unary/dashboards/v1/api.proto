@@ -16,6 +16,77 @@ import "bitdrift/public/unary/common/v1/common.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
+// Metadata sufficient to render a single chart.
+message ResolvedChart {
+  // An opaque identifier object for the chart. This should be provided to the
+  // data API in order to fetch/stream the data.
+  .bitdrift.public.unary.charts.v1.ChartIdentifier id = 1 [(validate.rules).message = {required: true}];
+
+  message Line {
+    // If the line chart contains histograms with a top-K grouping, this
+    // provides the list of allowed percentiles. The chart should default to the
+    // 0th element in the list and can override the value via the chart API.
+    //
+    // If this list is empty, the chart should not allow the user to change the
+    // percentile.
+    repeated float configurable_percentiles = 1;
+
+    // Whether or not the chart supports selecting multiple percentiles at once. This will be false for
+    // charts which contain grouped histograms or multiple histograms, and true for charts with a single histogram.
+    bool supports_multiple_percentiles = 3;
+  }
+
+  message Funnel {}
+
+  message Sankey {}
+
+  message Table {
+    // If the line chart corresponding to this table contains histograms with a
+    // top-K grouping, this
+    // provides the list of allowed percentiles. The chart should default to the
+    // 0th element in the list and can override the value via the chart API.
+    //
+    // If this list is empty, the chart should not allow the user to change the
+    // percentile.
+    repeated float configurable_percentiles = 1;
+
+    // Whether or not the chart supports selecting multiple percentiles at once. This will be false for
+    // charts which contain grouped histograms or multiple histograms, and true for charts with a single histogram.
+    bool supports_multiple_percentiles = 2;
+  }
+
+  // The type of chart.
+  oneof type {
+    option (validate.required) = true;
+    // The chart is a line chart, rendering one or more time series.
+    .bitdrift.public.unary.dashboards.v1.ResolvedChart.Line line = 2;
+
+    // The chart is a funnel chart, rendering the data as a set of steps.
+    .bitdrift.public.unary.dashboards.v1.ResolvedChart.Funnel funnel = 10;
+
+    // The chart is a sankey chart, rendering the data as a set of connected nodes.
+    .bitdrift.public.unary.dashboards.v1.ResolvedChart.Sankey sankey = 14;
+
+    // The chart is a table chart, rendering the data as a set of rows and columns.
+    .bitdrift.public.unary.dashboards.v1.ResolvedChart.Table table = 16;
+  }
+
+  // The display metadata for the chart.
+  .bitdrift.public.unary.charts.v1.ChartMetadata metadata = 21;
+}
+
+message GetWorkflowChartsRequest {
+  // The ID or slug of the workflow to fetch the dashboard for.
+  string workflow_id_or_slug = 2 [(validate.rules).string = {
+    min_len: 1
+    max_bytes: 4096
+  }];
+}
+
+message GetWorkflowChartsResponse {
+  repeated .bitdrift.public.unary.dashboards.v1.ResolvedChart charts = 1;
+}
+
 message InsightComparisonConfiguration {
   // The id of the first time series to compare against.
   string lhs_id = 1 [(validate.rules).string = {
@@ -113,6 +184,35 @@ message LineChartResponse {
   repeated .bitdrift.public.shared.workflows.v1.TimeSeries time_series = 1;
 }
 
+message SankeyChartResponse {
+  // A single state in the diagram.
+  message Node {
+    // The ID of the node.
+    string id = 1 [(validate.rules).string.min_len = 1];
+
+    // The name of the node.
+    string name = 2;
+  }
+
+  // A connection between two nodes in a diagram.
+  message Link {
+    // The ID of the source node.
+    string source_node_id = 1 [(validate.rules).string.min_len = 1];
+
+    // The ID of the target node.
+    string target_node_id = 2 [(validate.rules).string.min_len = 1];
+
+    // The value of the link.
+    uint64 value = 3;
+  }
+
+  // The nodes of the diagram.
+  repeated .bitdrift.public.unary.dashboards.v1.SankeyChartResponse.Node nodes = 1;
+
+  // The links of the diagram.
+  repeated .bitdrift.public.unary.dashboards.v1.SankeyChartResponse.Link links = 2;
+}
+
 message TableChartResponse {
   // The tables to render for this chart.
   repeated .bitdrift.public.unary.dashboards.v1.Table tables = 1;
@@ -157,6 +257,14 @@ message TableRow {
 
   // The unique devices count based on the TrackUnique configuration.
   optional uint64 unique_devices = 3;
+}
+
+message FunnelChartResponse {
+  // The funnel's steps.
+  // The order of steps in the list corresponds to the order of metric IDs in
+  // the stream funnels request. If there is no data available for any of the
+  // metrics associated with a given funnel, the `steps` list is empty.
+  repeated .bitdrift.public.unary.charts.v1.FunnelStep steps = 1;
 }
 
 message HistogramBarChartResponse {
@@ -213,8 +321,14 @@ message ChartData {
     // Line-chart data for the chart.
     .bitdrift.public.unary.dashboards.v1.LineChartResponse line_data = 3;
 
+    // Sankey-chart data for the chart.
+    .bitdrift.public.unary.dashboards.v1.SankeyChartResponse sankey_data = 7;
+
     // Table data for the chart.
     .bitdrift.public.unary.dashboards.v1.TableChartResponse table_data = 8;
+
+    // Funnel data for the chart.
+    .bitdrift.public.unary.dashboards.v1.FunnelChartResponse funnel_data = 9;
 
     // Histogram-bar-chart data for the chart.
     .bitdrift.public.unary.dashboards.v1.HistogramBarChartResponse histogram_bar_chart_response = 10;
@@ -252,6 +366,12 @@ message GetUniqueAppIdsResponse {
 
 // Provides access to dashboards and chart data, including layout and time series metrics.
 service DashboardService {
+  // Retrieves the chart configuration for a single workflow.
+  //
+  // Returns a list of all charts to be displayed for this workflow. The chart
+  // IDs should be used to fetch the data.
+  rpc GetWorkflowCharts(.bitdrift.public.unary.dashboards.v1.GetWorkflowChartsRequest) returns (.bitdrift.public.unary.dashboards.v1.GetWorkflowChartsResponse);
+
   // Retrieves chart data for one or more charts.
   rpc GetChartsData(.bitdrift.public.unary.dashboards.v1.GetChartsDataRequest) returns (.bitdrift.public.unary.dashboards.v1.GetChartsDataResponse);
 

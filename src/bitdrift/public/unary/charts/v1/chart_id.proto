@@ -31,10 +31,44 @@ message ChartIdentifier {
     optional string aggregated_action_id = 4 [(validate.rules).string = {max_len: 255}];
   }
 
+  message WorkflowFunnelChart {
+    // The workflow that owns this funnel chart.
+    string workflow_id = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // The funnel rule that defines this chart.
+    string funnel_rule_id = 3 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+  }
+
+  message WorkflowSankeyChart {
+    // The workflow that owns this sankey chart.
+    string workflow_id = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // The rule that defines this sankey chart.
+    string rule_id = 3 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+  }
+
   oneof type {
     option (validate.required) = true;
     // A workflow-backed metric chart.
     .bitdrift.public.unary.charts.v1.ChartIdentifier.WorkflowChart workflow = 1;
+
+    // A workflow-backed sankey chart.
+    .bitdrift.public.unary.charts.v1.ChartIdentifier.WorkflowSankeyChart sankey_chart = 5;
+
+    // A workflow-backed funnel chart.
+    .bitdrift.public.unary.charts.v1.ChartIdentifier.WorkflowFunnelChart workflow_funnel_chart = 7;
   }
 }
 
@@ -57,4 +91,12 @@ message HistogramConfiguration {
 
   // Percentiles to query when the chart supports returning multiple histogram lines.
   repeated float percentiles = 3 [(validate.rules).repeated.max_items = 20];
+}
+
+message FunnelStep {
+  // The action ID associated with this step.
+  string id = 1;
+
+  // The accumulated value of all collected data points for this metric.
+  uint64 value = 2;
 }
