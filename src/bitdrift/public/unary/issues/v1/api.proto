@@ -26,4 +26,13 @@ service IssueService {
 
   // Retrieves the feature flags associated with an issue.
   rpc GetIssueFeatureFlags(.bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsRequest) returns (.bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsResponse);
+
+  // Updates the status of an issue group.
+  rpc UpdateIssueGroupStatus(.bitdrift.public.unary.issues.v1.UpdateIssueGroupStatusRequest) returns (.bitdrift.public.unary.issues.v1.UpdateIssueGroupStatusResponse);
+
+  // Lists the users who can be assigned to issues.
+  rpc ListPossibleAssignees(.bitdrift.public.unary.issues.v1.ListPossibleAssigneesRequest) returns (.bitdrift.public.unary.issues.v1.ListPossibleAssigneesResponse);
+
+  // Updates the assignees for an issue group.
+  rpc UpdateIssueGroupAssignees(.bitdrift.public.unary.issues.v1.UpdateIssueGroupAssigneesRequest) returns (.bitdrift.public.unary.issues.v1.UpdateIssueGroupAssigneesResponse);
 }

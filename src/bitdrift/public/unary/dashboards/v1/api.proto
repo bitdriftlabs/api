@@ -24,11 +24,13 @@ message ResolvedChart {
 
   message Line {
     // If the line chart contains histograms with a top-K grouping, this
-    // provides the list of allowed percentiles. The chart should default to the
-    // 0th element in the list and can override the value via the chart API.
+    // provides a best-effort list of suggested percentiles. The chart should
+    // default to the 0th element in the list, and callers may override that
+    // value via the chart API.
     //
-    // If this list is empty, the chart should not allow the user to change the
-    // percentile.
+    // If this list is empty, the chart does not have suggested default
+    // percentile values, but callers may still choose a percentile via the
+    // chart API.
     repeated float configurable_percentiles = 1;
 
     // Whether or not the chart supports selecting multiple percentiles at once. This will be false for
@@ -42,12 +44,13 @@ message ResolvedChart {
 
   message Table {
     // If the line chart corresponding to this table contains histograms with a
-    // top-K grouping, this
-    // provides the list of allowed percentiles. The chart should default to the
-    // 0th element in the list and can override the value via the chart API.
+    // top-K grouping, this provides a best-effort list of suggested
+    // percentiles. The chart should default to the 0th element in the list,
+    // and callers may override that value via the chart API.
     //
-    // If this list is empty, the chart should not allow the user to change the
-    // percentile.
+    // If this list is empty, the chart does not have suggested default
+    // percentile values, but callers may still choose a percentile via the
+    // chart API.
     repeated float configurable_percentiles = 1;
 
     // Whether or not the chart supports selecting multiple percentiles at once. This will be false for
@@ -77,10 +80,10 @@ message ResolvedChart {
 
 message GetWorkflowChartsRequest {
   // The ID or slug of the workflow to fetch the dashboard for.
-  string workflow_id_or_slug = 2 [(validate.rules).string = {
-    min_len: 1
-    max_bytes: 4096
-  }];
+  string workflow_id_or_slug = 2 [
+    (validate.rules).string.min_len = 1,
+    (validate.rules).string.max_len = 4096
+  ];
 }
 
 message GetWorkflowChartsResponse {
