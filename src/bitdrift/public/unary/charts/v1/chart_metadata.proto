@@ -81,13 +81,11 @@ message ChartMetadata {
 
         oneof connector_type {
           option (validate.required) = true;
-          // Configuration specific to CloudWatch connectors. CloudWatch export
-          // is valid only for counter-backed time series. The configuration
-          // fails if the time series uses histogram data. For metrics with a
-          // numerator and denominator, the export configuration emits two
-          // CloudWatch metrics: one for the numerator and one for the
-          // denominator. If both are exported, the supplied namespace is
-          // appended with "/numerator" and "/denominator" for the respective
+          // Configuration specific to CloudWatch connectors. CloudWatch export is valid only for
+          // counter-backed time series. The configuration fails if the time series uses histogram
+          // data. For metrics with a numerator and denominator, the export configuration emits two
+          // CloudWatch metrics: one for the numerator and one for the denominator. The supplied
+          // metric name is appended with "/numerator" and "/denominator" for the respective
           // metrics.
           .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.CloudwatchConnectorExportConfig cloudwatch_connector_export_config = 2;
         }

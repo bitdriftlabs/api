@@ -475,8 +475,6 @@ message RuleStartTracing {
 }
 
 message Rule {
-  // A flush action instructs the client to flush its local log buffer and continue streaming logs
-  // for the current session. This is also known as session capture.
   message RuleFlushConfiguration {
     // The server-generated ID for this rule action. This can be used to query
     // for sessions that arrive at this rule action.

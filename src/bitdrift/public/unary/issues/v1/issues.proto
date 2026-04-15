@@ -437,3 +437,78 @@ message GetIssueFeatureFlagsResponse {
   // The feature flags active when the issue occurred.
   repeated .bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsResponse.FeatureFlag feature_flags = 1;
 }
+
+message UpdateIssueGroupStatusRequest {
+  // The unique identifier for the issue group.
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The new status to set.
+  .bitdrift.public.unary.issues.v1.IssueGroupStatus status = 2 [(validate.rules).enum = {defined_only: true}];
+}
+
+message UpdateIssueGroupStatusResponse {
+  // The resulting status after the update.
+  .bitdrift.public.unary.issues.v1.IssueGroupStatus status = 1 [(validate.rules).enum = {defined_only: true}];
+
+  // The latest version/version code of the application when marked as fixed.
+  oneof resolution_version {
+    string version = 2;
+
+    // Android-specific version field.
+    int64 version_code = 3;
+  }
+}
+
+message UpdateIssueGroupAssigneesRequest {
+  // The unique identifier for the issue group.
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The new assignees to set.
+  repeated .bitdrift.public.unary.common.v1.Owner assignees = 2 [(validate.rules).repeated = {max_items: 100}];
+}
+
+message UpdateIssueGroupAssigneesResponse {
+  // The resulting assignees after the update.
+  repeated .bitdrift.public.unary.common.v1.Owner assignees = 1;
+}
+
+message ListPossibleAssigneesRequest {
+  // Filter assignees by text match.
+  optional string search = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // Filter assignees to those with matching user IDs.
+  repeated string user_ids = 2 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      string: {max_len: 100}
+    }
+  }];
+
+  // The starting offset for pagination. For example, set this to 10 to start
+  // with the 10th record. Defaults to 0.
+  optional uint32 offset = 3;
+
+  // The maximum number of items to return. The server returns at most
+  // min(items.count, limit, 100) items.
+  optional uint32 limit = 4 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
+}
+
+message ListPossibleAssigneesResponse {
+  // Possible values for assignees.
+  repeated .bitdrift.public.unary.common.v1.Owner assignees = 1;
+
+  // Total number of possible assignees matching the filter criteria.
+  uint32 total = 2;
+}
