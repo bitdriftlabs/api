@@ -10,8 +10,10 @@ package bitdrift.public.unary.admin.v1;
 
 enum Permission {
   PERMISSION_UNSPECIFIED = 0;
-  // Allows creating, revoking, and listing SDK keys.
+  // Allows creating, revoking, and listing SDK and API keys.
   SDK_KEY_ADMIN = 1;
+  // Allows creating API keys.
+  API_KEY_CREATOR = 16;
   // Allows editing any workflow.
   WORKFLOW_ADMIN = 2;
   // Allows reading any workflow.
