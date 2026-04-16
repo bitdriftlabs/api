@@ -8,6 +8,7 @@ syntax = "proto3";
 
 package bitdrift.public.unary.workflows.v1;
 
+import "bitdrift/public/shared/workflows/v1/time_series.proto";
 import "bitdrift/public/unary/charts/v1/chart_metadata.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
 import "bitdrift/public/unary/workflows/v1/workflow.proto";
@@ -68,6 +69,10 @@ message FetchCapturedSessionsRequest {
 
   // The start time and end time of the captured sessions.
   .bitdrift.public.unary.common.v1.TimeRange time_range = 8;
+
+  // Field filters to apply to the captured session search. This supports filtering sessions based on certain indexed fields
+  // recorded alongside the captured session. Reach out to the bitdrift team to index additional fields.
+  repeated .bitdrift.public.shared.workflows.v1.AndFilter or_filter = 7 [(validate.rules).repeated = {max_items: 10}];
 
   // The page number and the number of items per page. The server will use this
   // to paginate the results. Defaults to 1 when not set.
