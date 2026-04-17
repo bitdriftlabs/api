@@ -8,6 +8,7 @@ syntax = "proto3";
 
 package bitdrift.public.unary.workflows.v1;
 
+import "bitdrift/public/shared/annotations/api_ootb_fields.proto";
 import "bitdrift/public/shared/platform/v1/platform.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
 import "bitdrift/public/unary/workflows/v1/workflow_metadata.proto";
@@ -262,7 +263,63 @@ message OotbMatch {
       // App moves into the foreground and becomes active.
       APP_FOREGROUND = 5;
       // App launch completes for a new process.
-      APP_LAUNCH = 6;
+      APP_LAUNCH = 6 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "startup_type"
+          description: "COLD, WARM, or HOT."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "startup_reason"
+          description: "Why the app was launched."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "startup_state"
+          description: "Startup state at launch time."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "startup_launch_mode"
+          description: "Activity launch mode."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "startup_was_forced_stopped"
+          description: "Whether the app was previously force-stopped."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "startup_time_to_initial_display_ms"
+          description: "Time from process start to first frame, if available."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "startup_intent_action"
+          description: "Intent action that triggered the launch, if present."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_launch_type"
+          description: "Launch type (e.g., remote notification)."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_scene"
+          description: "Scene that is activated."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+      }];
       // App reached time-to-interactive after launch. Carries the same fields as APP_LAUNCH.
       APP_LAUNCH_TTI = 7;
       // App opens into the foreground, either on a cold start or when reopened from the
@@ -270,46 +327,505 @@ message OotbMatch {
       APP_OPEN = 8;
       // An app termination is recorded. On Android this includes OS-reported exit information; on
       // Apple this corresponds to the app termination notification.
-      APP_TERMINATION = 9;
+      APP_TERMINATION = 9 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_app_exit_reason"
+          description: "iOS: \"app_will_terminate_notification\". Android: ApplicationExitInfo reason."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
       // App updates to a new version.
       APP_UPDATE = 10;
       // Device battery state changes.
-      BATTERY_STATE_CHANGE = 11;
+      BATTERY_STATE_CHANGE = 11 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_state"
+          description: "Android: \"charging\"/\"unplugged\". iOS: UIDevice battery state string."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_battery_level"
+          description: "Battery percentage."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "percent"
+        }
+        well_known_fields: {
+          key: "_battery_val"
+          description: "Battery level as a float."
+          type: OOTB_FIELD_TYPE_FLOAT
+        }
+      }];
       // A GraphQL request starts. Requires supported network instrumentation so the SDK can emit
       // the underlying HTTP and GraphQL span data.
-      GQL_REQUEST = 12;
+      GQL_REQUEST = 12 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_method"
+          description: "HTTP method."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_host"
+          description: "Request host."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_path_template"
+          description: "Format: gql-{operation_name}."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_operation_name"
+          description: "GraphQL operation name."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_operation_type"
+          description: "GraphQL operation type (query/mutation/subscription)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_operation_id"
+          description: "GraphQL operation ID."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_span_id"
+          description: "Span identifier."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
       // A GraphQL response completes. Requires supported network instrumentation and carries all
       // GQL_REQUEST fields plus response-specific fields.
-      GQL_RESPONSE = 13;
+      GQL_RESPONSE = 13 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_method"
+          description: "HTTP method."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_host"
+          description: "Request host."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_path_template"
+          description: "Format: gql-{operation_name}."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_operation_name"
+          description: "GraphQL operation name."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_operation_type"
+          description: "GraphQL operation type (query/mutation/subscription)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_operation_id"
+          description: "GraphQL operation ID."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_status_code"
+          description: "HTTP status code."
+          type: OOTB_FIELD_TYPE_INT
+        }
+        well_known_fields: {
+          key: "_duration_ms"
+          description: "Round-trip duration."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+        well_known_fields: {
+          key: "_result"
+          description: "\"success\" or \"failure\"."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_span_id"
+          description: "Span identifier."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
       // Device low-power mode toggles.
-      LOW_POWER_MODE = 14;
+      LOW_POWER_MODE = 14 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_low_power_enabled"
+          description: "Power save mode state."
+          type: OOTB_FIELD_TYPE_BOOL
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_low_power_mode"
+          description: "Low power mode state."
+          type: OOTB_FIELD_TYPE_BOOL
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_battery_val"
+          description: "Battery level as a float."
+          type: OOTB_FIELD_TYPE_FLOAT
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_state"
+          description: "Battery charging state."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_battery_level"
+          description: "Battery percentage."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "percent"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+      }];
       // App memory pressure is recorded. On Android this is emitted when app memory usage meets
       // the configured low-memory threshold. On Apple this is emitted for system memory pressure
       // notifications.
-      MEMORY_PRESSURE = 15;
+      MEMORY_PRESSURE = 15 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_jvm_used_kb"
+          description: "JVM heap currently used."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_jvm_total_kb"
+          description: "JVM heap currently allocated/committed."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_jvm_max_kb"
+          description: "JVM heap maximum size."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_jvm_used_percent"
+          description: "JVM used as percent of max."
+          type: OOTB_FIELD_TYPE_FLOAT
+          unit: "percent"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_native_used_kb"
+          description: "Native heap allocated."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_native_total_kb"
+          description: "Native heap total size."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_memory_class"
+          description: "Per-app memory class reported by Android."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "MB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_is_memory_low"
+          description: "Whether app memory usage is at or above the configured low-memory threshold."
+          type: OOTB_FIELD_TYPE_BOOL
+        }
+        well_known_fields: {
+          key: "_app_used_kb"
+          description: "App physical memory footprint."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_app_limit_kb"
+          description: "Estimated app memory limit before termination."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_device_kb"
+          description: "Total device RAM."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_app_used_percent"
+          description: "App used memory as a percent of the estimated limit."
+          type: OOTB_FIELD_TYPE_FLOAT
+          unit: "percent"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_mem_level"
+          description: "Apple memory pressure level: normal, warning, or critical."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+      }];
       // An HTTP network request starts. Requires supported network instrumentation integration.
-      NETWORK_REQUEST = 16;
+      NETWORK_REQUEST = 16 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_method"
+          description: "HTTP method."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_host"
+          description: "Request host."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_path"
+          description: "Full request path (high cardinality)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_path_template"
+          description: "Normalized path template (prefer for group_by)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_query"
+          description: "Query string."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_span_id"
+          description: "Span identifier."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_request_body_bytes_expected_to_send_count"
+          description: "Expected request body size from Content-Length."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+        }
+      }];
       // An HTTP network response completes. Requires supported network instrumentation integration.
-      NETWORK_RESPONSE = 17;
+      NETWORK_RESPONSE = 17 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_method"
+          description: "HTTP method."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_host"
+          description: "Request host."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_path"
+          description: "Full request path (high cardinality)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_path_template"
+          description: "Normalized path template (prefer for group_by)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_query"
+          description: "Query string."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_status_code"
+          description: "HTTP status code."
+          type: OOTB_FIELD_TYPE_INT
+        }
+        well_known_fields: {
+          key: "_result"
+          description: "\"success\" or \"failure\". Prefer over _status_code for filtering."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_duration_ms"
+          description: "Round-trip duration."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+        well_known_fields: {
+          key: "_error_type"
+          description: "Error type string (Android). iOS emits _error_code instead."
+          type: OOTB_FIELD_TYPE_STRING
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_error_code"
+          description: "Numeric error code (iOS). Android emits _error_type instead."
+          type: OOTB_FIELD_TYPE_INT
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_error_message"
+          description: "Human-readable error description."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_request_body_bytes_sent_count"
+          description: "Request body bytes sent."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+        }
+        well_known_fields: {
+          key: "_response_body_bytes_received_count"
+          description: "Response body bytes received."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+        }
+        well_known_fields: {
+          key: "_request_headers_bytes_count"
+          description: "Request header bytes."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+        }
+        well_known_fields: {
+          key: "_response_headers_bytes_count"
+          description: "Response header bytes."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+        }
+        well_known_fields: {
+          key: "_dns_resolution_duration_ms"
+          description: "DNS lookup duration."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+        well_known_fields: {
+          key: "_tls_duration_ms"
+          description: "TLS handshake duration."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+        well_known_fields: {
+          key: "_tcp_duration_ms"
+          description: "TCP connection duration."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+        well_known_fields: {
+          key: "_fetch_init_duration_ms"
+          description: "Fetch initialization duration."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+        well_known_fields: {
+          key: "_response_latency_ms"
+          description: "Time to first response byte."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+        well_known_fields: {
+          key: "_protocol"
+          description: "Protocol used (e.g., h2, http/1.1)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_span_id"
+          description: "Span identifier."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
       // Device orientation changes.
-      ORIENTATION_CHANGE = 18;
+      ORIENTATION_CHANGE = 18 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_orientation"
+          description: "Android: \"portrait\"/\"landscape\". iOS: portrait, portraitUpsideDown, landscapeLeft, landscapeRight, faceUp, faceDown, unknown."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
       // A periodic resource snapshot. Carries device and process resource metrics such as memory,
       // battery, power, disk, and network throughput fields.
       RESOURCE = 19;
       // A screen or view is displayed.
-      SCREEN_VIEW = 20;
+      SCREEN_VIEW = 20 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_screen_name"
+          description: "Name of the screen or view."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
       // SDK configuration is applied during SDK startup.
       SDK_CONFIGURATION = 21;
       // A Session Replay frame is captured.
       SESSION_REPLAY = 22;
       // A custom span ends.
-      SPAN_END = 23;
+      SPAN_END = 23 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_span_id"
+          description: "Span identifier."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_span_name"
+          description: "Span name."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_span_parent_id"
+          description: "Parent span identifier."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_duration_ms"
+          description: "Span duration."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+        well_known_fields: {
+          key: "_result"
+          description: "Span result."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
       // A custom span starts.
-      SPAN_START = 24;
+      SPAN_START = 24 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_span_id"
+          description: "Span identifier."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_span_name"
+          description: "Span name."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_span_parent_id"
+          description: "Parent span identifier."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
       // Device thermal state changes.
-      THERMAL_STATE_CHANGE = 25;
+      THERMAL_STATE_CHANGE = 25 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_thermal_state"
+          description: "Thermal state of the device."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
       // Device timezone changes.
-      TIMEZONE_CHANGE = 26;
+      TIMEZONE_CHANGE = 26 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_time_zone"
+          description: "New timezone identifier."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
     }
   }
 
@@ -328,7 +844,60 @@ message OotbMatch {
       APP_CLOSE = 6;
       // Android app crash. Carries crash details when available. Depending on the source, fields
       // may describe a JVM exception or an OS-reported fatal exit.
-      APP_CRASH = 7;
+      APP_CRASH = 7 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_app_exit_source"
+          description: "\"UncaughtExceptionHandler\" or \"ApplicationExitInfo\"."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_app_exit_info"
+          description: "Exception class name (UncaughtExceptionHandler only)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_app_exit_details"
+          description: "Exception message (UncaughtExceptionHandler only)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_app_exit_thread"
+          description: "Thread name (UncaughtExceptionHandler only)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_app_exit_description"
+          description: "Exit description (ApplicationExitInfo only)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_app_exit_process_name"
+          description: "Process name (ApplicationExitInfo only)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_app_exit_importance"
+          description: "Process importance (ApplicationExitInfo only)."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_app_exit_status"
+          description: "Exit status code (ApplicationExitInfo only)."
+          type: OOTB_FIELD_TYPE_INT
+        }
+        well_known_fields: {
+          key: "_app_exit_pss"
+          description: "Proportional set size at exit (ApplicationExitInfo only)."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+        }
+        well_known_fields: {
+          key: "_app_exit_rss"
+          description: "Resident set size at exit (ApplicationExitInfo only)."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+        }
+      }];
       // Deprecated Android-only alias of APP_TERMINATION. Retained for legacy compatibility;
       // prefer APP_TERMINATION for new workflows.
       APP_EXIT = 8;
@@ -341,7 +910,24 @@ message OotbMatch {
       BATTERY_STATE_CHANGE = 15;
       // A rendering issue is detected for a UI frame. `_frame_issue_type` distinguishes slow,
       // frozen, and ANR-classified frames.
-      DROPPED_FRAME = 16;
+      DROPPED_FRAME = 16 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_frame_issue_type"
+          description: "Slow, Frozen, or ANR."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_screen_name"
+          description: "Active screen name, if set."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_duration_ms"
+          description: "Frame duration."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+      }];
       GQL_REQUEST = 17;
       GQL_RESPONSE = 18;
       LOW_POWER_MODE = 19;
@@ -366,7 +952,25 @@ message OotbMatch {
     enum AppleOotbConditionType {
       UNKNOWN = 0;
       // iOS app hang detected when the app stops responding for longer than the configured threshold.
-      ANR = 1;
+      ANR = 1 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_duration_ms"
+          description: "ANR duration."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+        well_known_fields: {
+          key: "_threshold_duration_ms"
+          description: "Configured ANR threshold."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "ms"
+        }
+        well_known_fields: {
+          key: "_span_id"
+          description: "Span identifier for the ANR."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+      }];
       APP_BACKGROUND = 2;
       APP_BUILT_IN_JS_FATAL_ERROR = 3;
       APP_BUILT_IN_JS_NON_FATAL_ERROR = 4;
