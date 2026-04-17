@@ -1,0 +1,64 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.shared.annotations;
+
+import "google/protobuf/descriptor.proto";
+
+// Describes a well-known log field attached to an OOTB event. These fields are available for
+// matching via `generic_match` in workflow definitions.
+message OotbFieldDescriptor {
+  // The log field key (e.g., "_duration_ms").
+  string key = 1;
+
+  // Human-readable description of what this field represents.
+  string description = 2;
+
+  // The value type carried in the log field. All values are transmitted as strings; this indicates
+  // the semantic type for parsing and comparison.
+  .bitdrift.public.shared.annotations.OotbFieldType type = 3;
+
+  // Optional unit of measurement (e.g., "ms", "KB", "percent"). Empty when not applicable.
+  string unit = 4;
+
+  // Which platform emits this field. Defaults to ALL (both Android and iOS).
+  .bitdrift.public.shared.annotations.OotbFieldPlatform platform = 5;
+}
+
+// The semantic type of a well-known field value.
+enum OotbFieldType {
+  // A string value (default).
+  OOTB_FIELD_TYPE_STRING = 0;
+  // An integer value encoded as a string (e.g., "200", "42").
+  OOTB_FIELD_TYPE_INT = 1;
+  // A floating-point value encoded as a string (e.g., "72.431", "0.85").
+  OOTB_FIELD_TYPE_FLOAT = 2;
+  // A boolean value encoded as "1" (true) or "0" (false).
+  OOTB_FIELD_TYPE_BOOL = 3;
+}
+
+// Platform applicability for a well-known field.
+enum OotbFieldPlatform {
+  // Emitted on both Android and iOS.
+  OOTB_FIELD_PLATFORM_ALL = 0;
+  // Emitted only on Android.
+  OOTB_FIELD_PLATFORM_ANDROID = 1;
+  // Emitted only on iOS/Apple.
+  OOTB_FIELD_PLATFORM_IOS = 2;
+}
+
+// Structured metadata for an OOTB condition type enum value, describing the event and its
+// well-known log fields.
+message OotbEventMetadata {
+  // The well-known log fields this event carries, available for matching via generic_match.
+  repeated .bitdrift.public.shared.annotations.OotbFieldDescriptor well_known_fields = 1;
+}
+
+extend .google.protobuf.EnumValueOptions {
+  .bitdrift.public.shared.annotations.OotbEventMetadata ootb_event_metadata = 50002;
+}
