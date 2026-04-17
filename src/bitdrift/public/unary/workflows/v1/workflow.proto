@@ -242,48 +242,95 @@ message StateChangeMatch {
 }
 
 message OotbMatch {
+  // Cross-platform OOTB condition types. These events are emitted on all supported platforms.
+  // Where applicable, enum value documentation and metadata describe the well-known log fields
+  // carried by that event and matchable via `generic_match`. Platform-specific enums below share
+  // the same field definitions for values that appear here; only platform-exclusive values add
+  // new fields.
   message GenericOotbConditionType {
     enum GenericOotbConditionType {
+      // Invalid placeholder value. Do not use.
       UNKNOWN = 0;
+      // App moves out of the foreground and begins backgrounding.
       APP_BACKGROUND = 1;
+      // The SDK's built-in JS error handler captures a fatal JavaScript error.
       APP_BUILT_IN_JS_FATAL_ERROR = 2;
+      // The SDK's built-in JS error handler captures a non-fatal JavaScript error.
       APP_BUILT_IN_JS_NON_FATAL_ERROR = 3;
+      // App leaves the screen and its foreground UI closes.
       APP_CLOSE = 4;
+      // App moves into the foreground and becomes active.
       APP_FOREGROUND = 5;
+      // App launch completes for a new process.
       APP_LAUNCH = 6;
+      // App reached time-to-interactive after launch. Carries the same fields as APP_LAUNCH.
       APP_LAUNCH_TTI = 7;
+      // App opens into the foreground, either on a cold start or when reopened from the
+      // background.
       APP_OPEN = 8;
+      // An app termination is recorded. On Android this includes OS-reported exit information; on
+      // Apple this corresponds to the app termination notification.
       APP_TERMINATION = 9;
+      // App updates to a new version.
       APP_UPDATE = 10;
+      // Device battery state changes.
       BATTERY_STATE_CHANGE = 11;
+      // A GraphQL request starts. Requires supported network instrumentation so the SDK can emit
+      // the underlying HTTP and GraphQL span data.
       GQL_REQUEST = 12;
+      // A GraphQL response completes. Requires supported network instrumentation and carries all
+      // GQL_REQUEST fields plus response-specific fields.
       GQL_RESPONSE = 13;
+      // Device low-power mode toggles.
       LOW_POWER_MODE = 14;
+      // App memory pressure is recorded. On Android this is emitted when app memory usage meets
+      // the configured low-memory threshold. On Apple this is emitted for system memory pressure
+      // notifications.
       MEMORY_PRESSURE = 15;
+      // An HTTP network request starts. Requires supported network instrumentation integration.
       NETWORK_REQUEST = 16;
+      // An HTTP network response completes. Requires supported network instrumentation integration.
       NETWORK_RESPONSE = 17;
+      // Device orientation changes.
       ORIENTATION_CHANGE = 18;
+      // A periodic resource snapshot. Carries device and process resource metrics such as memory,
+      // battery, power, disk, and network throughput fields.
       RESOURCE = 19;
+      // A screen or view is displayed.
       SCREEN_VIEW = 20;
+      // SDK configuration is applied during SDK startup.
       SDK_CONFIGURATION = 21;
+      // A Session Replay frame is captured.
       SESSION_REPLAY = 22;
+      // A custom span ends.
       SPAN_END = 23;
+      // A custom span starts.
       SPAN_START = 24;
+      // Device thermal state changes.
       THERMAL_STATE_CHANGE = 25;
+      // Device timezone changes.
       TIMEZONE_CHANGE = 26;
     }
   }
 
+  // Android-specific OOTB condition types. Includes all generic conditions plus Android-exclusive
+  // events. Shared values carry the same well-known fields documented on GenericOotbConditionType.
   message AndroidOotbConditionType {
     enum AndroidOotbConditionType {
       UNKNOWN = 0;
+      // The SDK's built-in fatal issue handler captures an Android app hang.
       APP_ANDROID_BUILT_IN_ANR = 1;
+      // The SDK's built-in fatal issue handler captures an Android native crash.
       APP_ANDROID_BUILT_IN_NATIVE_CRASH = 2;
       APP_BACKGROUND = 3;
       APP_BUILT_IN_JS_FATAL_ERROR = 4;
       APP_BUILT_IN_JS_NON_FATAL_ERROR = 5;
       APP_CLOSE = 6;
+      // Android app crash. Carries crash details when available. Depending on the source, fields
+      // may describe a JVM exception or an OS-reported fatal exit.
       APP_CRASH = 7;
+      // Deprecated Android-only alias of APP_TERMINATION. Retained for legacy compatibility;
+      // prefer APP_TERMINATION for new workflows.
       APP_EXIT = 8;
       APP_FOREGROUND = 9;
       APP_LAUNCH = 10;
@@ -292,6 +339,8 @@ message OotbMatch {
       APP_TERMINATION = 13;
       APP_UPDATE = 14;
       BATTERY_STATE_CHANGE = 15;
+      // A rendering issue is detected for a UI frame. `_frame_issue_type` distinguishes slow,
+      // frozen, and ANR-classified frames.
       DROPPED_FRAME = 16;
       GQL_REQUEST = 17;
       GQL_RESPONSE = 18;
@@ -311,16 +360,21 @@ message OotbMatch {
     }
   }
 
+  // Apple-specific OOTB condition types. Includes all generic conditions plus Apple-exclusive
+  // events. Shared values carry the same well-known fields documented on GenericOotbConditionType.
   message AppleOotbConditionType {
     enum AppleOotbConditionType {
       UNKNOWN = 0;
+      // iOS app hang detected when the app stops responding for longer than the configured threshold.
       ANR = 1;
       APP_BACKGROUND = 2;
       APP_BUILT_IN_JS_FATAL_ERROR = 3;
       APP_BUILT_IN_JS_NON_FATAL_ERROR = 4;
       APP_CLOSE = 5;
       APP_FOREGROUND = 6;
+      // The SDK's built-in fatal issue handler captures an iOS app hang.
       APP_IOS_BUILT_IN_ANR = 7;
+      // The SDK's built-in fatal issue handler captures an iOS crash.
       APP_IOS_BUILT_IN_CRASH = 8;
       APP_LAUNCH = 9;
       APP_LAUNCH_TTI = 10;
