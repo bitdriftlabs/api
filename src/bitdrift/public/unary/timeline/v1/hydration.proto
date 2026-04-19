@@ -12,7 +12,7 @@ import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 enum HydrationStatus {
-  // Not used.
+  // Unused. Before any hydration record exists, the API returns NOT_FOUND instead.
   DRY = 0;
   // The session is currently being hydrated by an active hydration process.
   HYDRATING = 1;

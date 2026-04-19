@@ -90,16 +90,16 @@ message Workflow {
   // The current deployment state of the workflow.
   .bitdrift.public.unary.workflows.v1.Workflow.WorkflowState state = 7 [(validate.rules).enum = {defined_only: true}];
 
-  // Creation date of the workflow.
+  // Read-only. Set automatically by the server when the workflow is created.
   .google.protobuf.Timestamp created_at = 8;
 
-  // Last update date of the workflow.
+  // Read-only. Set automatically by the server whenever the workflow is modified.
   .google.protobuf.Timestamp updated_at = 9;
 
-  // The user this workflow belongs to.
+  // Read-only. The workflow owner assigned by the server.
   .bitdrift.public.unary.common.v1.Owner owner = 12;
 
-  // Last deploy date of the workflow.
+  // Read-only. The most recent deployment time. Unset until the workflow is deployed.
   .google.protobuf.Timestamp deployed_at = 13;
 
   // The platform targets for this workflow. If empty, this will match _any_ platform.
@@ -749,8 +749,204 @@ message OotbMatch {
         }
       }];
       // A periodic resource snapshot. Carries device and process resource metrics such as memory,
-      // battery, power, disk, and network throughput fields.
-      RESOURCE = 19;
+      // battery, power, disk, and network throughput fields. Memory, battery, and
+      // low-power fields are emitted on every snapshot; disk-usage fields are sampled at most once
+      // every 24 hours.
+      RESOURCE = 19 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        well_known_fields: {
+          key: "_jvm_used_kb"
+          description: "JVM heap currently used. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_jvm_max_kb"
+          description: "JVM heap maximum size. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_jvm_total_kb"
+          description: "JVM heap currently allocated or committed. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_jvm_used_percent"
+          description: "JVM used as a percent of max. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_FLOAT
+          unit: "percent"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_is_memory_low"
+          description: "Whether the configured low-memory threshold is currently met. Present only when low-memory detection is configured."
+          type: OOTB_FIELD_TYPE_BOOL
+        }
+        well_known_fields: {
+          key: "_native_used_kb"
+          description: "Native heap allocated. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_native_total_kb"
+          description: "Native heap total size. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_memory_class"
+          description: "Per-app memory class reported by Android. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "MB"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_app_used_kb"
+          description: "App physical memory footprint. Included on every Apple RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_app_limit_kb"
+          description: "Estimated app memory limit before termination. Included on every Apple RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_app_used_percent"
+          description: "App used memory as a percent of the estimated limit. Included on Apple snapshots when the memory limit estimate is valid."
+          type: OOTB_FIELD_TYPE_FLOAT
+          unit: "percent"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_device_kb"
+          description: "Total device RAM. Included on every Apple RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_battery_val"
+          description: "Battery level as a float. Included on every RESOURCE snapshot. May be -1.0 on Apple simulator."
+          type: OOTB_FIELD_TYPE_FLOAT
+        }
+        well_known_fields: {
+          key: "_battery_level"
+          description: "Battery percentage. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "percent"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_battery_level"
+          description: "Battery percentage when the battery level is known. Omitted on Apple simulator and other unknown battery states."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "percent"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_state"
+          description: "Battery charging state. Included on every RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_STRING
+        }
+        well_known_fields: {
+          key: "_battery_level_change_per_min"
+          description: "Battery percentage-point change per minute. Positive means draining, negative means charging. Present only after the rolling 1-minute battery window is populated."
+          type: OOTB_FIELD_TYPE_FLOAT
+        }
+        well_known_fields: {
+          key: "_low_power_enabled"
+          description: "Low-power mode state. Included on every RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_BOOL
+        }
+        well_known_fields: {
+          key: "_cache_dir_size_bytes"
+          description: "Cache directory size. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+        }
+        well_known_fields: {
+          key: "_files_dir_size_bytes"
+          description: "App files directory size. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_external_cache_dir_size_bytes"
+          description: "External cache directory size, when available. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_external_files_dir_size_bytes"
+          description: "External files directory size, when available. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+        }
+        well_known_fields: {
+          key: "_documents_dir_size_bytes"
+          description: "Documents directory size. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_tmp_dir_size_bytes"
+          description: "Temporary directory size. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes"
+          platform: OOTB_FIELD_PLATFORM_IOS
+        }
+        well_known_fields: {
+          key: "_request_bytes_per_min_count"
+          description: "Total outbound bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes/min"
+        }
+        well_known_fields: {
+          key: "_request_body_bytes_per_min_count"
+          description: "Outbound request-body bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes/min"
+        }
+        well_known_fields: {
+          key: "_request_headers_bytes_per_min_count"
+          description: "Outbound request-header bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes/min"
+        }
+        well_known_fields: {
+          key: "_response_bytes_per_min_count"
+          description: "Total inbound bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes/min"
+        }
+        well_known_fields: {
+          key: "_response_body_bytes_per_min_count"
+          description: "Inbound response-body bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes/min"
+        }
+        well_known_fields: {
+          key: "_response_headers_bytes_per_min_count"
+          description: "Inbound response-header bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          unit: "bytes/min"
+        }
+      }];
       // A screen or view is displayed.
       SCREEN_VIEW = 20 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         well_known_fields: {

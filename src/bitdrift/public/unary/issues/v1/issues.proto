@@ -41,13 +41,21 @@ message AdvancedFilter {
   message Condition {
     enum LhsTyped {
       LHS_TYPED_UNSPECIFIED = 0;
+      // App ID associated with the issue.
       LHS_TYPED_APP_ID = 1;
+      // Platform on which the issue occurred.
       LHS_TYPED_PLATFORM = 2;
+      // App version associated with the issue. This works well with version comparison operators.
       LHS_TYPED_APP_VERSION = 3;
+      // Operating system version associated with the issue.
       LHS_TYPED_OS_VERSION = 4;
+      // Device model associated with the issue.
       LHS_TYPED_MODEL = 5;
+      // Primary issue reason, such as an exception class or signal name.
       LHS_TYPED_REASON = 6;
+      // Additional issue context, such as a file name or function name.
       LHS_TYPED_CONTEXT = 7;
+      // High-level issue report type, such as Crash, ANR, or Exception.
       LHS_TYPED_REPORT_TYPE = 8;
     }
 
@@ -99,11 +107,17 @@ message IssueQuery {
 }
 
 enum IssueGroupStatus {
+  // Newly created issue group that has not yet been triaged.
   NEW = 0;
+  // Issue group currently under investigation.
   IN_PROGRESS = 3;
+  // Issue group marked fixed for a specific app version.
   FIXED = 4;
+  // Issue group that was marked fixed and later recurred on a newer app version.
   REOPENED = 5;
+  // Issue group hidden from default views without marking it fixed.
   IGNORED = 6;
+  // Issue group temporarily hidden until the snooze expires.
   SNOOZED = 7;
 }
 
