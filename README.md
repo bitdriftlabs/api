@@ -7,7 +7,7 @@ This repository contains the public-facing bitdrift API definitions.
 For API documentation, see:
 
 - API guide: https://docs.bitdrift.io/api-guide/
-- Full API reference: https://docs.bitdrift.io/api/index.md
+- Full API content (Markdown): https://docs.bitdrift.io/api/index.md
 
 ## Repository structure
 
