@@ -87,10 +87,21 @@ message HistogramConfiguration {
   //
   // This must be set to one of the percentiles in the ChartMetadata for the
   // chart if percentiles are defined.
-  float percentile = 2;
+  float percentile = 2 [(validate.rules).float = {
+    gte: 0.0
+    lte: 1.0
+  }];
 
   // Percentiles to query when the chart supports returning multiple histogram lines.
-  repeated float percentiles = 3 [(validate.rules).repeated.max_items = 20];
+  repeated float percentiles = 3 [(validate.rules).repeated = {
+    max_items: 20
+    items: {
+      float: {
+        gte: 0.0
+        lte: 1.0
+      }
+    }
+  }];
 }
 
 message FunnelStep {
