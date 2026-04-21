@@ -181,7 +181,11 @@ message GetChartsDataRequest {
   .bitdrift.public.shared.workflows.v1.AndFilter and_filter = 7;
 }
 
-// Used for line charts, they're just a list of time series.
+// Used for line charts. Each entry is a rendered time series for the request.
+//
+// For grouped charts, this response returns the visible grouped results, including the
+// `TimeSeries.id` and `labels` pair that callers can reuse with
+// `charts.v1.LimitStrategy.IdentifierMatch`.
 message LineChartResponse {
   // The time series to render in the chart.
   repeated .bitdrift.public.shared.workflows.v1.TimeSeries time_series = 1;
@@ -376,6 +380,10 @@ service DashboardService {
   rpc GetWorkflowCharts(.bitdrift.public.unary.dashboards.v1.GetWorkflowChartsRequest) returns (.bitdrift.public.unary.dashboards.v1.GetWorkflowChartsResponse);
 
   // Retrieves chart data for one or more charts.
+  //
+  // Returns rendered chart output such as time-series values, labels, and table rows. For grouped
+  // charts, callers can reuse each returned `TimeSeries.id` together with its full `labels` set to
+  // build `charts.v1.LimitStrategy.IdentifierMatch` in a later request.
   rpc GetChartsData(.bitdrift.public.unary.dashboards.v1.GetChartsDataRequest) returns (.bitdrift.public.unary.dashboards.v1.GetChartsDataResponse);
 
   // Returns the distinct platform, app ID, and app version combinations seen in

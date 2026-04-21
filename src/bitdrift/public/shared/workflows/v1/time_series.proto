@@ -71,10 +71,14 @@ message CardinalityOverflows {
 }
 
 message TimeSeries {
-  // The ID associated with this time series. Use it with the labels to
-  // uniquely identify a time series.
+  // The opaque ID of this time-series query result.
   //
-  // For workflow-backed time series, this maps back to one or more action IDs.
+  // For grouped chart results, callers pair this `id` with the full `labels` set to identify a
+  // returned group. Multiple grouped results can share the same `id` and differ only by `labels`.
+  //
+  // For workflow-backed time series, this maps back to one or more action IDs and can be reused as
+  // `charts.v1.LimitStrategy.IdentifierMatch.DimensionIdentifier.id` when selecting specific groups
+  // from a later `GetChartsData` request.
   string id = 1 [(validate.rules).string = {min_len: 1}];
 
   // The labels associated with this time series.
