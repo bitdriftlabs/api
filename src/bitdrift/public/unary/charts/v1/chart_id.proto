@@ -90,15 +90,19 @@ message LimitStrategy {
   // dimension value combinations will be included in the results.
   message IdentifierMatch {
     message DimensionIdentifier {
-      // The rule id associated with this chart dimension. This is the ID returned on the ChartsID response for a given time series.
+      // The `TimeSeries.id` of the grouped result to include.
+      //
+      // Use the `id` returned by `GetChartsData` together with the matching `labels`. This value
+      // identifies the backing time-series query and may be shared by multiple grouped results.
       string id = 1 [(validate.rules).string = {
         min_len: 1
         max_len: 255
       }];
 
-      // The labels associated with this chart dimension. This is used to specify the dimensions of the time series to include in the results.
+      // The label values for the grouped result.
       //
-      // For multi-group by time series the labels must be sent in the same order as the dimension identifiers in the ChartMetadata for the chart. For single group by time series there is only one dimension and thus one label per identifier, and order does not matter.
+      // These labels must match the selected grouped result exactly and are evaluated together with
+      // `id`. Labels disambiguate grouped results that share the same `TimeSeries.id`.
       repeated .bitdrift.public.shared.workflows.v1.LabelPair labels = 2 [(validate.rules).repeated = {
         max_items: 10
         items: {
@@ -107,6 +111,12 @@ message LimitStrategy {
       }];
     }
 
+    // Selects specific grouped results from a chart response.
+    //
+    // Callers send one `DimensionIdentifier` for each grouped result to include. Callers construct
+    // each entry from a `GetChartsData` result by copying the returned `TimeSeries.id` and its
+    // full `labels` set. For a single group-by, `labels` contains one entry. For a multi-group-by,
+    // `labels` must contain one entry per group key in the same order as the chart definition.
     repeated .bitdrift.public.unary.charts.v1.LimitStrategy.IdentifierMatch.DimensionIdentifier dimension_identifiers = 1 [(validate.rules).repeated = {
       min_items: 1
       max_items: 100
