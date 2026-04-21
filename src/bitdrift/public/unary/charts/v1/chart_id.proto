@@ -8,6 +8,7 @@ syntax = "proto3";
 
 package bitdrift.public.unary.charts.v1;
 
+import "bitdrift/public/shared/workflows/v1/time_series.proto";
 import "validate/validate.proto";
 
 message ChartIdentifier {
@@ -77,7 +78,60 @@ enum SortOrder {
   MIN = 1;
 }
 
-message LimitStrategy {}
+message LimitStrategy {
+  message TopKLimit {
+    // The number of time series to return per chart dimension.
+    uint64 top_k = 1 [(validate.rules).uint64 = {gt: 0}];
+  }
+
+  // Used to select specific time series from a chart instead of relying on a top-K algorithm.
+  //
+  // This specifies the list of dimension values to include in the results. Only time series that match one of the sent
+  // dimension value combinations will be included in the results.
+  message IdentifierMatch {
+    message DimensionIdentifier {
+      // The rule id associated with this chart dimension. This is the ID returned on the ChartsID response for a given time series.
+      string id = 1 [(validate.rules).string = {
+        min_len: 1
+        max_len: 255
+      }];
+
+      // The labels associated with this chart dimension. This is used to specify the dimensions of the time series to include in the results.
+      //
+      // For multi-group by time series the labels must be sent in the same order as the dimension identifiers in the ChartMetadata for the chart. For single group by time series there is only one dimension and thus one label per identifier, and order does not matter.
+      repeated .bitdrift.public.shared.workflows.v1.LabelPair labels = 2 [(validate.rules).repeated = {
+        max_items: 10
+        items: {
+          message: {required: true}
+        }
+      }];
+    }
+
+    repeated .bitdrift.public.unary.charts.v1.LimitStrategy.IdentifierMatch.DimensionIdentifier dimension_identifiers = 1 [(validate.rules).repeated = {
+      min_items: 1
+      max_items: 100
+    }];
+
+    // If true, the rest of the dimensions will be returned as "other". This does not currently
+    // work for histograms.
+    bool return_other = 2;
+  }
+
+  oneof limit_strategy {
+    // Select the top K groups per time series based on the aggregated value for the chart metric. This is the most common limit strategy and is used when there are too many groups to display in the chart and we want to show the most important ones.
+    .bitdrift.public.unary.charts.v1.LimitStrategy.TopKLimit top_k_limit = 1;
+
+    // Select specific groups based on their dimension values. This is used to target particular groups that we want to display in the chart regardless of their aggregated value.
+    .bitdrift.public.unary.charts.v1.LimitStrategy.IdentifierMatch identifier_match = 2;
+  }
+
+  // The sort order to use when applying the limit strategy. By default the output returns the top K
+  // of maximum values, but can be switched to return the top K of minimum values (bottom K).
+  .bitdrift.public.unary.charts.v1.SortOrder sort_order = 3 [(validate.rules).enum = {defined_only: true}];
+
+  // Optional exclusions to apply when limiting. This is used to exclude specific dimensions from the top K results
+  .bitdrift.public.unary.charts.v1.LimitStrategy.IdentifierMatch exclusions = 4;
+}
 
 message HistogramConfiguration {
   // Pins the histograms within this chart to a specific percentile. This is
