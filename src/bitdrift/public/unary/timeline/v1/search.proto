@@ -1,0 +1,180 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.timeline.v1;
+
+import "bitdrift/public/unary/common/v1/common.proto";
+import "bitdrift/public/unary/timeline/v1/logs.proto";
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+// Advanced search request for logs within a session.
+message SessionAdvancedSearchRequest {
+  // The session ID to search within.
+  string session_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The start time of the query. If not specified, the query will start from the beginning of the session.
+  .google.protobuf.Timestamp start_time = 2;
+
+  // The end time of the query. If not specified, the query will end at the end of the session.
+  .google.protobuf.Timestamp end_time = 3;
+
+  // The maximum number of results to return.
+  optional uint32 limit = 4 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 1000
+  }];
+
+  // The result offset for pagination.
+  optional uint32 offset = 5;
+
+  // Matches against a specific field value.
+  message FieldMatch {
+    // The JSONPath expression identifying the field to match against.
+    // For a known field type like `os_version`, this would be `$.fields.os_version`.
+    string json_path = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 500
+    }];
+
+    // The operator to use for comparison.
+    .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
+
+    // The value to compare against.
+    string value = 3 [(validate.rules).string = {
+      min_len: 1
+      max_len: 1000
+    }];
+  }
+
+  // Matches against the log type.
+  message LogTypeMatch {
+    // The operator to use for comparison.
+    .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
+
+    // The log type to match.
+    .bitdrift_public.protobuf.logging.v1.LogType log_type = 1 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Matches against the log level.
+  message LogLevelMatch {
+    // The operator to use for comparison.
+    .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
+
+    // The log level to match.
+    .bitdrift.public.unary.timeline.v1.Log.LogLevel log_level = 1 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // A full-text search condition.
+  //
+  // Searches across top-level log properties and nested values within the
+  // `fields` object.
+  //
+  // For example, the search term "1234" against a log like:
+  // {
+  //   "message": "This is a test log",
+  //   "fields": {
+  //     "foo_bar": {
+  //       "baz": {
+  //         "qux": "1234"
+  //       }
+  //     }
+  //   }
+  // }
+  //
+  // matches on $.fields.foo_bar because the query runs against each
+  // top-level field's value.
+  message RawMatch {
+    // The raw search query.
+    string query = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 1000
+    }];
+
+    // The operator to use for comparison.
+    .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  message Condition {
+    oneof condition_type {
+      option (validate.required) = true;
+      // Matches against a specific field value.
+      .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchRequest.FieldMatch field_match = 1;
+
+      // Matches against the full-text content of the log.
+      .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchRequest.RawMatch raw_match = 2;
+
+      // Matches against the log type.
+      .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchRequest.LogTypeMatch log_type_match = 3;
+
+      // Matches against the log level.
+      .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchRequest.LogLevelMatch log_level_match = 4;
+    }
+  }
+
+  message AndQuery {
+    // The conditions to combine with logical AND.
+    repeated .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchRequest.Condition conditions = 1 [(validate.rules).repeated = {
+      min_items: 1
+      max_items: 20
+    }];
+  }
+
+  // All AndQuery groups are combined with logical OR.
+  //
+  // (or_query[0].conditions[0] AND or_query[0].conditions[1] AND or_query[0].conditions[2])
+  //                            OR
+  // (or_query[1].conditions[0] AND or_query[1].conditions[1])
+  repeated .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchRequest.AndQuery or_query = 7 [(validate.rules).repeated = {
+    min_items: 1
+    max_items: 20
+  }];
+}
+
+message SessionAdvancedSearchResponse {
+  // The total number of pages of results (based on limit).
+  uint32 total_pages = 1;
+
+  // The results for this page.
+  repeated .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchResponse.Result results = 2;
+
+  // The total number of results.
+  uint32 total_results = 3;
+
+  message Result {
+    message Match {
+      // Indicates which part of the log matched the search condition.
+      oneof match_type {
+        // The JSONPath of the matching field, set when a FieldMatch or RawMatch matched a field value.
+        string fields_json_path = 1;
+
+        // Set to true when a RawMatch matched the log message.
+        bool message = 2;
+
+        // Set to true when a LogLevelMatch matched the log level.
+        bool log_level = 6;
+
+        // Set to true when a LogTypeMatch matched the log type.
+        bool log_type = 7;
+      }
+    }
+
+    // The matching log.
+    .bitdrift.public.unary.timeline.v1.Log log = 1;
+
+    // The index of the log within the session timeline.
+    uint32 row_number = 2;
+
+    // The list of matches for this log.
+    repeated .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchResponse.Result.Match matches = 3;
+  }
+}
