@@ -31,7 +31,7 @@ message SessionAdvancedSearchRequest {
   // The maximum number of results to return.
   optional uint32 limit = 4 [(validate.rules).uint32 = {
     gte: 1
-    lte: 1000
+    lte: 5000
   }];
 
   // The result offset for pagination.
