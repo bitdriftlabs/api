@@ -89,6 +89,11 @@ message GetSessionLogsRequest {
     lte: 5000
   }];
 
+  // Whether to include internal logs in the query results.
+  //
+  // Internal logs include screen capture, resource, and internal SDK logs that do not appear in the default timeline view.
+  bool include_internal_logs = 8;
+
   // Session ID to query for.
   string session_id = 9 [(validate.rules).string = {
     min_len: 1
