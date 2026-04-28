@@ -37,6 +37,11 @@ message SessionAdvancedSearchRequest {
   // The result offset for pagination.
   optional uint32 offset = 5;
 
+  // Whether to include internal logs in the search results.
+  //
+  // Internal logs include screen capture, resource, and internal SDK logs that do not appear in the default timeline view.
+  bool include_internal_logs = 6;
+
   // Matches against a specific field value.
   message FieldMatch {
     // The JSONPath expression identifying the field to match against.
