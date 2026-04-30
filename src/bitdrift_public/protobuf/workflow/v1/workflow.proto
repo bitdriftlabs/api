@@ -114,8 +114,11 @@ message Workflow {
   message Rule {
     oneof rule_type {
       option (validate.required) = true;
+
       RuleLogMatch rule_log_match = 1;
       RuleStateChangeMatch rule_state_change_match = 3;
+      // This will match when a new session starts.
+      bool on_new_session = 4;
     }
 
     reserved 2;

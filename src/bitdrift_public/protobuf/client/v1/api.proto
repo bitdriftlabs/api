@@ -34,19 +34,36 @@ message ClientKillFile {
   google.protobuf.Timestamp kill_until = 2;
 }
 
+// This is sent both in the initial handshake as well as mid-stream if any of the attributes have
+// changed. The handshake will fill in all values as part of an initial update.
+message StateUpdateRequest {
+  message StartedSession {
+    // The session ID of the started session.
+    string session_id = 1;
+    // The start time of the session.
+    google.protobuf.Timestamp start_time = 2;
+  }
+
+  message OpaqueEntityUpdate {
+    // If one has been supplied, the opaque entity ID. If an update is sent that nulls this out
+    // it means that the unique entity is no longer bound (for example after a logout).
+    optional string opaque_entity_id = 1;
+  }
+
+  // The opaque entity update.
+  OpaqueEntityUpdate opaque_entity_update = 1;
+
+  // The list of started sessions.
+  repeated StartedSession started_sessions = 2;
+}
+
 // The initial request sent over the stream.
 message HandshakeRequest {
   // A set of opaque metadata that identifies the connecting device. These will
   // remain static for the duration of this stream.
-  // TODO(snowp): Support updating these throughout the session.
-  // TODO(snowp): Improve the story for this when parameters change during a
-  // logging period, e.g. if we capture multiple process restarts that may span
-  // versions.
+  // TODO(snowp): Support updating these throughout the session / move to StateUpdateRequest.
   map<string, logging.v1.Data> static_device_metadata = 1;
 
-  // This was never used by the client. Reserve it for now to avoid implementing it. We can bring
-  // it back later if needed.
-  reserved "fields_for_all_logs";
   reserved 2;
 
   // If the client has an active configuration, previously obtained via a ConfigurationUpdate
@@ -74,6 +91,12 @@ message HandshakeRequest {
   // should continue to send this on every handshake request until the server provides a new
   // value (which may be empty to clear existing state).
   optional bytes opaque_client_state = 8;
+
+  // When the handshake request is sent an initial state update will be included with both
+  // the opaque entity ID (if provided) as well as at least the current session. There may be
+  // multiple sessions included if some session transitions have happened while offline and have
+  // not yet been sent to the server.
+  StateUpdateRequest state_update = 9;
 }
 
 // Notifies the server about the intent to upload one or more batches of logs. The client is expected (but
@@ -210,6 +233,7 @@ message ApiRequest {
     UploadArtifactRequest artifact_upload = 12;
     UploadArtifactIntentRequest artifact_intent = 13;
     DebugDataRequest debug_data = 14;
+    StateUpdateRequest state_update = 15;
   }
 
   reserved 8;
@@ -603,6 +627,8 @@ message DebugDataRequest {
   map<string, WorkflowDebugData> workflow_debug_data = 1;
 }
 
+message StateUpdateResponse {}
+
 // A multiplexed response sent over the bitdrift API.
 message ApiResponse {
   oneof response_type {
@@ -621,6 +647,7 @@ message ApiResponse {
     SankeyIntentResponse sankey_intent_response = 13;
     UploadArtifactResponse artifact_upload = 14;
     UploadArtifactIntentResponse artifact_intent = 15;
+    StateUpdateResponse state_update = 16;
   }
 
   reserved 10;
