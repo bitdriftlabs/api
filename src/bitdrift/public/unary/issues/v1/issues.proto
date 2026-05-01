@@ -57,6 +57,10 @@ message AdvancedFilter {
       LHS_TYPED_CONTEXT = 7;
       // High-level issue report type, such as Crash, ANR, or Exception.
       LHS_TYPED_REPORT_TYPE = 8;
+      // iOS build ID associated with the issue. This corresponds to CFBundleVersion.
+      LHS_TYPED_BUILD_ID = 9;
+      // Android versionCode associated with the issue.
+      LHS_TYPED_VERSION_CODE = 10;
     }
 
     // The filter key to match against.
