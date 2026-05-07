@@ -1,0 +1,36 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.health.v1;
+
+import "google/protobuf/duration.proto";
+
+// The HealthService provides methods for checking the health and status of the system, including
+// the number of connected SDK clients and the current queue delays for processing ingested data.
+service HealthService {
+  // Get the overall system status, including the number of SDK clients connected and the current
+  // queue delay for processing ingested data.
+  rpc GetSystemStatus(.bitdrift.public.unary.health.v1.GetSystemStatusRequest) returns (.bitdrift.public.unary.health.v1.GetSystemStatusResponse);
+}
+
+message GetSystemStatusRequest {}
+
+message GetSystemStatusResponse {
+  // The approximate number of SDK clients currently connected. In practice this will be the
+  // smoothed average over the previous minute.
+  uint64 connected_clients = 1;
+
+  // The approximate current queue delay for processing ingested metrics.
+  .google.protobuf.Duration metrics_ingestion_delay = 2;
+
+  // The approximate current queue delay for processing ingested issues.
+  .google.protobuf.Duration issues_ingestion_delay = 3;
+
+  // The approximate current queue delay for processing ingested logs.
+  .google.protobuf.Duration logs_ingestion_delay = 4;
+}
