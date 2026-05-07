@@ -223,7 +223,7 @@ message IssueGroup {
 }
 
 message GetIssueGroupRequest {
-  // The unique identifier for the issue group.
+  // The identifier for the issue group.
   string id = 1 [(validate.rules).string = {
     min_len: 1
     max_len: 100
