@@ -19,9 +19,15 @@ message SdkKeyResponse {
   // The app/bundle ID regex that the key is associated with.
   string bundle_id_regex = 2;
 
-  // An optional postfix for the app ID associated with the key. The server
-  // appends this to the base app ID during authentication.
-  optional string app_id_postfix = 3;
+  oneof app_id_transform {
+    // An optional postfix for the app ID associated with the key. The server
+    // appends this to the base app ID during authentication.
+    string app_id_postfix = 3 [(validate.rules).string = {max_len: 255}];
+
+    // An optional replacement for the app ID associated with the key. The server
+    // replaces the base app ID during authentication.
+    string app_id_replacement = 4 [(validate.rules).string = {max_len: 255}];
+  }
 }
 
 message ApiKeyResponse {
@@ -78,9 +84,15 @@ message CreateKeyRequest {
       max_len: 2048
     }];
 
-    // An optional postfix for the app ID associated with the key. The server
-    // appends this to the base app ID during authentication.
-    optional string app_id_postfix = 2 [(validate.rules).string = {max_len: 255}];
+    oneof app_id_transform {
+      // An optional postfix for the app ID associated with the key. The server
+      // appends this to the base app ID during authentication.
+      string app_id_postfix = 2 [(validate.rules).string = {max_len: 255}];
+
+      // An optional replacement for the app ID associated with the key. The server
+      // replaces the base app ID during authentication.
+      string app_id_replacement = 3 [(validate.rules).string = {max_len: 255}];
+    }
   }
 
   message ApiKeyRequest {

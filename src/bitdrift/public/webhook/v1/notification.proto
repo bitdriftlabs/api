@@ -1,0 +1,150 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.webhook.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Describes a webhook notification event delivered to an external destination.
+message WebhookNotification {
+  // Timestamp when the notification was generated.
+  .google.protobuf.Timestamp timestamp = 1;
+
+  oneof notification_type {
+    // A test notification.
+    .bitdrift.public.webhook.v1.TestNotification test = 2;
+
+    // A workflow session capture notification.
+    .bitdrift.public.webhook.v1.SessionCaptureNotification session_capture = 3;
+
+    // A workflow alert fired.
+    .bitdrift.public.webhook.v1.AlertNotification alert = 4;
+
+    // An issue alert fired.
+    .bitdrift.public.webhook.v1.IssueAlertNotification issue_alert = 5;
+
+    // A notification for a new issue report.
+    .bitdrift.public.webhook.v1.IssueReportNotification issue_report_notification = 6;
+
+    // A notification for a new issue.
+    .bitdrift.public.webhook.v1.IssueNotification issue_notification = 7;
+  }
+}
+
+// Represents a webhook test event used to validate delivery.
+message TestNotification {}
+
+// Describes a webhook notification for a captured workflow session.
+message SessionCaptureNotification {
+  // Timeline URL for the captured session.
+  string timeline_url = 1;
+
+  // Workflow URL for the captured session.
+  string workflow_url = 2;
+
+  // Session identifier.
+  string session_id = 3;
+
+  // Exploration name.
+  string exploration_name = 5;
+
+  // Workflow name.
+  string workflow_name = 6;
+
+  // Title of the workflow session capture node that triggered the capture.
+  string rule_title = 7;
+}
+
+// Describes a webhook notification for a workflow alert.
+message AlertNotification {
+  // Alert name.
+  string alert_name = 1;
+
+  // Alert URL.
+  string alert_url = 2;
+
+  // Workflow name.
+  string workflow_name = 3;
+
+  // Workflow URL
+  string workflow_url = 4;
+
+  // Exploration name.
+  string exploration_name = 5;
+
+  // Custom notification text.
+  string custom_notification_text = 6;
+}
+
+// Describes an issue referenced by an issue webhook notification.
+message IssueDetails {
+  // Issue URL.
+  string issue_url = 1;
+
+  // Reason/description of the issue.
+  string reason = 2;
+}
+
+// Describes a webhook notification for an issue alert.
+message IssueAlertNotification {
+  // Indicates that the alert applies to the full view instead of specific issues.
+  message GlobalAlert {}
+
+  // Lists the issues that triggered a per-issue alert.
+  message PerIssueAlert {
+    // List of issues that triggered the alert.
+    repeated .bitdrift.public.webhook.v1.IssueDetails issues = 1;
+  }
+
+  // Alert URL.
+  string alert_url = 1;
+
+  // View URL.
+  string view_url = 2;
+
+  // View name.
+  string view_name = 3;
+
+  oneof scope {
+    // Global alert (no per issue details).
+    .bitdrift.public.webhook.v1.IssueAlertNotification.GlobalAlert global = 4;
+
+    // Per-issue alert with affected issues.
+    .bitdrift.public.webhook.v1.IssueAlertNotification.PerIssueAlert per_issue = 5;
+  }
+
+  // Custom notification text.
+  string custom_notification_text = 6;
+}
+
+// Describes a webhook notification for a newly created issue report.
+message IssueReportNotification {
+  // Report URL.
+  string report_url = 1;
+
+  // View URL.
+  string view_url = 2;
+
+  // View name.
+  string view_name = 3;
+}
+
+// Describes a webhook notification for a newly created issue.
+message IssueNotification {
+  // Issue URL.
+  string issue_url = 1;
+
+  // View URL.
+  string view_url = 2;
+
+  // View name.
+  string view_name = 3;
+
+  // Issue reason/description.
+  string reason = 6;
+}
