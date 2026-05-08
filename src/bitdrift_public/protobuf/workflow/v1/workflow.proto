@@ -22,6 +22,32 @@ message WorkflowsConfiguration {
   repeated Workflow workflows = 1;
 }
 
+// Extracts multiple state entries and turns each match into a separate output item with two
+// tags: one for the matched state key and one for the matched state value.
+//
+// For example, if a metric action has two normal tags and a multi tag that matches three feature
+// flags, the action emits three metrics. Each metric includes the two normal tags plus the
+// configured key/value tags for one matched state entry.
+//
+// If a regex is not specified, that side matches all state entries. This can produce a large
+// number of items, subject to built-in cardinality limits.
+message MultiTag {
+  // The scope of the state entries to match.
+  state.v1.StateScope scope = 1 [(validate.rules).enum.defined_only = true];
+
+  // The tag name populated with the matched state key.
+  string key_tag_name = 2 [(validate.rules).string = {min_len: 1}];
+
+  // The tag name populated with the matched state value.
+  string value_tag_name = 3 [(validate.rules).string = {min_len: 1}];
+
+  // Filters matched state keys. If not specified, all keys match.
+  optional string key_regex = 4;
+
+  // Filters matched state values. If not specified, all values match.
+  optional string value_regex = 5;
+}
+
 // A complete workflow configuration. Each traversal of the state machine defined
 // by the configuration is called a *workflow run*. There can be multiple runs
 // for a given workflow configuration active at a given time on a given device.
@@ -331,6 +357,10 @@ message Workflow {
 
       // The tags for the metric.
       repeated Tag tags = 4;
+
+      // An optional multi-tag extraction that emits one metric per matched state entry. Each
+      // emitted metric includes all tags from `tags` plus the key/value tags from `multi_tag`.
+      MultiTag multi_tag = 7;
 
       // A synthetic counter.
       message Counter {}
