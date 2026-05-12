@@ -49,7 +49,7 @@ message GroupBy {
     }
   }
 
-  // Additional dimensions to collect for each emitted metric. Each entry adds one dimension. For
+  // Dimensions to collect for each emitted metric. Each entry adds one or more dimensions. For
   // example, grouping an error-count time series by `error_type` makes that error type value
   // available alongside the charted metric data.
   repeated .bitdrift.public.unary.workflows.v1.GroupBy.Value values = 6 [(validate.rules).repeated = {max_items: 100}];

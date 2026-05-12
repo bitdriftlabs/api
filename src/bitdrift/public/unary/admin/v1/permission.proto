@@ -40,4 +40,6 @@ enum Permission {
   DEBUG_FILE_READ = 15;
   // Allows reading system status information.
   SYSTEM_STATUS_READ = 18;
+  // Allows creating, editing, and deleting issue workflows that the user owns.
+  ISSUE_WORKFLOW_WRITE = 19;
 }
