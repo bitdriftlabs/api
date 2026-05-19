@@ -13,7 +13,7 @@ import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 message FeatureFlag {
   // The name of the feature flag.
-  string name = 1 [(validate.rules).string = {min_len: 1}];
+  string name = 1;
 
   // The variant of the feature flag, if any.
   optional string variant = 2;
