@@ -79,6 +79,9 @@ message AlertNotification {
 
   // Custom notification text.
   string custom_notification_text = 6;
+
+  // Additional labels attached to the alert.
+  map<string, string> labels = 7;
 }
 
 // Describes an issue referenced by an issue webhook notification.
@@ -120,6 +123,9 @@ message IssueAlertNotification {
 
   // Custom notification text.
   string custom_notification_text = 6;
+
+  // Additional labels attached to the alert.
+  map<string, string> labels = 7;
 }
 
 // Describes a webhook notification for a newly created issue report.

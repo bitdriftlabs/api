@@ -1,0 +1,101 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.alerts.v1;
+
+import "google/protobuf/duration.proto";
+import "validate/validate.proto";
+
+// Configuration for a notification that is sent in response to an alert condition. Alert conditions
+// include session capture notifications, chart alerts, etc.
+message AlertNotificationConfig {
+  // Identifies a notification group target for an alert notification.
+  message NotificationGroup {
+    // The name of the notification group configured for the organization.
+    string name = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+  }
+
+  oneof notification_type {
+    option (validate.required) = true;
+    // Sends notifications to a notification group.
+    .bitdrift.public.unary.alerts.v1.AlertNotificationConfig.NotificationGroup notification_group = 3;
+  }
+
+  // Whether the notification is currently disabled/muted.
+  bool disabled = 4;
+}
+
+// Configures alert notification delivery together with its rate limit.
+message RateLimitedNotificationConfig {
+  // The minimum time between notifications for the same alert target. If unset, the server uses
+  // a default interval of 5 minutes.
+  .google.protobuf.Duration min_time_between_notifications = 1;
+
+  // The notification target and channel settings for this notification.
+  .bitdrift.public.unary.alerts.v1.AlertNotificationConfig notification_config = 2;
+}
+
+// Lists the session capture notifications configured for a workflow rule.
+message SessionCaptureNotificationConfigList {
+  // The list of session capture notification configurations.
+  repeated .bitdrift.public.unary.alerts.v1.RateLimitedNotificationConfig session_capture_notification_configs = 1 [(validate.rules).repeated = {max_items: 100}];
+}
+
+// Requests the session capture notification settings for a workflow rule.
+message GetCapturedSessionNotificationRequest {
+  // The action ID for the session capture rule to get the configuration for.
+  string action_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The workflow ID for the workflow rule to get the configuration for.
+  string workflow_id = 3 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+// Returns the session capture notification settings for a workflow rule.
+message GetCapturedSessionNotificationResponse {
+  // The notification configuration for the session capture rule.
+  .bitdrift.public.unary.alerts.v1.SessionCaptureNotificationConfigList notifications = 1 [(validate.rules).message = {required: true}];
+}
+
+// Requests creation or replacement of session capture notification settings for a workflow rule.
+message UpsertCapturedSessionNotificationRequest {
+  // The action ID for the session capture rule to upsert the configuration for.
+  string action_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The notification configuration to upsert.
+  .bitdrift.public.unary.alerts.v1.SessionCaptureNotificationConfigList notifications = 2 [(validate.rules).message = {required: true}];
+
+  // The workflow ID for the workflow rule to upsert the configuration for.
+  string workflow_id = 4 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+// Confirms that the session capture notification settings were updated.
+message UpsertCapturedSessionNotificationResponse {}
+
+// Manages session capture notification settings for workflow rules.
+service NotificationsService {
+  // Gets the notification configuration for a session capture rule within a workflow.
+  rpc GetCapturedSessionNotification(.bitdrift.public.unary.alerts.v1.GetCapturedSessionNotificationRequest) returns (.bitdrift.public.unary.alerts.v1.GetCapturedSessionNotificationResponse);
+
+  // Upserts the notification configuration for a session capture rule within a workflow.
+  rpc UpsertCapturedSessionNotification(.bitdrift.public.unary.alerts.v1.UpsertCapturedSessionNotificationRequest) returns (.bitdrift.public.unary.alerts.v1.UpsertCapturedSessionNotificationResponse);
+}

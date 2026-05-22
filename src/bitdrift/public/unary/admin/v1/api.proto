@@ -10,9 +10,25 @@ package bitdrift.public.unary.admin.v1;
 
 import "bitdrift/public/unary/admin/v1/connector.proto";
 import "bitdrift/public/unary/admin/v1/keys.proto";
+import "bitdrift/public/unary/admin/v1/notifications.proto";
 
 // Manages administrative settings including Slack integrations, notification groups, views, API/SDK keys, users, teams, and connectors.
 service AdminService {
+  // Lists all notification groups for the organization.
+  rpc GetNotificationGroups(.bitdrift.public.unary.admin.v1.GetNotificationGroupsRequest) returns (.bitdrift.public.unary.admin.v1.GetNotificationGroupsResponse);
+
+  // Creates or updates a notification group for the organization.
+  rpc UpsertNotificationGroup(.bitdrift.public.unary.admin.v1.UpsertNotificationGroupRequest) returns (.bitdrift.public.unary.admin.v1.UpsertNotificationGroupResponse);
+
+  // Deletes a notification group for the organization.
+  rpc DeleteNotificationGroup(.bitdrift.public.unary.admin.v1.DeleteNotificationGroupRequest) returns (.bitdrift.public.unary.admin.v1.DeleteNotificationGroupResponse);
+
+  // Sends a test notification to all targets in a notification group.
+  rpc TestNotificationGroup(.bitdrift.public.unary.admin.v1.TestNotificationGroupRequest) returns (.bitdrift.public.unary.admin.v1.TestNotificationGroupResponse);
+
+  // Sends a test alert notification to validate formatting and mentions.
+  rpc TestAlertNotification(.bitdrift.public.unary.admin.v1.TestAlertNotificationRequest) returns (.bitdrift.public.unary.admin.v1.TestAlertNotificationResponse);
+
   // Lists the API and SDK keys available to the authenticated user.
   rpc GetKeys(.bitdrift.public.unary.admin.v1.GetKeysRequest) returns (.bitdrift.public.unary.admin.v1.GetKeysResponse);
 

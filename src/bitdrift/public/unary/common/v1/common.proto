@@ -27,6 +27,11 @@ enum SortDirection {
   DESCENDING = 1;
 }
 
+// Deprecated: use request-specific sort messages with enumerated sort keys instead of raw fields.
+message Sort {
+  option deprecated = true;
+}
+
 message Pagination {
   // The starting offset for pagination. For example, set this to 10 to start
   // with the 10th record. Defaults to 0.
