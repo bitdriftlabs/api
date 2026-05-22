@@ -24,14 +24,14 @@ enum Permission {
   WORKFLOW_DEPLOY = 5;
   // Allows reading session/timeline data.
   SESSION_READ = 7;
-  // Allows reading issue report data.
-  ISSUE_READ = 8;
   // Allows reading metrics data.
   METRIC_READ = 9;
   // Allows managing issue company settings.
   ISSUE_ADMIN = 11;
   // Allows reading user data for issue assignment.
   ISSUE_ASSIGN = 12;
+  // Allows reading issue report data.
+  ISSUE_READ = 8;
   // Allows managing connectors.
   CONNECTOR_ADMIN = 14;
   // Allows reading connectors.
@@ -42,4 +42,14 @@ enum Permission {
   SYSTEM_STATUS_READ = 18;
   // Allows creating, editing, and deleting issue workflows that the user owns.
   ISSUE_WORKFLOW_WRITE = 19;
+  // Allows creating, editing, and deleting any alert and notification configuration.
+  ALERT_ADMIN = 20;
+  // Allows reading alert and notification configuration.
+  ALERT_READ = 21;
+  // Allows creating, editing, and deleting alert and notification configuration that the user owns.
+  ALERT_WRITE = 22;
+  // Allows reading notification groups.
+  NOTIFICATION_GROUP_READ = 23;
+  // Allows creating, editing, and deleting notification groups.
+  NOTIFICATION_GROUP_ADMIN = 24;
 }

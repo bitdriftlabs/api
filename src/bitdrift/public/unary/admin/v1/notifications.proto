@@ -1,0 +1,199 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.admin.v1;
+
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+// Defines a reusable set of notification targets for the organization.
+message NotificationGroup {
+  // Describes a PagerDuty target in a notification group.
+  message PagerDutyNotification {
+    enum PagerDutySeverity {
+      CRITICAL = 0;
+      ERROR = 1;
+      WARNING = 2;
+      INFO = 3;
+    }
+
+    // Routing key for the PagerDuty integration to notify.
+    string routing_key = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // Severity sent with the PagerDuty incident.
+    .bitdrift.public.unary.admin.v1.NotificationGroup.PagerDutyNotification.PagerDutySeverity severity = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Describes a Datadog On-Call target in a notification group.
+  message DataDogNotification {
+    enum DataDogSeverity {
+      SEVERITY_UNSPECIFIED = 0;
+      LOW = 1;
+      HIGH = 2;
+    }
+
+    // The base URL for the DataDog On-Call API, for example https://navy.oncall.datadoghq.com.
+    string api_base_url = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // The DataDog API key. GetNotificationGroups returns this as <redacted> after creation.
+    // UpsertNotificationGroup accepts <redacted> to preserve the stored value for an existing
+    // target.
+    string api_key = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // The DataDog application key. GetNotificationGroups returns this as <redacted> after
+    // creation. UpsertNotificationGroup accepts <redacted> to preserve the stored value for an
+    // existing target.
+    string application_key = 3 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // The DataDog team handle to page.
+    string team_handle = 4 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // The requested paging urgency.
+    .bitdrift.public.unary.admin.v1.NotificationGroup.DataDogNotification.DataDogSeverity severity = 5 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // The name of the notification group. Must be unique.
+  string name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The list of Slack channel names that are members of the notification group.
+  repeated string slack_channels = 2 [(validate.rules).repeated = {max_items: 100}];
+
+  // The list of PagerDuty targets that are members of the notification group.
+  repeated .bitdrift.public.unary.admin.v1.NotificationGroup.PagerDutyNotification pager_duty_notifications = 3 [(validate.rules).repeated = {max_items: 100}];
+
+  // The list of email addresses that are members of the notification group.
+  repeated string email_addresses = 4 [(validate.rules).repeated = {max_items: 100}];
+
+  // The list of SNS topic ARNs that are members of the notification group.
+  repeated string sns_topic_arns = 5 [(validate.rules).repeated = {max_items: 100}];
+
+  // The list of DataDog On-Call targets that are members of the notification group.
+  repeated .bitdrift.public.unary.admin.v1.NotificationGroup.DataDogNotification datadog_notifications = 6 [(validate.rules).repeated = {max_items: 100}];
+}
+
+// Requests the notification groups configured for the organization.
+message GetNotificationGroupsRequest {}
+
+// Returns the notification groups configured for the organization.
+message GetNotificationGroupsResponse {
+  // Describes a notification group together with its creation and usage timestamps.
+  message NotificationGroupWithMetadata {
+    // The notification group.
+    .bitdrift.public.unary.admin.v1.NotificationGroup notification_group = 1;
+
+    // The time the notification group was created.
+    .google.protobuf.Timestamp created_at = 2;
+
+    // The time the notification group was last used.
+    .google.protobuf.Timestamp used_at = 3;
+  }
+
+  // The list of notification groups.
+  repeated .bitdrift.public.unary.admin.v1.GetNotificationGroupsResponse.NotificationGroupWithMetadata notification_groups = 1;
+}
+
+// Requests creation or replacement of a notification group.
+message UpsertNotificationGroupRequest {
+  // The notification group to upsert.
+  .bitdrift.public.unary.admin.v1.NotificationGroup notification_group = 1 [(validate.rules).message = {required: true}];
+}
+
+// Confirms that the notification group was created or updated.
+message UpsertNotificationGroupResponse {}
+
+// Requests deletion of a notification group.
+message DeleteNotificationGroupRequest {
+  // The name of the notification group to delete.
+  string name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+// Confirms that the notification group was deleted.
+message DeleteNotificationGroupResponse {}
+
+// Requests a test notification for a notification group.
+message TestNotificationGroupRequest {
+  // The name of the notification group to test.
+  string name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+// Returns any errors encountered while sending a test notification group message.
+message TestNotificationGroupResponse {
+  // The list of errors that occurred while sending the test notification.
+  repeated string errors = 1;
+}
+
+// Describes a workflow alert notification to send as a test.
+message WorkflowAlertTest {
+  // Workflow ID used to build links in the test notification.
+  string workflow_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+// Describes an issues alert notification to send as a test.
+message IssuesAlertTest {
+  // View ID associated with the issues alert.
+  int64 view_id = 1 [(validate.rules).int64 = {gt: 0}];
+
+  // Alert UUID to use when formatting the test notification.
+  optional string alert_uuid = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+// Requests a test alert notification using the selected alert type and notification groups.
+message TestAlertNotificationRequest {
+  // Selects which alert type to send as a test notification.
+  oneof alert_kind {
+    option (validate.required) = true;
+    // Uses workflow alert formatting for the test notification.
+    .bitdrift.public.unary.admin.v1.WorkflowAlertTest workflow_alert = 1;
+
+    // Uses issues alert formatting for the test notification.
+    .bitdrift.public.unary.admin.v1.IssuesAlertTest issues_alert = 2;
+  }
+
+  // Optional custom notification text exactly like alert CommonAlertConfig.custom_notification_text
+  // formatting (used to test Slack mentions). If empty, no extra text is appended.
+  string custom_notification_text = 3 [(validate.rules).string = {max_len: 2048}];
+
+  // The selected notification groups for the alert.
+  repeated string notification_group_names = 4 [(validate.rules).repeated = {max_items: 100}];
+}
+
+// Returns any errors encountered while sending a test alert notification.
+message TestAlertNotificationResponse {
+  // Errors encountered while attempting to send the test alert.
+  repeated string errors = 1;
+}

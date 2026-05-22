@@ -57,7 +57,9 @@ message HydrateSessionResponse {
   // Whether the hydration request is ignored because the session is already hydrated or is currently hydrating.
   bool ignored = 1;
 
-  // Whether the hydration request is successful.
+  // Whether the hydration request is successful. If the session is unknown, this will be set to
+  // false and additional information about the session will be provided in the
+  // session_not_found_info field.
   bool success = 2;
 
   // The most recent hydration state for the session. This is useful when the

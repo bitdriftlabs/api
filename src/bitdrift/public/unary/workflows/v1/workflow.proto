@@ -1669,12 +1669,8 @@ message Violation {
 }
 
 message GetWorkflowRequest {
-  // The slug or ID of the parent exploration. This is mapped to the REST path.
-  string exploration_slug_or_id = 1 [(validate.rules).string = {max_len: 100}];
-
-  // The slug or ID of the workflow to retrieve. We'll try to match both and
-  // return the first one that matches. This is mapped to the REST path.
-  string workflow_slug_or_id = 2 [(validate.rules).string = {max_len: 100}];
+  // The ID of the workflow to retrieve.
+  string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
 }
 
 message GetWorkflowResponse {

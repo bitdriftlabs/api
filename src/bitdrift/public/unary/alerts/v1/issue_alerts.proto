@@ -1,0 +1,367 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.alerts.v1;
+
+import "bitdrift/public/unary/alerts/v1/alerts.proto";
+import "bitdrift/public/unary/alerts/v1/notifications.proto";
+import "bitdrift/public/unary/common/v1/common.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+// Defines the issue alert configuration for an issues view.
+message IssuesAlertConfig {
+  // Groups multiple issue alert conditions under a logical operator.
+  message IssuesAlertConditionList {
+    // Conditions combined by the surrounding logical operator.
+    repeated .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.IssuesAlertCondition conditions = 1 [(validate.rules).repeated = {
+      min_items: 2
+      max_items: 20
+    }];
+  }
+
+  // Defines a count threshold that must be met within a duration.
+  message CountOverDuration {
+    // Minimum count required during the duration.
+    uint64 count = 1;
+
+    // Duration over which the count is evaluated.
+    .google.protobuf.Duration duration = 2;
+  }
+
+  // Defines a percentage threshold that must be met within a duration.
+  message PercentOverDuration {
+    // Minimum percentage required during the duration.
+    double percent = 1;
+
+    // Duration over which the percentage is evaluated.
+    .google.protobuf.Duration duration = 2;
+  }
+
+  // Defines the condition that controls when an issues alert fires.
+  message IssuesAlertCondition {
+    // Selects the condition type used by the issues alert.
+    oneof condition_type {
+      option (validate.required) = true;
+      // All conditions must be met for the alert to fire.
+      .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.IssuesAlertConditionList and_conditions = 1;
+
+      // Any of the conditions must be met for the alert to fire.
+      .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.IssuesAlertConditionList or_conditions = 2;
+
+      // A count of events over a duration required for the alert to fire.
+      .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.CountOverDuration event_threshold = 3;
+
+      // A count of unique devices over a duration required for the alert to fire.
+      .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.CountOverDuration unique_device_threshold = 4;
+
+      // A count of unique sessions over a duration required for the alert to fire.
+      .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.CountOverDuration unique_session_threshold = 5;
+
+      // A percentage of events compared to app opens over a duration required for the alert to
+      // fire. The app open metric will only be filtered by the platform and app ID.
+      .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.PercentOverDuration event_to_app_open_threshold = 6;
+
+      // A percentage of unique sessions with events compared to overall unique sessions over a
+      // duration required for the alert to fire. The unique session metric will only be filtered by
+      // the platform and app ID.
+      .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.PercentOverDuration event_unique_sessions_to_overall_unique_sessions_threshold = 7;
+
+      // A rate of change of events over a duration required for the alert to fire.
+      .bitdrift.public.unary.alerts.v1.RateOfChangeAlertConfig event_rate_of_change = 8;
+
+      // A percentage of unique devices with events compared to overall unique devices over a
+      // duration required for the alert to fire. The unique device metric will only be filtered by
+      // the platform and app ID.
+      .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.PercentOverDuration event_unique_devices_to_overall_unique_devices_threshold = 9;
+    }
+  }
+
+  // Defines one issues alert attached to the view.
+  message IssuesAlert {
+    // Shared metadata and notification settings for the alert.
+    .bitdrift.public.unary.alerts.v1.CommonAlertConfig common_config = 1 [(validate.rules).message.required = true];
+
+    // If false, the alert applies globally (across all issue groups). If true, the alert applies
+    // individually within every issue group.
+    bool per_issue_group = 2;
+
+    // The condition for the alert to fire.
+    .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.IssuesAlertCondition condition = 3 [(validate.rules).message.required = true];
+
+    // Whether the alert is disabled or not.
+    bool disabled = 4;
+
+    // The unique identifier for the alert. This only needs to be unique within a view. This is
+    // used to associate history data with this alert. The ID should be kept consistent across
+    // modifications where the expectation is the history will be preserved.
+    string alert_uuid = 5 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+  }
+
+  // Rate limited notifications for new issue events within the view.
+  repeated .bitdrift.public.unary.alerts.v1.RateLimitedNotificationConfig new_issue_event_notification = 1 [(validate.rules).repeated = {max_items: 20}];
+
+  // Notifications for new issue groups within the view.
+  repeated .bitdrift.public.unary.alerts.v1.RateLimitedNotificationConfig new_issue_group_notification = 2 [(validate.rules).repeated = {max_items: 20}];
+
+  // Alerts for the view.
+  repeated .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.IssuesAlert alerts = 3 [(validate.rules).repeated = {max_items: 20}];
+}
+
+// Requests the issues alert configuration for a view.
+message GetIssuesAlertConfigRequest {
+  // The issues view ID that the config is associated with. There can only be a single alert
+  // configuration per view ID. The view ID provides the filters used for the overall alert
+  // including at minimum platform and app ID.
+  string view_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+// Returns the issues alert configuration for a view.
+message GetIssuesAlertConfigResponse {
+  // Describes caller-visible state for one alert in the configuration.
+  message PerAlertInfo {
+    // Stable UUID for the alert.
+    string alert_uuid = 1;
+
+    // Time when the alert most recently triggered.
+    .google.protobuf.Timestamp last_triggered_at = 2;
+
+    // Time when the alert most recently resolved.
+    .google.protobuf.Timestamp last_resolved_at = 3;
+  }
+
+  // Returns the alert configuration for the issues view ID.
+  .bitdrift.public.unary.alerts.v1.IssuesAlertConfig alert_config = 1;
+
+  // Per alert information on top of the stored configuration.
+  repeated .bitdrift.public.unary.alerts.v1.GetIssuesAlertConfigResponse.PerAlertInfo per_alert_info = 2;
+}
+
+// Requests creation, update, or deletion of an issues alert configuration.
+message UpsertIssuesAlertConfigRequest {
+  // The issues view ID that the config is associated with.
+  string view_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // If provided, the config will either be created or updated based on the view ID. If not
+  // provided the alert config will be deleted.
+  .bitdrift.public.unary.alerts.v1.IssuesAlertConfig alert_config = 2;
+}
+
+// Confirms that the issues alert configuration was updated.
+message UpsertIssuesAlertConfigResponse {}
+
+// Filters the list of issues alerts by firing state or view.
+message AllIssueAlertsFilter {
+  // Matches issues alerts that are currently firing.
+  message Firing {}
+
+  // Matches issues alerts that are not currently firing.
+  message NotFiring {}
+
+  // Matches issues alerts belonging to the selected views.
+  message View {
+    // View IDs to include in the result.
+    repeated string view_ids = 1 [(validate.rules).repeated = {
+      min_items: 1
+      max_items: 100
+    }];
+  }
+
+  oneof type {
+    option (validate.required) = true;
+    // Filters on whether the alert is firing.
+    .bitdrift.public.unary.alerts.v1.AllIssueAlertsFilter.Firing firing = 1;
+
+    // Filters on whether the alert is not firing.
+    .bitdrift.public.unary.alerts.v1.AllIssueAlertsFilter.NotFiring not_firing = 2;
+
+    // Filters on specific views.
+    .bitdrift.public.unary.alerts.v1.AllIssueAlertsFilter.View view = 3;
+  }
+}
+
+// Requests a paginated list of issues alerts for the organization.
+message GetAllIssueAlertsRequest {
+  // Describes one caller-visible ordering criterion for issues alert results.
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      VIEW_NAME = 1;
+      ALERT_NAME = 2;
+      LAST_TRIGGERED = 3;
+    }
+
+    // Selects which caller-visible issue alert attribute to order by.
+    .bitdrift.public.unary.alerts.v1.GetAllIssueAlertsRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Used to paginate through results. To get the next page result, set this to
+  // the desired starting offset. For example, setting to 10 will start with the
+  // 10th record. The default value is 0.
+  optional uint32 offset = 1;
+
+  // This defines the upper bound of the number of items returned. The maximum
+  // value supported is 100, meaning that we’ll never return more than
+  // max(items.count, limit, 100).
+  optional uint32 limit = 2 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
+
+  // Filter the list of alerts based on the current user's relationship to
+  // the alert. This is a logical AND. If no filters are supplied, all
+  // alerts are returned.
+  repeated .bitdrift.public.unary.alerts.v1.AllIssueAlertsFilter filters = 3 [(validate.rules).repeated = {max_items: 100}];
+
+  // Deprecated: use sort instead.
+  repeated .bitdrift.public.unary.common.v1.Sort sort_by = 4 [
+    deprecated = true,
+    (validate.rules).repeated = {max_items: 100}
+  ];
+
+  // Orders issue alerts by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.alerts.v1.GetAllIssueAlertsRequest.Sort sort = 5 [(validate.rules).repeated = {max_items: 100}];
+}
+
+// Returns a paginated list of issues alerts for the organization.
+message GetAllIssueAlertsResponse {
+  // Describes one issues alert in the list response.
+  message Item {
+    // View ID the alert belongs to.
+    string view_id = 1;
+
+    // Name of the view the alert belongs to.
+    string view_name = 2;
+
+    // Short name of the alert.
+    string alert_name = 3;
+
+    // Description of the alert.
+    string alert_description = 4;
+
+    // Stable UUID for the alert.
+    string alert_uuid = 5;
+
+    // Whether the alert is currently disabled.
+    bool disabled = 6;
+
+    // Time when the alert most recently triggered.
+    .google.protobuf.Timestamp last_triggered_at = 7;
+
+    // Time when the alert most recently resolved.
+    .google.protobuf.Timestamp last_resolved_at = 8;
+  }
+
+  // Issues alerts returned for the requested page.
+  repeated .bitdrift.public.unary.alerts.v1.GetAllIssueAlertsResponse.Item items = 1;
+
+  // Total number of issues alerts that match the request.
+  uint32 total_alerts = 2;
+}
+
+// Requests alert history for a single issues alert.
+message GetIssueAlertHistoryRequest {
+  // The issues view ID that the alert is associated with.
+  string view_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The alert UUID that the history is being requested for.
+  string alert_uuid = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The start time and end time of the alert history.
+  // All alerts that were firing within the time range will be returned, regardless of whether they
+  // were triggered before the start time or resolved after the end time.
+  optional .google.protobuf.Timestamp start_time = 4 [(validate.rules).message = {required: true}];
+
+  // End of the time range to return issues alert history for.
+  optional .google.protobuf.Timestamp end_time = 5 [(validate.rules).message = {required: true}];
+}
+
+// Describes one issues alert firing interval together with its contributing issue groups.
+message IssueAlertHistoryDetails {
+  // If there were errors sending notifications for the alert, they will be listed here.
+  repeated string notification_failures = 1;
+
+  // The configuration of the alert at the time it was triggered.
+  .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.IssuesAlert alert_config = 2;
+
+  // The issue groups that contributed to the alert. For alerts that are per-issue group, this is
+  // all impacted groups. For alerts that are not per-issue group, this is effectively a list
+  // of all issue groups that had activity during the alert period.
+  repeated string issue_group_ids = 3;
+}
+
+// Returns the alert history for a single issues alert.
+message GetIssueAlertHistoryResponse {
+  // Describes one firing interval in the issues alert history.
+  message AlertHistoryItem {
+    // The time the alert was triggered.
+    .google.protobuf.Timestamp triggered_at = 1;
+
+    // The time the alert was resolved.
+    .google.protobuf.Timestamp resolved_at = 2;
+
+    // Additional details related to the firing of the alert.
+    .bitdrift.public.unary.alerts.v1.IssueAlertHistoryDetails details = 3;
+  }
+
+  // Summarizes one issue group that contributed to alerting during the time range.
+  message IssueGroupSummary {
+    // The issue group ID that can be used to look up additional group details.
+    string group_id = 1;
+
+    // The number of alert events associated with the group during the time range.
+    uint32 alert_count = 2;
+
+    // The time the group last contributed to a triggered alert.
+    .google.protobuf.Timestamp last_triggered_at = 3;
+  }
+
+  // The history of the alert during the time range specified in the request. Used to draw a time
+  // series like chart.
+  repeated .bitdrift.public.unary.alerts.v1.GetIssueAlertHistoryResponse.AlertHistoryItem history = 1;
+
+  // A summary of the issue groups that contributed to alerting during the time range.
+  repeated .bitdrift.public.unary.alerts.v1.GetIssueAlertHistoryResponse.IssueGroupSummary issue_groups = 2;
+}
+
+// Provides issues alert configuration, listing, and history operations.
+service IssuesAlertsService {
+  // Gets the alert configuration for an issues view.
+  rpc GetAlertConfig(.bitdrift.public.unary.alerts.v1.GetIssuesAlertConfigRequest) returns (.bitdrift.public.unary.alerts.v1.GetIssuesAlertConfigResponse);
+
+  // Upserts the alert configuration for an issues view.
+  rpc UpsertAlertConfig(.bitdrift.public.unary.alerts.v1.UpsertIssuesAlertConfigRequest) returns (.bitdrift.public.unary.alerts.v1.UpsertIssuesAlertConfigResponse);
+
+  // Lists issues alerts for the organization.
+  rpc GetAllAlerts(.bitdrift.public.unary.alerts.v1.GetAllIssueAlertsRequest) returns (.bitdrift.public.unary.alerts.v1.GetAllIssueAlertsResponse);
+
+  // Gets history for a single issues alert.
+  rpc GetAlertHistory(.bitdrift.public.unary.alerts.v1.GetIssueAlertHistoryRequest) returns (.bitdrift.public.unary.alerts.v1.GetIssueAlertHistoryResponse);
+}

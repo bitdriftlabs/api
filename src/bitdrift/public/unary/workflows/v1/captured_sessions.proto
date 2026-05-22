@@ -1,0 +1,32 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.workflows.v1;
+
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message CapturedSession {
+  // The unique identifier of the captured session.
+  string session_id = 1 [(validate.rules).string = {min_len: 1}];
+
+  // The timestamp of the first log seen for this session.
+  .google.protobuf.Timestamp first_seen = 2 [(validate.rules).message = {required: true}];
+
+  // The timestamp of the most recent log seen for this session.
+  .google.protobuf.Timestamp last_seen = 7 [(validate.rules).message = {required: true}];
+
+  // The number of times the session was seen. This will always be set to 1 when performing a
+  // global search. For a per-action search, it will effectively return the number of trigger logs
+  // for the session.
+  uint64 count = 4;
+
+  // The fields associated with the captured session. They are similar to the fields in the
+  // insights.
+  map<string, string> fields = 5;
+}

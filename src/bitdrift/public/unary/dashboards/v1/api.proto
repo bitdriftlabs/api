@@ -79,8 +79,8 @@ message ResolvedChart {
 }
 
 message GetWorkflowChartsRequest {
-  // The ID or slug of the workflow to fetch the dashboard for.
-  string workflow_id_or_slug = 2 [
+  // The ID of the workflow to fetch the charts for.
+  string workflow_id = 2 [
     (validate.rules).string.min_len = 1,
     (validate.rules).string.max_len = 4096
   ];

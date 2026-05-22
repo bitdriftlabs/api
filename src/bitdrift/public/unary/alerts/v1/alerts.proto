@@ -1,0 +1,504 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.alerts.v1;
+
+import "bitdrift/public/shared/workflows/v1/time_series.proto";
+import "bitdrift/public/unary/alerts/v1/notifications.proto";
+import "bitdrift/public/unary/charts/v1/chart_id.proto";
+import "bitdrift/public/unary/common/v1/common.proto";
+import "bitdrift/public/unary/dashboards/v1/api.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+enum ThresholdCondition {
+  ABOVE = 0;
+  BELOW = 1;
+}
+
+// An alert definition global for an individual metric aggregated ID. This is shared across N
+// workflows/charts if all of those workflows/charts refer to the same aggregated ID.
+message BasicAlertConfig {
+  // The threshold value for the alert that will cause the alert to trigger.
+  double threshold = 1;
+
+  // The condition that the threshold must meet for the alert to trigger.
+  .bitdrift.public.unary.alerts.v1.ThresholdCondition condition = 2 [(validate.rules).enum = {defined_only: true}];
+
+  // The window over which the alert will be evaluated. Currently supported windows include: 5
+  // minutes, 1 hour, and 1 day. Regardless of the window, alerts are currently evaluated every 5
+  // minutes.
+  .google.protobuf.Duration window = 3 [(validate.rules).duration.gt = {}];
+
+  // The number of consecutive data points that must meet the threshold condition for the alert to
+  // trigger. The aggregation window of each point depends on the evaluation window. For 5 minute
+  // and 1 hour evaluation windows, the aggregation window is 1 minute. For the 24 hour evaluation
+  // window, the aggregation window is 15 minutes. If not set defaults to 1.
+  optional uint32 consecutive_data_points = 4;
+
+  // Configuration for any histogram values within the aggregate ID. This is required if the
+  // aggregate ID refers to a histogram so that one or more percentiles can be used as part of the
+  // alert condition.
+  .bitdrift.public.unary.charts.v1.HistogramConfiguration histogram_configuration = 5;
+
+  // Optional limit strategy to use for this alert. If this is omitted, a default value of limiting
+  // by a top k of 5 entries is used. Ultimately this will allow alerting on specific dimensions
+  // for a group by aggregate ID if desired.
+  .bitdrift.public.unary.charts.v1.LimitStrategy limit_strategy = 6;
+
+  // If specified, the alert will only trigger if at least this many unique devices are present in
+  // each consecutive data point that breaches the threshold condition.
+  optional uint32 unique_device_threshold = 7;
+}
+
+// SLO alerts can only be defined on rate time series. The config will be failed otherwise. The
+// Rate is assumed to be <good results> / <total results>. Ultimately the windows and burn rates
+// are what drives alerting, but the SLO duration is still required so that error budget
+// consumption can be calculated. Additionally, we can use the SLO duration to show SLO adherence
+// over the trailing window if we like.
+message SloAlertConfig {
+  // SLO alerts use MWMBR (Multi-Window/Multi-Burn Rate). Each alert evaluation looks at every
+  // WindowAndBurnRate and alerts if any of them alert. For an individual WindowAndBurnRate to alert
+  // both the short window AND long window must breach based on the SLO target and burn rate.
+  message WindowAndBurnRate {
+    // Overrides the default notification settings for this burn-rate window.
+    message OverrideNotifications {
+      // Notification targets for the alert when this OverrideNotifications is used.
+      repeated .bitdrift.public.unary.alerts.v1.RateLimitedNotificationConfig notifications = 1 [(validate.rules).repeated = {max_items: 100}];
+
+      // Custom notification text to use when this OverrideNotifications is used. If not set,
+      // the CommonAlertConfig.custom_notification_text will be used.
+      optional string custom_notification_text = 2 [(validate.rules).string = {max_len: 2048}];
+    }
+
+    // Short evaluation window for this burn-rate policy.
+    .google.protobuf.Duration short_window = 1 [(validate.rules).duration.gt = {}];
+
+    // Long evaluation window for this burn-rate policy.
+    .google.protobuf.Duration long_window = 2 [(validate.rules).duration.gt = {}];
+
+    // Burn rate threshold that causes this policy to trigger.
+    double burn_rate = 3;
+
+    // Notification targets for the alert when this WindowAndBurnRate triggers. If unset, the
+    // CommonAlertConfig.notifications will be used.
+    .bitdrift.public.unary.alerts.v1.SloAlertConfig.WindowAndBurnRate.OverrideNotifications notifications = 4;
+  }
+
+  // Currently only supports 7 days and 30 days.
+  .google.protobuf.Duration slo_duration = 1 [(validate.rules).duration.gt = {}];
+
+  // A percentage expressed as a number between 0 and 1. E.g., 0.99 for 99% or 0.95 for 95%.
+  double slo_target = 2;
+
+  // Optional limit strategy to use for this alert. If this is omitted, a default value of limiting
+  // by a top k of 5 entries is used. Ultimately this will allow alerting on specific dimensions
+  // for a group by aggregate ID if desired.
+  .bitdrift.public.unary.charts.v1.LimitStrategy limit_strategy = 3;
+
+  // The list of window and burn rates to use for the SLO alert. Each WindowAndBurnRate defines a
+  // short and long window, as well as a burn rate. The alert will trigger if any of the
+  // WindowAndBurnRates breach the SLO target based on the burn rate.
+  repeated .bitdrift.public.unary.alerts.v1.SloAlertConfig.WindowAndBurnRate window_and_burn_rates = 4 [(validate.rules).repeated = {
+    min_items: 1
+    max_items: 10
+  }];
+}
+
+// Rate of change alerts are used to look at significant changes over a period of time. They work
+// for counter, rate, and histogram chart types.
+message RateOfChangeAlertConfig {
+  enum ChangeDirection {
+    INCREASE = 0;
+    DECREASE = 1;
+  }
+
+  oneof window_type {
+    option (validate.required) = true;
+    // This comparison type defines a window. [now - window, now] is compared to
+    // [now - 2 * window, now - window].
+    .google.protobuf.Duration window = 1 [(validate.rules).duration.gt = {}];
+  }
+
+  oneof comparison_type {
+    option (validate.required) = true;
+    // This compares an absolute amount of change when the data is aggregated across each of the
+    // comparison windows.
+    double absolute_change = 2;
+
+    // This compares a percentage of change when the data is aggregated across each of the
+    // comparison windows.
+    double percentage_change = 3;
+  }
+
+  // The direction of change to check for.
+  .bitdrift.public.unary.alerts.v1.RateOfChangeAlertConfig.ChangeDirection change_direction = 4 [(validate.rules).enum = {defined_only: true}];
+
+  // Configuration for any histogram values within the aggregate ID. This is required if the
+  // aggregate ID refers to a histogram so that one or more percentiles can be used as part of the
+  // alert condition.
+  .bitdrift.public.unary.charts.v1.HistogramConfiguration histogram_configuration = 5;
+
+  // Optional limit strategy to use for this alert. If this is omitted, a default value of limiting
+  // by a top k of 5 entries is used. Ultimately this will allow alerting on specific dimensions
+  // for a group by aggregate ID if desired.
+  .bitdrift.public.unary.charts.v1.LimitStrategy limit_strategy = 6;
+}
+
+// Defines caller-visible alert metadata shared by all alert types.
+message CommonAlertConfig {
+  // Short name for the alert.
+  string name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // Long form description for the alert.
+  string description = 2 [(validate.rules).string = {max_len: 2048}];
+
+  // Notification targets for the alert.
+  repeated .bitdrift.public.unary.alerts.v1.RateLimitedNotificationConfig notifications = 3 [(validate.rules).repeated = {max_items: 100}];
+
+  // If not empty, this text will be appended to the notification text for the alert when the
+  // notification is sent.
+  string custom_notification_text = 4 [(validate.rules).string = {max_len: 2048}];
+
+  // Optional labels to attach to the alert. For notification channels that support structured data
+  // (e.g. PagerDuty and SNS), these labels can be used to provide additional context for the alert.
+  map<string, string> labels = 5 [(validate.rules).map.max_pairs = 20];
+}
+
+// Defines a workflow alert together with its shared metadata and alert type.
+message AlertConfig {
+  // Shared metadata and notification settings for the alert.
+  .bitdrift.public.unary.alerts.v1.CommonAlertConfig common_config = 1 [(validate.rules).message.required = true];
+
+  oneof alert_type {
+    option (validate.required) = true;
+    // Configuration for a basic alert.
+    .bitdrift.public.unary.alerts.v1.BasicAlertConfig basic_alert = 5;
+
+    // Configuration for an SLO alert.
+    .bitdrift.public.unary.alerts.v1.SloAlertConfig slo_alert = 6;
+
+    // Configuration for a rate of change alert.
+    .bitdrift.public.unary.alerts.v1.RateOfChangeAlertConfig rate_of_change_alert = 7;
+  }
+}
+
+// Requests the alert configuration for a workflow chart.
+message GetAlertConfigRequest {
+  // The workflow ID to get the configuration for.
+  string workflow_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The chart rule ID to get the configuration for.
+  string chart_rule_id = 3 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+// Returns the alert configurations for a workflow chart.
+message GetAlertConfigResponse {
+  // Describes a stored alert configuration together with its identifier and state.
+  message AlertConfigWithId {
+    // The ID of the alert configuration.
+    uint64 id = 1;
+
+    // Stored alert configuration.
+    .bitdrift.public.unary.alerts.v1.AlertConfig config = 6;
+
+    // Whether the alert is disabled
+    bool disabled = 3;
+
+    // The aggregated action ID the alert targets.
+    string aggregated_action_id = 4;
+
+    // The owner of the alert.
+    .bitdrift.public.unary.common.v1.Owner owner = 5;
+  }
+
+  // The list of alert configurations.
+  repeated .bitdrift.public.unary.alerts.v1.GetAlertConfigResponse.AlertConfigWithId alert_configs = 1;
+}
+
+// Requests creation, update, or deletion of an alert configuration.
+message UpsertAlertConfigRequest {
+  // The workflow ID to upsert the configuration for.
+  string workflow_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The chart rule ID to upsert the configuration for.
+  string chart_rule_id = 3 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The aggregated action ID to upsert the configuration for.
+  string aggregated_action_id = 4 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The ID of the alert configuration to upsert. If empty a new alert config will be created.
+  optional uint64 id = 5;
+
+  // Alert configuration to create or update.
+  .bitdrift.public.unary.alerts.v1.AlertConfig alert_config = 8;
+
+  // Whether to enable or disable the alert as part of the upsert.
+  bool disabled = 7;
+}
+
+// Returns the identifier of the alert configuration that was changed.
+message UpsertAlertConfigResponse {
+  // The ID of the upserted or deleted alert configuration.
+  uint64 id = 1;
+}
+
+enum WorkflowAlertType {
+  BASIC = 0;
+  SLO = 1;
+  RATE_OF_CHANGE = 2;
+}
+
+// Filters the list of workflow alerts by ownership, firing state, or alert type.
+message AllAlertsFilter {
+  // Matches alerts owned by the authenticated user.
+  message Owned {}
+
+  // Matches alerts that are currently firing.
+  message Firing {}
+
+  // Matches alerts that are not currently firing.
+  message NotFiring {}
+
+  oneof type {
+    option (validate.required) = true;
+    // Filters on whether the current user owns the alert.
+    .bitdrift.public.unary.alerts.v1.AllAlertsFilter.Owned owned = 1;
+
+    // Filters on whether the alert is firing.
+    .bitdrift.public.unary.alerts.v1.AllAlertsFilter.Firing firing = 2;
+
+    // Filters on whether the alert is not firing.
+    .bitdrift.public.unary.alerts.v1.AllAlertsFilter.NotFiring not_firing = 3;
+
+    // Filters on a specific alert type.
+    .bitdrift.public.unary.alerts.v1.WorkflowAlertType alert_type = 4 [(validate.rules).enum = {defined_only: true}];
+  }
+}
+
+// Requests a paginated list of workflow alerts for the organization.
+message GetAllAlertsRequest {
+  // Describes one caller-visible ordering criterion for workflow alert results.
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      ALERT_NAME = 1;
+      LAST_TRIGGERED = 2;
+      LAST_RESOLVED = 3;
+      OWNER_NAME = 4;
+    }
+
+    // Selects which caller-visible alert attribute to order by.
+    .bitdrift.public.unary.alerts.v1.GetAllAlertsRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Used to paginate through results. To get the next page result, set this to
+  // the desired starting offset. For example, setting to 10 will start with the
+  // 10th record. The default value is 0.
+  optional uint32 offset = 1;
+
+  // This defines the upper bound of the number of items returned. The maximum
+  // value supported is 100, meaning that we’ll never return more than
+  // max(items.count, limit, 100).
+  optional uint32 limit = 2 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
+
+  // Filter the list of alerts based on the current user's relationship to
+  // the alert. This is a logical AND. If no filters are supplied, all
+  // alerts are returned.
+  repeated .bitdrift.public.unary.alerts.v1.AllAlertsFilter filters = 3 [(validate.rules).repeated = {max_items: 100}];
+
+  // Deprecated: use sort instead.
+  repeated .bitdrift.public.unary.common.v1.Sort sort_by = 4 [
+    deprecated = true,
+    (validate.rules).repeated = {max_items: 100}
+  ];
+
+  // Orders alerts by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.alerts.v1.GetAllAlertsRequest.Sort sort = 5 [(validate.rules).repeated = {max_items: 100}];
+}
+
+// Returns a paginated list of workflow alerts for the organization.
+message GetAllAlertsResponse {
+  // Describes one workflow alert in the list response.
+  message Item {
+    // Short name of the alert.
+    string alert_name = 1;
+
+    // Unique identifier of the alert.
+    uint64 alert_id = 2;
+
+    // Workflow ID the alert belongs to.
+    string workflow_id = 4;
+
+    // Chart rule ID the alert belongs to.
+    string chart_rule_id = 5;
+
+    // Aggregated action ID evaluated by the alert.
+    string aggregated_action_id = 6;
+
+    // Whether the alert is currently disabled.
+    bool disabled = 7;
+
+    // Time when the alert most recently triggered.
+    .google.protobuf.Timestamp last_triggered_at = 8;
+
+    // Time when the alert most recently resolved.
+    .google.protobuf.Timestamp last_resolved_at = 9;
+
+    // Owner information for the alert.
+    .bitdrift.public.unary.common.v1.Owner owner = 10;
+
+    // Alert type used by this alert.
+    .bitdrift.public.unary.alerts.v1.WorkflowAlertType alert_type = 11;
+  }
+
+  // Workflow alerts returned for the requested page.
+  repeated .bitdrift.public.unary.alerts.v1.GetAllAlertsResponse.Item items = 1;
+
+  // Total number of workflow alerts that match the request.
+  uint32 total_alerts = 2;
+}
+
+// Requests alert history for a single workflow alert.
+message GetAlertHistoryRequest {
+  // The alert ID to get the history for.
+  uint64 alert_id = 1;
+
+  // Used to paginate through results. To get the next page result, set this to
+  // the desired starting offset. For example, setting to 10 will start with the
+  // 10th record. The default value is 0.
+  optional uint32 offset = 2;
+
+  // This defines the upper bound of the number of items returned. The maximum
+  // value supported is 100, meaning that we’ll never return more than
+  // max(items.count, limit, 100).
+  optional uint32 limit = 3 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
+
+  // The start time and end time of the alert history.
+  // All alerts that were firing within the time range will be returned, regardless of whether they
+  // were triggered before the start time or resolved after the end time.
+  optional .google.protobuf.Timestamp start_time = 4 [(validate.rules).message = {required: true}];
+
+  // End of the time range to return alert history for.
+  optional .google.protobuf.Timestamp end_time = 5 [(validate.rules).message = {required: true}];
+}
+
+// Describes why an alert triggered and what data contributed to it.
+message AlertHistoryDetails {
+  // In the case of group by this might return multiple items.
+  // Describes the data points that contributed to a basic alert trigger.
+  message BasicContributingData {
+    // The data points that contributed to the alert. For grouped alerts, the response may include
+    // multiple time series.
+    repeated .bitdrift.public.shared.workflows.v1.DataPoint data_points = 1;
+  }
+
+  // Describes the burn-rate data that contributed to an SLO alert trigger.
+  message SloContributingData {
+    // Burn-rate window configuration that triggered the alert.
+    .bitdrift.public.unary.alerts.v1.SloAlertConfig.WindowAndBurnRate window_and_burn_rate = 1;
+
+    // Short-window comparison data for the alert trigger.
+    .bitdrift.public.unary.dashboards.v1.Table short_table = 2;
+
+    // Long-window comparison data for the alert trigger.
+    .bitdrift.public.unary.dashboards.v1.Table long_table = 3;
+  }
+
+  // Wraps the contributing data for whichever alert type triggered.
+  message ContributingData {
+    // Selects the contributing data format for the triggered alert type.
+    oneof data {
+      // Contributing data for a basic alert.
+      .bitdrift.public.unary.alerts.v1.AlertHistoryDetails.BasicContributingData basic = 1;
+
+      // Contributing data for an SLO alert.
+      .bitdrift.public.unary.alerts.v1.AlertHistoryDetails.SloContributingData slo = 2;
+    }
+  }
+
+  // If the alert was triggered by a group by dimension, this will contain the dimensions that
+  // triggered the alert.
+  repeated string group_by_dimensions = 1;
+
+  // If there were errors sending notifications for the alert, they will be listed here.
+  repeated string notification_failures = 2;
+
+  // Alert configuration snapshot captured when the alert triggered.
+  .bitdrift.public.unary.alerts.v1.AlertConfig alert_config = 4;
+
+  // The data points that contributed to the alert being triggered.
+  repeated .bitdrift.public.unary.alerts.v1.AlertHistoryDetails.ContributingData contributing_data = 5;
+}
+
+// Returns the alert history for a single workflow alert.
+message GetAlertHistoryResponse {
+  // Describes one firing interval in the alert history.
+  message AlertHistoryItem {
+    // The time the alert was triggered.
+    .google.protobuf.Timestamp triggered_at = 1;
+
+    // The time the alert was resolved.
+    .google.protobuf.Timestamp resolved_at = 2;
+
+    // Additional details related to the firing of the alert.
+    .bitdrift.public.unary.alerts.v1.AlertHistoryDetails details = 3;
+  }
+
+  // Alert history items that match the request.
+  repeated .bitdrift.public.unary.alerts.v1.GetAlertHistoryResponse.AlertHistoryItem history = 1;
+
+  // Total number of alert history items that match the request.
+  uint32 total_alert_history = 2;
+}
+
+// Provides workflow alert configuration, listing, and history operations.
+service AlertsService {
+  // Gets alert configuration for a workflow chart.
+  rpc GetAlertConfig(.bitdrift.public.unary.alerts.v1.GetAlertConfigRequest) returns (.bitdrift.public.unary.alerts.v1.GetAlertConfigResponse);
+
+  // Upserts alert configuration for a workflow chart.
+  rpc UpsertAlertConfig(.bitdrift.public.unary.alerts.v1.UpsertAlertConfigRequest) returns (.bitdrift.public.unary.alerts.v1.UpsertAlertConfigResponse);
+
+  // Lists workflow alerts for the organization.
+  rpc GetAllAlerts(.bitdrift.public.unary.alerts.v1.GetAllAlertsRequest) returns (.bitdrift.public.unary.alerts.v1.GetAllAlertsResponse);
+
+  // Gets history for a single workflow alert.
+  rpc GetAlertHistory(.bitdrift.public.unary.alerts.v1.GetAlertHistoryRequest) returns (.bitdrift.public.unary.alerts.v1.GetAlertHistoryResponse);
+}
