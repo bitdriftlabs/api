@@ -80,6 +80,13 @@ enum JavaScriptEngine : int8 {
     Hermes = 2,          // Hermes (Used by React Native on Android and iOS)
 }
 
+enum MemoryPressureLevel : int8 {
+    Unknown = 0,
+    Normal = 1,
+    Warning = 2,
+    Critical = 3,
+}
+
 struct Timestamp {
   seconds:uint64;
   nanos:uint32;
@@ -143,6 +150,9 @@ table AppMetrics {
 
     // JavaScript engine used by the application (only relevant for React Native/JS apps)
     javascript_engine:JavaScriptEngine;
+
+    // Memory pressure level at the time of the crash, as reported by the OS.
+    memory_pressure_level:MemoryPressureLevel;
 }
 
 table OSBuild {
