@@ -342,6 +342,9 @@ message ChartData {
 
     // Contains an error message when chart data could not be retrieved.
     string error = 6;
+
+    // Set to true if the chart is not found.
+    bool chart_not_found = 12 [(validate.rules).bool = {const: true}];
   }
 }
 

@@ -22,6 +22,9 @@ message WebhookNotification {
     // A workflow session capture notification.
     .bitdrift.public.webhook.v1.SessionCaptureNotification session_capture = 3;
 
+    // An entity recording request completed.
+    .bitdrift.public.webhook.v1.EntityRecordingCompletedNotification entity_recording_completed = 8;
+
     // A workflow alert fired.
     .bitdrift.public.webhook.v1.AlertNotification alert = 4;
 
@@ -58,6 +61,12 @@ message SessionCaptureNotification {
 
   // Title of the workflow session capture node that triggered the capture.
   string rule_title = 7;
+}
+
+// Describes a webhook notification for a completed entity recording request.
+message EntityRecordingCompletedNotification {
+  // Entity identifier for the completed recording.
+  string entity_id = 1;
 }
 
 // Describes a webhook notification for a workflow alert.

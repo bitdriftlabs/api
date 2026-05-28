@@ -530,3 +530,63 @@ message ListPossibleAssigneesResponse {
   // Total number of possible assignees matching the filter criteria.
   uint32 total = 2;
 }
+
+message UpdateIssueGroupAttributesRequest {
+  message UpdateAttributeOperation {
+    enum OperationType {
+      OPERATION_TYPE_UNSPECIFIED = 0;
+      UPSERT = 1;
+      REMOVE = 2;
+    }
+
+    // The type of update operation to perform.
+    .bitdrift.public.unary.issues.v1.UpdateIssueGroupAttributesRequest.UpdateAttributeOperation.OperationType operation_type = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // The attribute key to update. For example, "priority" or "customer_impact".
+    string key = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    // The new value for the attribute. This is required for the UPSERT operation, and should be
+    // left empty for REMOVE operations.
+    string value = 3 [(validate.rules).string = {max_len: 1024}];
+  }
+
+  // The identifier for the issue group.
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The list of attribute update operations to perform on the issue group. The operations will be
+  // performed in the order they are provided in the list. For example, if the list contains an
+  // UPSERT operation for the "priority" attribute followed by a REMOVE operation for the "priority"
+  // attribute, the final result will be that the "priority" attribute is removed from the issue
+  // group.
+  repeated .bitdrift.public.unary.issues.v1.UpdateIssueGroupAttributesRequest.UpdateAttributeOperation operations = 2 [(validate.rules).repeated = {max_items: 100}];
+}
+
+message UpdateIssueGroupAttributesResponse {}
+
+message GetIssueGroupAttributesRequest {
+  // The unique identifier for the issue group.
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message GetIssueGroupAttributesResponse {
+  message Attribute {
+    string key = 1 [(validate.rules).string = {min_len: 1}];
+
+    string value = 2 [(validate.rules).string = {min_len: 1}];
+  }
+
+  // The list of attributes for the issue group.
+  repeated .bitdrift.public.unary.issues.v1.GetIssueGroupAttributesResponse.Attribute attributes = 1;
+}

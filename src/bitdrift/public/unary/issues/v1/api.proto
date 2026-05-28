@@ -35,4 +35,10 @@ service IssueService {
 
   // Updates the assignees for an issue group.
   rpc UpdateIssueGroupAssignees(.bitdrift.public.unary.issues.v1.UpdateIssueGroupAssigneesRequest) returns (.bitdrift.public.unary.issues.v1.UpdateIssueGroupAssigneesResponse);
+
+  // Updates ancillary attributes for an issue group, such as custom tags or metadata.
+  rpc UpdateIssueGroupAttributes(.bitdrift.public.unary.issues.v1.UpdateIssueGroupAttributesRequest) returns (.bitdrift.public.unary.issues.v1.UpdateIssueGroupAttributesResponse);
+
+  // Retrieves ancillary attributes for an issue group, such as custom tags or metadata.
+  rpc GetIssueGroupAttributes(.bitdrift.public.unary.issues.v1.GetIssueGroupAttributesRequest) returns (.bitdrift.public.unary.issues.v1.GetIssueGroupAttributesResponse);
 }
