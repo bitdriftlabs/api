@@ -96,6 +96,13 @@ message Report {
   }
 
   message AppMetrics {
+    enum MemoryPressureLevel {
+      MEMORY_PRESSURE_UNKNOWN = 0;
+      MEMORY_PRESSURE_NORMAL = 1;
+      MEMORY_PRESSURE_WARNING = 2;
+      MEMORY_PRESSURE_CRITICAL = 3;
+    }
+
     string app_id = 1 [(validate.rules).string = {min_len: 1}];
 
     string version = 2 [(validate.rules).string = {min_len: 1}];
@@ -105,6 +112,8 @@ message Report {
 
       int64 version_code = 4;
     }
+
+    optional .bitdrift.public.unary.issues.v1.Report.AppMetrics.MemoryPressureLevel memory_pressure_level = 5 [(validate.rules).enum = {defined_only: true}];
   }
 
   message DeviceMetrics {
