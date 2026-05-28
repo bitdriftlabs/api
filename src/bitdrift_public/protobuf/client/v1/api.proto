@@ -552,10 +552,13 @@ message ErrorShutdown {
 // received by the client it should proceed with normal behavior as if it had decided to flush
 // the buffers locally (e.g., rate limiting, intents, etc.).
 message FlushBuffers {
-  // The list of buffers to flush. If the list is empty, all buffers should be flushed. In the case
-  // of a server side listener trigger, every occurrence of ActionFlushBuffer in the trigger_actions
-  // field will populate a buffer in this list.
+  // The list of trigger buffers to flush. If the list is empty, all eligible trigger buffers
+  // known to the client should be flushed.
   repeated string buffer_id_list = 1;
+
+  // The streaming configuration to apply when buffer flushing occurs. If not specified, no subsequent
+  // log streaming will occur when the specified buffers are flushed.
+  workflow.v1.Workflow.Action.ActionFlushBuffers.Streaming streaming = 2;
 }
 
 // The response to Sankey diagram path upload request.
