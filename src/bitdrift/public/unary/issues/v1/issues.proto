@@ -61,6 +61,8 @@ message AdvancedFilter {
       LHS_TYPED_BUILD_ID = 9;
       // Android versionCode associated with the issue.
       LHS_TYPED_VERSION_CODE = 10;
+      // Memory pressure level at the time of the issue.
+      LHS_TYPED_MEMORY_PRESSURE_LEVEL = 11;
     }
 
     // The filter key to match against.
