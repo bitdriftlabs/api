@@ -20,6 +20,47 @@ message ConnectorConfig {
 
     // The role ARN for the CloudWatch connector. This role will be assumed by the connector
     // in order to put metrics into CloudWatch.
+    //
+    // The role MUST have the following permission policy:
+    // ```json
+    // {
+    //   "Version": "2012-10-17",
+    //   "Statement": [
+    //     {
+    //       "Sid": "AllowScopedMetricPush",
+    //       "Effect": "Allow",
+    //       "Action": "cloudwatch:PutMetricData",
+    //       "Resource": "*",
+    //       "Condition": {
+    //         "StringLike": {
+    //           "cloudwatch:namespace": "bitdrift/*"
+    //         }
+    //       }
+    //     }
+    //   ]
+    // }
+    // ```
+    // The role MUST have the following trust policy. Replace `<bitdrift account ID>` with the
+    // actual Bitdrift account ID provided by your sales or support contact:
+    // ```json
+    // {
+    //   "Version": "2012-10-17",
+    //   "Statement": [
+    //     {
+    //       "Effect": "Allow",
+    //       "Principal": {
+    //         "AWS": "arn:aws:iam::<bitdrift account ID>:root"
+    //       },
+    //       "Action": "sts:AssumeRole",
+    //       "Condition": {
+    //         "StringEquals": {
+    //           "sts:ExternalId": "bitdrift"
+    //         }
+    //       }
+    //     }
+    //   ]
+    // }
+    // ```
     string role_arn = 2 [(validate.rules).string = {
       min_len: 1
       max_len: 255
@@ -34,6 +75,7 @@ message ConnectorConfig {
 
   oneof connector_type {
     option (validate.required) = true;
+    // Configuration for an AWS CloudWatch connector.
     .bitdrift.public.unary.admin.v1.ConnectorConfig.CloudwatchConnectorConfig cloudwatch_connector_config = 2;
   }
 }
