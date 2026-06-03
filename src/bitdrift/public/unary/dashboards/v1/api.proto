@@ -354,6 +354,19 @@ message GetChartsDataResponse {
   repeated .bitdrift.public.unary.dashboards.v1.ChartData data = 1;
 }
 
+message GetActiveDevicesRequest {
+  // The time range to inspect for active devices.
+  .bitdrift.public.unary.common.v1.TimeRange time_range = 7;
+
+  // Optional platform filters used to narrow the active-device count.
+  repeated .bitdrift.public.shared.platform.v1.Platform platform_filter = 6 [(validate.rules).repeated.max_items = 10];
+}
+
+message GetActiveDevicesResponse {
+  // The number of distinct active devices observed in the requested time range.
+  uint64 devices = 1;
+}
+
 message GetUniqueAppIdsRequest {
   // The start of the time range to inspect. Defaults to 30 days before the
   // current time when unset.
@@ -388,6 +401,13 @@ service DashboardService {
   // charts, callers can reuse each returned `TimeSeries.id` together with its full `labels` set to
   // build `charts.v1.LimitStrategy.IdentifierMatch` in a later request.
   rpc GetChartsData(.bitdrift.public.unary.dashboards.v1.GetChartsDataRequest) returns (.bitdrift.public.unary.dashboards.v1.GetChartsDataResponse);
+
+  // Gets the unique active devices for a given time range and filter conditions. Active devices in
+  // this context are *any* devices that connected to the platform, regardless of whether they sent
+  // any metrics, were freshly started, moved to foreground, etc. This includes devices that
+  // connected as part of background activity so the number will be higher than "app open" based
+  // numbers.
+  rpc GetActiveDevices(.bitdrift.public.unary.dashboards.v1.GetActiveDevicesRequest) returns (.bitdrift.public.unary.dashboards.v1.GetActiveDevicesResponse);
 
   // Returns the distinct platform, app ID, and app version combinations seen in
   // the specified time range.

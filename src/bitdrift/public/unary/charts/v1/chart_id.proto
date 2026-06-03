@@ -60,6 +60,46 @@ message ChartIdentifier {
     }];
   }
 
+  // Active devices are global to an account and are not tied to an action ID. Use request-level
+  // platform filtering to narrow results. This chart returns line-chart data and resolves to a
+  // line chart in dashboard metadata. See the GetActiveDevices API for an explanation of what
+  // constitutes an active device.
+  message ActiveDevicesChart {
+    enum ActiveDevicesChartType {
+      // This is a standard chart using 1m/15m/2h resolutions.
+      NORMAL = 0;
+      // Includes three daily series: DAU for that day, WAU for the trailing 7 days, and MAU for
+      // the trailing 30 days. This chart is returned in a dashboard group with a minimum query
+      // interval of 7 days, so smaller time windows may return no data.
+      LONG_TERM = 1;
+      // Shows stickiness as DAU/MAU, with the same minimum time-window expectations as LONG_TERM.
+      STICKINESS = 2;
+    }
+
+    // The active-devices chart variant to query.
+    .bitdrift.public.unary.charts.v1.ChartIdentifier.ActiveDevicesChart.ActiveDevicesChartType type = 1 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Shows issue-stability metrics that are not tied to a specific action ID. Results are filtered
+  // by platform and app ID.
+  message IssueStabilityChart {
+    enum IssueStabilityChartType {
+      // Shows three series on the same chart: Crash-Free Rate = (1 - (# of crashes / # of app
+      // opens)) x 100; Crash-Free Session Rate = (1 - (# of crash sessions / # of sessions)) x
+      // 100; Crash-Free Devices = (1 - (# of crashed devices / # of devices)) x 100.
+      GLOBAL = 0;
+      // Crash-Free Rate grouped by report type.
+      DETAILED_CRASH_FREE_RATE = 1;
+      // Crash-Free Session Rate grouped by report type.
+      DETAILED_CRASH_FREE_SESSION_RATE = 2;
+      // Crash-Free Devices grouped by report type.
+      DETAILED_CRASH_FREE_DEVICES = 3;
+    }
+
+    // The issue-stability chart variant to query.
+    .bitdrift.public.unary.charts.v1.ChartIdentifier.IssueStabilityChart.IssueStabilityChartType type = 1 [(validate.rules).enum = {defined_only: true}];
+  }
+
   oneof type {
     option (validate.required) = true;
     // A workflow-backed metric chart.
@@ -68,8 +108,14 @@ message ChartIdentifier {
     // A workflow-backed sankey chart.
     .bitdrift.public.unary.charts.v1.ChartIdentifier.WorkflowSankeyChart sankey_chart = 5;
 
+    // An active-devices chart as found on the devices tab in Instant Insights.
+    .bitdrift.public.unary.charts.v1.ChartIdentifier.ActiveDevicesChart active_devices_chart = 6;
+
     // A workflow-backed funnel chart.
     .bitdrift.public.unary.charts.v1.ChartIdentifier.WorkflowFunnelChart workflow_funnel_chart = 7;
+
+    // An issue-stability chart as found on the stability tab in Instant Insights.
+    .bitdrift.public.unary.charts.v1.ChartIdentifier.IssueStabilityChart issue_stability_chart = 9;
   }
 }
 
