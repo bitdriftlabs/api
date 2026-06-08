@@ -8,6 +8,7 @@ syntax = "proto3";
 
 package bitdrift.public.unary.timeline.v1;
 
+import "bitdrift/public/unary/common/v1/common.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
@@ -66,6 +67,9 @@ message HydrateSessionResponse {
   // request is ignored because the session is already hydrated or currently
   // hydrating.
   .bitdrift.public.unary.timeline.v1.HydrationState last_hydration_state = 3;
+
+  // If the session ID is unknown, this field will contain additional information about the session.
+  .bitdrift.public.unary.common.v1.SessionStatusInfo session_not_found_info = 4;
 }
 
 message GetHydrationStatusRequest {

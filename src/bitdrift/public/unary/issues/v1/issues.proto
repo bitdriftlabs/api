@@ -63,6 +63,15 @@ message AdvancedFilter {
       LHS_TYPED_VERSION_CODE = 10;
       // Memory pressure level at the time of the issue.
       LHS_TYPED_MEMORY_PRESSURE_LEVEL = 11;
+      // A function in the reported stack trace. The only supported operators are SEARCH and
+      // NOT_SEARCH.
+      LHS_TYPED_FUNCTION = 12;
+      // A file in the reported stack trace. The only supported operators are SEARCH and
+      // NOT_SEARCH.
+      LHS_TYPED_FILE = 13;
+      // A module in the reported stack trace. The only supported operators are SEARCH and
+      // NOT_SEARCH.
+      LHS_TYPED_MODULE = 14;
     }
 
     // The filter key to match against.
@@ -417,8 +426,8 @@ message ListIssuesRequest {
   }];
 
   // Filter the list of issues based on the current user's relationship to
-  // the issue. This is a logical AND. If no filters are supplied, all
-  // issues are returned.
+  // the issue. This is a logical AND. When issue_query is omitted and no
+  // time range filter is supplied, the server defaults to the last 7 days.
   repeated .bitdrift.public.unary.issues.v1.ListIssuesRequest.ListIssuesFilters filters = 4 [(validate.rules).repeated = {max_items: 100}];
 
   .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 6;

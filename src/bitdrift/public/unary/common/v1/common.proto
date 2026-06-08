@@ -77,6 +77,11 @@ enum Operator {
   IN = 9;
   // A negation of the IN operator.
   NOT_IN = 10;
+  // Tokenized substring search operator. Only supported on specific fields and documented per-field.
+  // Search strings shorter than 3 characters are rejected.
+  SEARCH = 11;
+  // A negation of the SEARCH operator.
+  NOT_SEARCH = 12;
 }
 
 message TimeRange {
@@ -107,4 +112,26 @@ message TimeRange {
     // from 20 minutes ago to 5 minutes ago.
     .bitdrift.public.unary.common.v1.TimeRange.RelativeTimeRange relative_time_range = 2;
   }
+}
+
+message SessionStatusInfo {
+  // If this is true the session is known but has been soft deleted due to account retention
+  // policies. Contact support to recover the session if you believe this is in error.
+  bool session_soft_deleted = 1;
+
+  // If this is true, a device has reported seeing this session, but it was never triggered
+  // for attempted upload.
+  bool session_seen_on_device = 2;
+
+  // If this is true, the session was triggered but rejected, due to daily limits.
+  bool session_triggered_but_rejected = 3;
+
+  // If this is true, the session was triggered and accepted for upload. As the device can
+  // immediately go offline this does not guarantee that the session was uploaded.
+  bool session_triggered_and_accepted = 4;
+
+  // If this is true, at least some logs for the session were uploaded. If hydration is
+  // failing this is likely a very new session and eventual consistency means it has not
+  // yet been fully indexed. Try again soon.
+  bool session_uploaded = 5;
 }
