@@ -52,4 +52,8 @@ enum Permission {
   NOTIFICATION_GROUP_READ = 23;
   // Allows creating, editing, and deleting notification groups.
   NOTIFICATION_GROUP_ADMIN = 24;
+  // Allows reading issue and workflow views.
+  VIEW_READ = 25;
+  // Allows creating, editing, and deleting issue and workflow views.
+  VIEW_WRITE = 26;
 }

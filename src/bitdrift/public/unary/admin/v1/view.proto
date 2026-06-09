@@ -1,0 +1,248 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.admin.v1;
+
+import "bitdrift/public/unary/common/v1/common.proto";
+import "bitdrift/public/unary/issues/v1/issues.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message ViewFilters {
+  message IssueGroupList {
+    // The issue group filters saved in the view.
+    repeated .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters filters = 1 [(validate.rules).repeated = {max_items: 100}];
+  }
+
+  message IssueGroupListQuery {
+    // The issue-level query saved in the view.
+    .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 1;
+
+    // The issue group query saved in the view.
+    .bitdrift.public.unary.issues.v1.IssueGroupQuery issue_group_query = 2;
+  }
+
+  // Selects the saved criteria for one supported view type.
+  oneof type {
+    option (validate.required) = true;
+    // The saved criteria for an issue group view.
+    .bitdrift.public.unary.admin.v1.ViewFilters.IssueGroupList issue_group_list = 1;
+
+    // The saved issue group query for an issue group view.
+    .bitdrift.public.unary.admin.v1.ViewFilters.IssueGroupListQuery issue_group_list_new = 2;
+  }
+}
+
+message ViewSort {
+  // Selects the sort criteria for one supported view type.
+  oneof type {
+    option (validate.required) = true;
+    // Orders issue group views using issue group list sort criteria.
+    .bitdrift.public.unary.issues.v1.ListIssueGroupsRequest.Sort issue_group = 1;
+  }
+}
+
+message ViewSortList {
+  // The sorts to apply in order.
+  repeated .bitdrift.public.unary.admin.v1.ViewSort sort = 1 [(validate.rules).repeated = {max_items: 100}];
+}
+
+// Represents a view for a specific service.
+message View {
+  message ViewIcon {
+    // The Phosphor icon name to display for the view, such as ph:bug or ph:chart-bar.
+    string icon_name = 1 [(validate.rules).string = {max_len: 100}];
+  }
+
+  // The unique identifier for the view.
+  string id = 1;
+
+  // The name of the view.
+  string name = 2;
+
+  // A description of the view.
+  optional string description = 3;
+
+  // The user who created the view.
+  .bitdrift.public.unary.common.v1.Owner created_by = 4;
+
+  // The time the view was created.
+  .google.protobuf.Timestamp created_at = 5;
+
+  // The user who last modified the view.
+  .bitdrift.public.unary.common.v1.Owner modified_by = 6;
+
+  // The time the view was last modified.
+  .google.protobuf.Timestamp modified_at = 7;
+
+  // The filters applied to this view.
+  .bitdrift.public.unary.admin.v1.ViewFilters view_filters = 8;
+
+  // Whether the current user has favorited this view.
+  bool current_user_favorited = 11;
+
+  // An optional icon for the view.
+  .bitdrift.public.unary.admin.v1.View.ViewIcon icon = 12;
+
+  // The default sort order for the view using service-specific sort criteria.
+  .bitdrift.public.unary.admin.v1.ViewSortList default_sort = 14;
+}
+
+// Request to upsert a view.
+message UpsertViewRequest {
+  // The values to use when creating a view.
+  message Insert {
+    // The name of the new view.
+    string name = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // An optional description of the new view.
+    optional string description = 2 [(validate.rules).string = {max_len: 1000}];
+
+    // The saved filters for the new view.
+    .bitdrift.public.unary.admin.v1.ViewFilters view_filters = 3 [(validate.rules).message = {required: true}];
+
+    // The default sort order for the new view.
+    .bitdrift.public.unary.admin.v1.ViewSortList default_sort = 5;
+
+    // An optional icon to display for the new view.
+    .bitdrift.public.unary.admin.v1.View.ViewIcon icon = 6;
+  }
+
+  // The values to update on an existing view.
+  message Update {
+    // The ID of the view to update.
+    string id = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    // An optional replacement name for the view.
+    optional string name = 2 [(validate.rules).string = {max_len: 255}];
+
+    // An optional replacement description for the view.
+    optional string description = 3 [(validate.rules).string = {max_len: 1000}];
+
+    // Optional replacement filters for the view.
+    optional .bitdrift.public.unary.admin.v1.ViewFilters view_filters = 4;
+
+    // Optional replacement default sort criteria.
+    .bitdrift.public.unary.admin.v1.ViewSortList default_sort = 6;
+
+    // Optional replacement icon for the view.
+    .bitdrift.public.unary.admin.v1.View.ViewIcon icon = 7;
+  }
+
+  oneof action {
+    option (validate.required) = true;
+    // Creates a new view.
+    .bitdrift.public.unary.admin.v1.UpsertViewRequest.Insert insert = 1;
+
+    // Updates an existing view. Only provided fields are changed.
+    .bitdrift.public.unary.admin.v1.UpsertViewRequest.Update update = 2;
+  }
+}
+
+// Response after upserting a view.
+message UpsertViewResponse {
+  .bitdrift.public.unary.admin.v1.View view = 1;
+}
+
+// Request to get a view by ID.
+message GetViewRequest {
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+// Response with the requested view.
+message GetViewResponse {
+  .bitdrift.public.unary.admin.v1.View view = 1;
+}
+
+// Request to delete a view.
+message DeleteViewRequest {
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+// Response after deleting a view.
+message DeleteViewResponse {}
+
+// Request to list all views for a service.
+message ListViewsRequest {
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      DISPLAY_NAME = 1;
+      CREATION_TIME = 2;
+      UPDATED_TIME = 3;
+      FAVORITED = 4;
+    }
+
+    // Selects which caller-visible view attribute to order by.
+    .bitdrift.public.unary.admin.v1.ListViewsRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Selects which service's views to return.
+  enum ServiceType {
+    // Returns views across all supported services.
+    UNSPECIFIED = 0;
+    // Returns issue group views.
+    ISSUE_GROUP = 1;
+  }
+
+  // Selects which service's views to return.
+  .bitdrift.public.unary.admin.v1.ListViewsRequest.ServiceType service_type = 1 [(validate.rules).enum = {defined_only: true}];
+
+  // The preferred pagination parameters for the request.
+  //
+  // If both pagination and deprecated_offset or deprecated_limit are provided,
+  // pagination takes precedence.
+  .bitdrift.public.unary.common.v1.Pagination pagination = 5;
+
+  // An optional name to filter by.
+  optional string name = 6 [(validate.rules).string = {max_len: 255}];
+
+  // Orders views by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.admin.v1.ListViewsRequest.Sort sort = 7 [(validate.rules).repeated = {max_items: 100}];
+
+  // If true, only returns views that the current user has favorited.
+  bool favorites_only = 8;
+}
+
+// Response with a list of views.
+message ListViewsResponse {
+  // The views that matched the request.
+  repeated .bitdrift.public.unary.admin.v1.View views = 1;
+
+  // The total number of matching views before pagination is applied.
+  uint32 total_count = 2;
+}
+
+// Request to favorite a view for the authenticated user.
+message FavoriteViewRequest {
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+// Response after favoriting a view.
+message FavoriteViewResponse {}
