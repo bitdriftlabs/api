@@ -186,9 +186,6 @@ message AlertConfig {
 
     // Configuration for an SLO alert.
     .bitdrift.public.unary.alerts.v1.SloAlertConfig slo_alert = 6;
-
-    // Configuration for a rate of change alert.
-    .bitdrift.public.unary.alerts.v1.RateOfChangeAlertConfig rate_of_change_alert = 7;
   }
 }
 

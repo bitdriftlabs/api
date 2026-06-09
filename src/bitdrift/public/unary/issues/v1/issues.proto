@@ -248,6 +248,58 @@ message GetIssueGroupResponse {
   .bitdrift.public.unary.issues.v1.IssueGroup issue_group = 1 [(validate.rules).message = {required: true}];
 }
 
+message ListIssueGroupsFilters {
+  message Assignee {
+    // The assignee(s) of an issue group to filter by.
+    repeated .bitdrift.public.unary.common.v1.Owner value = 1 [(validate.rules).repeated = {max_items: 100}];
+  }
+
+  message Status {
+    // The status of an issue group to filter by.
+    .bitdrift.public.unary.issues.v1.IssueGroupStatus value = 1 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  message Platform {
+    // The platform of an issue group to filter by.
+    repeated .bitdrift.public.shared.platform.v1.Platform value = 1 [(validate.rules).repeated = {max_items: 100}];
+  }
+
+  message TimeRange {
+    .bitdrift.public.unary.common.v1.TimeRange time_range = 3;
+  }
+
+  message IdsFilters {
+    // The issue group IDs to filter the list by.
+    repeated string value = 1 [(validate.rules).repeated = {
+      max_items: 100
+      items: {
+        string: {max_len: 100}
+      }
+    }];
+  }
+
+  oneof type {
+    option (validate.required) = true;
+    // Filters on the assignee of an issue group.
+    .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters.Assignee assignees = 1;
+
+    // Filters on the status of an issue group.
+    .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters.Status status = 2;
+
+    // Filters on the platform of an issue group.
+    .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters.Platform platform = 3;
+
+    // Filters on the time range of an issue group.
+    .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters.TimeRange time_range = 4;
+
+    // Filters on the advanced filters of an issue group.
+    .bitdrift.public.unary.issues.v1.AdvancedFilter advanced_filters = 6;
+
+    // Filters on specific issue group IDs.
+    .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters.IdsFilters ids_filter = 7;
+  }
+}
+
 message ListIssueGroupsRequest {
   message Sort {
     enum SortKey {

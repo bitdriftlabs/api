@@ -11,6 +11,7 @@ package bitdrift.public.unary.admin.v1;
 import "bitdrift/public/unary/admin/v1/connector.proto";
 import "bitdrift/public/unary/admin/v1/keys.proto";
 import "bitdrift/public/unary/admin/v1/notifications.proto";
+import "bitdrift/public/unary/admin/v1/view.proto";
 
 // Manages administrative settings including Slack integrations, notification groups, views, API/SDK keys, users, teams, and connectors.
 service AdminService {
@@ -29,6 +30,20 @@ service AdminService {
   // Sends a test alert notification to validate formatting and mentions.
   rpc TestAlertNotification(.bitdrift.public.unary.admin.v1.TestAlertNotificationRequest) returns (.bitdrift.public.unary.admin.v1.TestAlertNotificationResponse);
 
+  // Creates a view or updates an existing view for the organization.
+  rpc UpsertView(.bitdrift.public.unary.admin.v1.UpsertViewRequest) returns (.bitdrift.public.unary.admin.v1.UpsertViewResponse);
+
+  // Retrieves a view by ID.
+  rpc GetView(.bitdrift.public.unary.admin.v1.GetViewRequest) returns (.bitdrift.public.unary.admin.v1.GetViewResponse);
+
+  // Deletes a view by ID.
+  //
+  // This permanently removes the view from the organization.
+  rpc DeleteView(.bitdrift.public.unary.admin.v1.DeleteViewRequest) returns (.bitdrift.public.unary.admin.v1.DeleteViewResponse);
+
+  // Lists all views for the organization and the given service.
+  rpc ListViews(.bitdrift.public.unary.admin.v1.ListViewsRequest) returns (.bitdrift.public.unary.admin.v1.ListViewsResponse);
+
   // Lists the API and SDK keys available to the authenticated user.
   rpc GetKeys(.bitdrift.public.unary.admin.v1.GetKeysRequest) returns (.bitdrift.public.unary.admin.v1.GetKeysResponse);
 
@@ -37,6 +52,9 @@ service AdminService {
 
   // Revokes an API key or SDK key by ID.
   rpc RevokeKey(.bitdrift.public.unary.admin.v1.RevokeKeyRequest) returns (.bitdrift.public.unary.admin.v1.RevokeKeyResponse);
+
+  // Marks or unmarks a view as a favorite for the authenticated user.
+  rpc FavoriteView(.bitdrift.public.unary.admin.v1.FavoriteViewRequest) returns (.bitdrift.public.unary.admin.v1.FavoriteViewResponse);
 
   // Lists all connectors for the organization.
   rpc GetConnectors(.bitdrift.public.unary.admin.v1.GetConnectorsRequest) returns (.bitdrift.public.unary.admin.v1.GetConnectorsResponse);
