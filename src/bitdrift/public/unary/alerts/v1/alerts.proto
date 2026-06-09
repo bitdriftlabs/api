@@ -267,7 +267,6 @@ message UpsertAlertConfigResponse {
 enum WorkflowAlertType {
   BASIC = 0;
   SLO = 1;
-  RATE_OF_CHANGE = 2;
 }
 
 // Filters the list of workflow alerts by ownership, firing state, or alert type.
