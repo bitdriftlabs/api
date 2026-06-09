@@ -16,6 +16,8 @@ import "bitdrift_public/protobuf/client/v1/runtime.proto";
 import "bitdrift_public/protobuf/config/v1/config.proto";
 import "bitdrift_public/protobuf/filter/v1/filter.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "bitdrift_public/protobuf/state/v1/scope.proto";
+import "bitdrift_public/protobuf/state/v1/state_payload.proto";
 import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -32,6 +34,25 @@ message ClientKillFile {
   // The time the client will be killed until. After this time it will try to contact the server
   // again.
   google.protobuf.Timestamp kill_until = 2;
+}
+
+// Used by the server to tell the client to clear or set state.
+message ClientStateUpdate {
+  message ClearClientState {
+    state.v1.StateScope scope = 1;
+    string state_key = 2;
+  }
+
+  message SetClientState {
+    state.v1.StateScope scope = 1;
+    string state_key = 2;
+    state.v1.StateValue state_value = 3;
+  }
+
+  oneof update_type {
+    ClearClientState clear_client_state = 1;
+    SetClientState set_client_state = 2;
+  }
 }
 
 // This is sent both in the initial handshake as well as mid-stream if any of the attributes have
@@ -373,6 +394,10 @@ message HandshakeResponse {
   // request. If unset, the client should continue to send any existing opaque state, or none
   // if it has none. Sending an explicit empty value will clear any existing state.
   optional bytes opaque_client_state_to_echo = 3;
+
+  // If set, the client should update or clear the corresponding state according to the provided
+  // list of updates.
+  repeated ClientStateUpdate client_state_updates = 4;
 }
 
 // A general indication of rate limiting from server to client.
@@ -522,6 +547,10 @@ message ConfigurationUpdate {
     // SoTW is the only currently supported configuration type.
     StateOfTheWorld state_of_the_world = 2;
   }
+
+  // If set, the client should update or clear the corresponding state according to the provided
+  // list of updates.
+  repeated ClientStateUpdate client_state_updates = 3;
 }
 
 // Runtime update from server to client.
