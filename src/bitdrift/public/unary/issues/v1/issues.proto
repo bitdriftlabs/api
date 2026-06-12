@@ -72,6 +72,8 @@ message AdvancedFilter {
       // A module in the reported stack trace. The only supported operators are SEARCH and
       // NOT_SEARCH.
       LHS_TYPED_MODULE = 14;
+      // The model manufacturer associated with the issue, e.g. "Google" for models like the Pixel.
+      LHS_TYPED_MANUFACTURER = 15;
     }
 
     // The filter key to match against.
@@ -212,7 +214,7 @@ message IssueGroup {
   // Most of the time we expect this to be a single platform.
   repeated .bitdrift.public.shared.platform.v1.Platform platform = 3;
 
-  // The stats for the issue group _BEFORE_ filters are applied.
+  // The stats for the issue group.
   .bitdrift.public.unary.issues.v1.IssueGroup.Stats stats = 4;
 
   // The assignees of the issue group.
@@ -220,9 +222,6 @@ message IssueGroup {
 
   // The status of the issue group.
   .bitdrift.public.unary.issues.v1.IssueGroupStatus status = 6;
-
-  // The stats for the issue group _AFTER_ filters are applied.
-  .bitdrift.public.unary.issues.v1.IssueGroup.Stats filtered_stats = 7;
 
   // The latest version/version code of the application when marked as fixed
   oneof resolution_version {

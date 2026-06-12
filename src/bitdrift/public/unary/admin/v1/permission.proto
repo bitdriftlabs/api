@@ -56,4 +56,10 @@ enum Permission {
   VIEW_READ = 25;
   // Allows creating, editing, and deleting issue and workflow views.
   VIEW_WRITE = 26;
+  // Allows managing teams.
+  TEAMS_ADMIN = 27;
+  // Allows managing owned teams.
+  TEAMS_WRITE = 28;
+  // Allows reading teams.
+  TEAMS_READ = 29;
 }
