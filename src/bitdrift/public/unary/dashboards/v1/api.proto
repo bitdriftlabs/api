@@ -58,6 +58,29 @@ message ResolvedChart {
     bool supports_multiple_percentiles = 2;
   }
 
+  message BackingWorkflowDeploymentHistory {
+    message Deployment {
+      // The version number of the workflow deployment.
+      uint64 version = 1;
+
+      // The time when this workflow version was deployed.
+      .google.protobuf.Timestamp deployed_at = 2;
+
+      // The time when this deployment stopped being active.
+      //
+      // If this is not set, the deployment is still active.
+      .google.protobuf.Timestamp stopped_at = 3;
+
+      // The user who deployed this workflow version.
+      .bitdrift.public.unary.common.v1.Owner deployed_by_user = 4;
+    }
+
+    // The deployment history of the workflow backing this chart.
+    //
+    // Entries are ordered from newest to oldest.
+    repeated .bitdrift.public.unary.dashboards.v1.ResolvedChart.BackingWorkflowDeploymentHistory.Deployment deployments = 1;
+  }
+
   // The type of chart.
   oneof type {
     option (validate.required) = true;
@@ -76,6 +99,9 @@ message ResolvedChart {
 
   // The display metadata for the chart.
   .bitdrift.public.unary.charts.v1.ChartMetadata metadata = 21;
+
+  // The deployment history of the workflow backing this chart, if applicable.
+  .bitdrift.public.unary.dashboards.v1.ResolvedChart.BackingWorkflowDeploymentHistory backing_workflow_deployment_history = 22;
 }
 
 message GetWorkflowChartsRequest {
