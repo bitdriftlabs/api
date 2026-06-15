@@ -1,0 +1,592 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.entity.v1;
+
+import "bitdrift/public/unary/common/v1/common.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+// Represents an entity that is known to the system, meaning it has been explicitly created or
+// updated by a caller via the UpsertKnownEntity API.
+message KnownEntity {
+  // A display name for the entity.
+  string display_name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+// Describes an entity ID.
+//
+// Callers can provide either the complete entity ID or a hash returned by another API. The system
+// only stores a hash of the complete entity ID.
+message EntityId {
+  oneof entity_id_type {
+    option (validate.required) = true;
+    // The unique ID of the entity. Only a hash of this ID is stored by the system.
+    string id = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 256
+    }];
+
+    // The hash of the complete entity ID. This is opaque and must be retrieved from other API
+    // responses via the ObfuscatedEntityId type.
+    string hash = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 256
+    }];
+  }
+}
+
+// The system only stores a hash of the complete entity ID. It also stores both the first four
+// characters and the last four characters of the entity ID in plaintext to allow users to
+// cross reference the ID with their own systems.
+message ObfuscatedEntityId {
+  // The first four characters of the entity ID.
+  string prefix = 1 [(validate.rules).string = {
+    min_len: 4
+    max_len: 4
+  }];
+
+  // The last four characters of the entity ID.
+  string suffix = 2 [(validate.rules).string = {
+    min_len: 4
+    max_len: 4
+  }];
+
+  // The hash of the complete entity ID.
+  string hash = 3 [(validate.rules).string = {
+    min_len: 1
+    max_len: 256
+  }];
+
+  // If this is a known entity, this field will be populated with additional information about the
+  // entity.
+  .bitdrift.public.unary.entity.v1.KnownEntity known_entity = 4;
+}
+
+message GetEntityInfoRequest {
+  oneof entity_id_type {
+    option (validate.required) = true;
+    // The unique ID of the entity to retrieve information for.
+    .bitdrift.public.unary.entity.v1.EntityId entity_id = 1;
+
+    // The bitdrift device ID to search for. If the device ID has been used by multiple entities,
+    // the server will return information for the most recently active entity associated with that
+    // device ID.
+    string device_id = 7 [(validate.rules).string = {
+      min_len: 1
+      max_len: 256
+    }];
+  }
+
+  // The time range to filter the information by.
+  .bitdrift.public.unary.common.v1.TimeRange time_range = 2 [(validate.rules).message.required = true];
+
+  // An optional limit on the number of recent sessions to include in the response. Defaults to 5.
+  optional uint32 max_recent_sessions = 3 [(validate.rules).uint32.gt = 0];
+
+  // An optional limit on the number of top issues to include in the response. Defaults to 5.
+  optional uint32 max_top_issues = 4 [(validate.rules).uint32.gt = 0];
+
+  // An optional limit on the number of recent locations to include in the response. Defaults to 5.
+  optional uint32 max_recent_locations = 5 [(validate.rules).uint32.gt = 0];
+
+  // An optional max number of buckets to include in the sessions summary. Defaults to 10.
+  optional uint32 max_session_summary_buckets = 6 [(validate.rules).uint32.gt = 0];
+}
+
+message GetEntityInfoResponse {
+  message SessionsSummary {
+    message SessionsSummaryBucket {
+      // The start time of the bucket.
+      uint64 start_time = 1;
+
+      // The end time of the bucket.
+      uint64 end_time = 2;
+
+      // The number of sessions that started within this bucket.
+      uint32 session_count = 3;
+    }
+
+    // The total number of sessions observed for the entity within the specified time range.
+    uint32 total_sessions = 1;
+
+    // A breakdown of sessions over time, divided into buckets. The bucket size and boundaries are
+    // determined by the server.
+    repeated .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.SessionsSummary.SessionsSummaryBucket buckets = 2;
+  }
+
+  message OnlineSummary {
+    message NextOnlineTimePrediction {
+      // The predicted next time the entity is expected to come online.
+      .google.protobuf.Timestamp next_online_time = 1;
+
+      // The confidence of the next online time prediction, represented as a value between 0 and 1.
+      // Lower values indicate weaker or more ambiguous recent activity patterns.
+      float confidence = 2;
+    }
+
+    // The total duration the entity was observed to be online within the specified time range.
+    .google.protobuf.Duration total_online_duration = 1;
+
+    oneof last_online_info {
+      // The timestamp of the most recent time the entity was observed to be online.
+      .google.protobuf.Timestamp last_online_time = 2;
+
+      // Indicates that the entity is currently online. If this is true, last_online_time will not
+      // be set.
+      bool is_currently_online = 3;
+    }
+
+    // Based on the entity's last 30 days of online activity, this field estimates the next time
+    // the entity will be online using recurring 15-minute weekly activity buckets. If the entity
+    // has not been online in the last 30 days, this field will not be set.
+    .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.OnlineSummary.NextOnlineTimePrediction next_online_time = 4;
+  }
+
+  message RecentSession {
+    // The unique identifier of the session.
+    string session_id = 1;
+
+    // The timestamp of the first log seen for this session.
+    .google.protobuf.Timestamp first_seen = 2;
+
+    // The timestamp of the most recent log seen for this session.
+    .google.protobuf.Timestamp last_seen = 3;
+
+    // The fields associated with the session.
+    map<string, string> fields = 4;
+
+    // The status of the session.
+    .bitdrift.public.unary.common.v1.SessionStatusInfo session_status_info = 5;
+  }
+
+  message LocationInfo {
+    // The time when the entity was observed at this location.
+    .google.protobuf.Timestamp observed_at = 1;
+
+    // The autonomous system number (ASN) associated with the IP address observed for the entity.
+    string asn = 2;
+
+    // The country code associated with the IP address observed for the entity, in ISO 3166-1
+    // alpha-2 format.
+    string country_code = 3;
+
+    // The latitude of the location.
+    float latitude = 4;
+
+    // The longitude of the location.
+    float longitude = 5;
+
+    // The city associated with the IP address observed for the entity.
+    string city = 6;
+  }
+
+  message Device {
+    // The timestamp this device was first seen.
+    .google.protobuf.Timestamp first_seen = 1;
+
+    // The timestamp this device was most recently seen.
+    .google.protobuf.Timestamp last_seen = 2;
+
+    // The device ID.
+    string device_id = 3;
+
+    // The device platform.
+    string platform = 4;
+
+    // The app ID observed for this device.
+    string app_id = 5;
+
+    // The app version most recently observed for this device (given upgrades).
+    string app_version = 6;
+
+    // The operating system observed for this device.
+    string os = 7;
+
+    // The operating system version observed for this device.
+    string os_version = 8;
+
+    // The model observed for this device.
+    string model = 9;
+  }
+
+  message IssueSummary {
+    message TopCrash {
+      // The unique identifier for the issue group.
+      string issue_group_id = 1;
+
+      // The issue group reason.
+      string reason = 2;
+
+      // Additional detailed issue data. This is sampled from one crash in the issue group and may
+      // not represent every crash in the group.
+      string detail = 3;
+
+      // The first time any crash was seen for this issue group.
+      .google.protobuf.Timestamp first_seen = 4;
+
+      // The number of crashes observed for this issue group within the requested time range.
+      uint64 count = 5;
+    }
+
+    // The total number of crashes observed for the entity within the requested time range.
+    uint64 total_crashes = 1;
+
+    // The timestamp of the most recent crash observed for the entity within the requested time
+    // range.
+    .google.protobuf.Timestamp last_crash = 2;
+
+    // The highest-volume crash groups for the entity within the requested time range.
+    repeated .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.IssueSummary.TopCrash top_crashes = 3;
+  }
+
+  // A summary of the sessions observed for the entity within the specified time range, including a
+  // breakdown of sessions over time.
+  .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.SessionsSummary sessions_summary = 1;
+
+  // A summary of the entity's online activity within the specified time range, including total
+  // online duration and patterns of when the entity is online.
+  .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.OnlineSummary online_summary = 2;
+
+  // A list of recent sessions for the entity, up to the specified limit. The sessions are ordered
+  // by last_seen time, with the most recent session first.
+  repeated .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.RecentSession recent_sessions = 3;
+
+  // A list of recent locations observed for the entity, up to the specified limit. The locations
+  // are ordered by observed_at time, with the most recent location first.
+  repeated .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.LocationInfo recent_locations = 4;
+
+  // A list of all devices observed for the entity within the specified time range.
+  repeated .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.Device devices = 5;
+
+  // A summary of crashes observed for the entity within the specified time range.
+  .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.IssueSummary issue_summary = 6;
+
+  // The obfuscated entity ID, including the known entity information when available.
+  .bitdrift.public.unary.entity.v1.ObfuscatedEntityId entity_id = 7;
+
+  // If this entity has ever had a next online time recording request, this field will be populated
+  // with the most recent recording request information.
+  .bitdrift.public.unary.entity.v1.EntityRecordNextOnlineTime entity_record_next_online_time = 8;
+}
+
+message UpsertEntityRecordNextOnlineTimeRequest {
+  // The unique ID of the entity.
+  .bitdrift.public.unary.entity.v1.EntityId entity_id = 1 [(validate.rules).message.required = true];
+
+  // Optional list of notification group names to send notifications to when session data is
+  // recorded and available the next time the entity is online.
+  repeated string notification_group_names = 2 [(validate.rules).repeated = {max_items: 100}];
+}
+
+// The lifecycle state of an entity recording request.
+enum EntityRecordNextOnlineTimeStatus {
+  // The status is unspecified.
+  ENTITY_RECORD_NEXT_ONLINE_TIME_STATUS_UNSPECIFIED = 0;
+  // The request is active and waiting for the next eligible online event.
+  PENDING = 1;
+  // The requested data was recorded when the entity next came online.
+  RECORDED = 2;
+  // The request is no longer active because it was canceled.
+  CANCELED = 3;
+  // The request is no longer active because recording could not be completed.
+  FAILED = 4;
+}
+
+// A request to record session data the next time a specific entity comes online.
+message EntityRecordNextOnlineTime {
+  // The unique ID of the entity associated with this recording request.
+  .bitdrift.public.unary.entity.v1.ObfuscatedEntityId entity_id = 1 [(validate.rules).message.required = true];
+
+  // The current lifecycle state of the recording request.
+  .bitdrift.public.unary.entity.v1.EntityRecordNextOnlineTimeStatus status = 2 [(validate.rules).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
+
+  // The time when this recording request was first created.
+  .google.protobuf.Timestamp created_at = 3 [(validate.rules).message.required = true];
+
+  // The time when this recording request most recently changed state.
+  .google.protobuf.Timestamp updated_at = 4 [(validate.rules).message.required = true];
+
+  // The notification groups that will be notified when recorded data becomes available.
+  repeated string notification_group_names = 5 [(validate.rules).repeated = {max_items: 100}];
+}
+
+message UpsertEntityRecordNextOnlineTimeResponse {
+  // The recording request after the upsert operation has been applied.
+  .bitdrift.public.unary.entity.v1.EntityRecordNextOnlineTime entity_record_next_online_time = 1;
+}
+
+message CancelEntityRecordNextOnlineTimeRequest {
+  // The unique ID of the entity.
+  .bitdrift.public.unary.entity.v1.EntityId entity_id = 1 [(validate.rules).message.required = true];
+}
+
+message CancelEntityRecordNextOnlineTimeResponse {
+  // The recording request after the cancel operation has been applied.
+  .bitdrift.public.unary.entity.v1.EntityRecordNextOnlineTime entity_record_next_online_time = 1;
+}
+
+message ListEntityRecordNextOnlineTimesRequest {
+  message AllEntities {}
+
+  message SingleEntity {
+    // The unique ID of the entity whose recording requests should be returned.
+    .bitdrift.public.unary.entity.v1.EntityId entity_id = 1 [(validate.rules).message.required = true];
+  }
+
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      // Orders results by entity ID.
+      ENTITY_ID = 1;
+      // Orders results by lifecycle status.
+      STATUS = 2;
+      // Orders results by creation time.
+      CREATED_AT = 3;
+      // Orders results by last update time.
+      UPDATED_AT = 4;
+    }
+
+    // Selects which caller-visible attribute to order by.
+    .bitdrift.public.unary.entity.v1.ListEntityRecordNextOnlineTimesRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Selects the starting offset and maximum number of results to return.
+  .bitdrift.public.unary.common.v1.Pagination pagination = 1;
+
+  oneof scope {
+    option (validate.required) = true;
+    // Returns recording requests for every entity visible to the caller.
+    .bitdrift.public.unary.entity.v1.ListEntityRecordNextOnlineTimesRequest.AllEntities all_entities = 2;
+
+    // Returns recording requests for a single entity.
+    .bitdrift.public.unary.entity.v1.ListEntityRecordNextOnlineTimesRequest.SingleEntity single_entity = 3;
+  }
+
+  // When set, limits results to recording requests in the selected lifecycle status.
+  optional .bitdrift.public.unary.entity.v1.EntityRecordNextOnlineTimeStatus status = 4 [(validate.rules).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
+
+  // Orders recording requests by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.entity.v1.ListEntityRecordNextOnlineTimesRequest.Sort sort = 6 [(validate.rules).repeated = {max_items: 10}];
+}
+
+message ListEntityRecordNextOnlineTimesResponse {
+  // The recording requests that matched the request.
+  repeated .bitdrift.public.unary.entity.v1.EntityRecordNextOnlineTime entity_record_next_online_times = 1;
+
+  // The total number of recording requests that matched the request, regardless of pagination.
+  uint32 total_count = 2;
+}
+
+message UpsertKnownEntityRequest {
+  // The unique ID of the entity to create or update. If a hash is supplied, the entity will be
+  // looked up by hash in the recently viewed entities of the caller. If it is not found the
+  // API will return an error.
+  .bitdrift.public.unary.entity.v1.EntityId entity_id = 1 [(validate.rules).message.required = true];
+
+  // The known entity information to associate.
+  .bitdrift.public.unary.entity.v1.KnownEntity info = 2 [(validate.rules).message.required = true];
+}
+
+message UpsertKnownEntityResponse {
+  // The known entity after the upsert operation has been applied.
+  .bitdrift.public.unary.entity.v1.ObfuscatedEntityId known_entity = 1;
+}
+
+message DeleteKnownEntityRequest {
+  // The ID of the entity to delete.
+  .bitdrift.public.unary.entity.v1.EntityId entity_id = 1 [(validate.rules).message.required = true];
+}
+
+message DeleteKnownEntityResponse {}
+
+message EntityListItem {
+  // The entity returned by the list.
+  .bitdrift.public.unary.entity.v1.ObfuscatedEntityId entity_id = 1 [(validate.rules).message.required = true];
+
+  // The most recent time the entity was observed in session data.
+  optional .google.protobuf.Timestamp last_seen = 2;
+
+  // The most recent time captured session data was recorded for the entity.
+  optional .google.protobuf.Timestamp last_session_capture = 3;
+
+  // The devices that have been observed for the entity.
+  repeated .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.Device known_devices = 4;
+
+  // The lifecycle state of the entity's current recording request, when one exists.
+  optional .bitdrift.public.unary.entity.v1.EntityRecordNextOnlineTimeStatus pending_recording_status = 5;
+
+  // The time the entity was added to the known entities list.
+  //
+  // This is populated in ListKnownEntities responses.
+  optional .google.protobuf.Timestamp added = 6;
+
+  // The most recent time the authenticated user viewed the entity.
+  optional .google.protobuf.Timestamp last_viewed = 7;
+}
+
+message ListKnownEntitiesRequest {
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      // Orders results by the known entity display name when available.
+      //
+      // Entities without a known display name are ordered by the obfuscated entity ID prefix.
+      NAME = 1;
+      // Orders results by pending recording status.
+      STATUS = 2;
+      // Orders results by the time the entity was added to the known entities list.
+      ADDED = 3;
+      // Orders results by the most recent time the authenticated user viewed the entity.
+      VIEWED = 4;
+    }
+
+    // Selects which caller-visible attribute to order by.
+    .bitdrift.public.unary.entity.v1.ListKnownEntitiesRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Selects the starting offset and maximum number of results to return.
+  .bitdrift.public.unary.common.v1.Pagination pagination = 1;
+
+  // Fuzzily matches known entity display names.
+  optional string known_entity_name = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // Orders known entities by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.entity.v1.ListKnownEntitiesRequest.Sort sort = 3 [(validate.rules).repeated = {max_items: 10}];
+
+  // When set, limits results to entities whose current recording request is in the selected
+  // lifecycle status.
+  optional .bitdrift.public.unary.entity.v1.EntityRecordNextOnlineTimeStatus status = 4 [(validate.rules).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
+}
+
+message ListKnownEntitiesResponse {
+  // The known entities that matched the request.
+  repeated .bitdrift.public.unary.entity.v1.EntityListItem known_entities = 1;
+
+  // The total number of known entities that matched the request, regardless of pagination.
+  uint32 total_count = 2;
+}
+
+message ListRecentlyViewedEntitiesRequest {
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      // Orders results by the known entity display name when available.
+      //
+      // Entities without a known display name are ordered by the obfuscated entity ID prefix.
+      NAME = 1;
+      // Orders results by pending recording status.
+      STATUS = 2;
+      // Orders results by the most recent time the authenticated user viewed the entity.
+      LAST_VIEWED = 3;
+    }
+
+    // Selects which caller-visible attribute to order by.
+    .bitdrift.public.unary.entity.v1.ListRecentlyViewedEntitiesRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Selects the starting offset and maximum number of results to return.
+  .bitdrift.public.unary.common.v1.Pagination pagination = 1;
+
+  // Limits results to a single entity.
+  //
+  // When an entity ID is provided, the server hashes it before applying the filter. Callers may
+  // also provide the hash directly.
+  .bitdrift.public.unary.entity.v1.EntityId entity_id = 2;
+
+  // Orders recently viewed entities by caller-visible attributes. Apply criteria in the order
+  // provided.
+  repeated .bitdrift.public.unary.entity.v1.ListRecentlyViewedEntitiesRequest.Sort sort = 3 [(validate.rules).repeated = {max_items: 10}];
+
+  // When set, limits results to entities whose current recording request is in the selected
+  // lifecycle status.
+  optional .bitdrift.public.unary.entity.v1.EntityRecordNextOnlineTimeStatus status = 4 [(validate.rules).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
+}
+
+message ListRecentlyViewedEntitiesResponse {
+  // The entities in the caller's recently viewed history.
+  repeated .bitdrift.public.unary.entity.v1.EntityListItem recently_viewed_entities = 1;
+
+  // The total number of recently viewed entities that matched the request, regardless of
+  // pagination.
+  uint32 total_count = 2;
+}
+
+// Provides entity details, known-entity management, and entity recording requests.
+service EntityService {
+  // Retrieves summary information about a specific entity.
+  rpc GetEntityInfo(.bitdrift.public.unary.entity.v1.GetEntityInfoRequest) returns (.bitdrift.public.unary.entity.v1.GetEntityInfoResponse);
+
+  // Creates or updates a request to record data the next time the entity comes online.
+  rpc UpsertEntityRecordNextOnlineTime(.bitdrift.public.unary.entity.v1.UpsertEntityRecordNextOnlineTimeRequest) returns (.bitdrift.public.unary.entity.v1.UpsertEntityRecordNextOnlineTimeResponse);
+
+  // Cancels an active request to record data the next time the entity comes online.
+  rpc CancelEntityRecordNextOnlineTime(.bitdrift.public.unary.entity.v1.CancelEntityRecordNextOnlineTimeRequest) returns (.bitdrift.public.unary.entity.v1.CancelEntityRecordNextOnlineTimeResponse);
+
+  // Lists entity recording requests with pagination, filtering, and sorting.
+  rpc ListEntityRecordNextOnlineTimes(.bitdrift.public.unary.entity.v1.ListEntityRecordNextOnlineTimesRequest) returns (.bitdrift.public.unary.entity.v1.ListEntityRecordNextOnlineTimesResponse);
+
+  // Creates or updates a known entity.
+  //
+  // Known entities can be targeted separately from other entities. Organizations may limit how
+  // many known entities can be stored at once.
+  rpc UpsertKnownEntity(.bitdrift.public.unary.entity.v1.UpsertKnownEntityRequest) returns (.bitdrift.public.unary.entity.v1.UpsertKnownEntityResponse);
+
+  // Deletes a known entity.
+  rpc DeleteKnownEntity(.bitdrift.public.unary.entity.v1.DeleteKnownEntityRequest) returns (.bitdrift.public.unary.entity.v1.DeleteKnownEntityResponse);
+
+  // Lists known entities.
+  //
+  // Returns entity metadata together with recent activity summaries, when the entity was added and
+  // viewed, and supports pagination, fuzzy name filtering, and sorting.
+  rpc ListKnownEntities(.bitdrift.public.unary.entity.v1.ListKnownEntitiesRequest) returns (.bitdrift.public.unary.entity.v1.ListKnownEntitiesResponse);
+
+  // Lists recently viewed entities for the authenticated user.
+  //
+  // This history is scoped to the authenticated user rather than the organization and supports
+  // pagination, entity filtering, and sorting by last viewed time or other caller-visible
+  // attributes.
+  rpc ListRecentlyViewedEntities(.bitdrift.public.unary.entity.v1.ListRecentlyViewedEntitiesRequest) returns (.bitdrift.public.unary.entity.v1.ListRecentlyViewedEntitiesResponse);
+}
