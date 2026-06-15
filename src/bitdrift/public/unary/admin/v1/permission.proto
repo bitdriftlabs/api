@@ -62,4 +62,8 @@ enum Permission {
   TEAMS_WRITE = 28;
   // Allows reading teams.
   TEAMS_READ = 29;
+  // Allows reading entity information and entity recording requests.
+  ENTITY_READ = 30;
+  // Allows creating, editing, and deleting known entities and entity recording requests.
+  ENTITY_WRITE = 31;
 }
