@@ -134,6 +134,12 @@ message GetEntityInfoResponse {
       float confidence = 2;
     }
 
+    message CurrentlyOnlineInfo {
+      // The device IDs currently connected for the entity when the response was created. This is
+      // a best-effort snapshot and may not include every connected device.
+      repeated string device_ids = 1;
+    }
+
     // The total duration the entity was observed to be online within the specified time range.
     .google.protobuf.Duration total_online_duration = 1;
 
@@ -141,9 +147,9 @@ message GetEntityInfoResponse {
       // The timestamp of the most recent time the entity was observed to be online.
       .google.protobuf.Timestamp last_online_time = 2;
 
-      // Indicates that the entity is currently online. If this is true, last_online_time will not
+      // Indicates that the entity is currently online. If this is set, last_online_time will not
       // be set.
-      bool is_currently_online = 3;
+      .bitdrift.public.unary.entity.v1.GetEntityInfoResponse.OnlineSummary.CurrentlyOnlineInfo is_currently_online = 3;
     }
 
     // Based on the entity's last 30 days of online activity, this field estimates the next time
@@ -194,7 +200,9 @@ message GetEntityInfoResponse {
     // The timestamp this device was first seen.
     .google.protobuf.Timestamp first_seen = 1;
 
-    // The timestamp this device was most recently seen.
+    // The timestamp this device was most recently seen. If the device is currently online when
+    // the response is created, this reflects the response time instead of the last stored
+    // observation time.
     .google.protobuf.Timestamp last_seen = 2;
 
     // The device ID.
