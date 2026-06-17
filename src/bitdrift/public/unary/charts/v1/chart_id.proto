@@ -151,9 +151,7 @@ message LimitStrategy {
       // `id`. Labels disambiguate grouped results that share the same `TimeSeries.id`.
       repeated .bitdrift.public.shared.workflows.v1.LabelPair labels = 2 [(validate.rules).repeated = {
         max_items: 10
-        items: {
-          message: {required: true}
-        }
+        items: {message: {required: true}}
       }];
     }
 

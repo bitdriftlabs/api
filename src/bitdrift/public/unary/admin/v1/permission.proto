@@ -66,4 +66,10 @@ enum Permission {
   ENTITY_READ = 30;
   // Allows creating, editing, and deleting known entities and entity recording requests.
   ENTITY_WRITE = 31;
+  // Allows managing dashboards.
+  DASHBOARDS_ADMIN = 32;
+  // Allows managing owned dashboards, or dashboards that the user has been granted edit access to.
+  DASHBOARDS_WRITE = 33;
+  // Allows reading dashboards.
+  DASHBOARDS_READ = 34;
 }

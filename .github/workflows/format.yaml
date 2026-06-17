@@ -14,7 +14,9 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: bufbuild/buf-setup-action@v1
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
       - uses: bufbuild/buf-lint-action@v1
       - name: Format
         run: tools/format.sh
