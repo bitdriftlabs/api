@@ -1,0 +1,63 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.admin.v1;
+
+import "validate/validate.proto";
+
+// Message used when receiving queries for access permission levels.
+message AccessPermissionQuery {
+  enum AccessLevel {
+    VIEW = 0;
+    EDIT = 1;
+    OWNER = 2;
+  }
+
+  enum Operator {
+    IS = 0;
+    IS_NOT = 1;
+  }
+
+  // A single predicate: e.g. "access IS EDIT" or "access IS_NOT OWNER".
+  message Condition {
+    .bitdrift.public.unary.admin.v1.AccessPermissionQuery.Operator operator = 1 [(validate.rules).enum = {defined_only: true}];
+
+    .bitdrift.public.unary.admin.v1.AccessPermissionQuery.AccessLevel level = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // All conditions must be true (logical AND).
+  message AllOf {
+    repeated .bitdrift.public.unary.admin.v1.AccessPermissionQuery.Condition conditions = 1 [(validate.rules).repeated = {
+      min_items: 1
+      max_items: 20
+    }];
+  }
+
+  // A filter that matches when at least one AllOf group is satisfied (logical OR of ANDs).
+  // Example: (IS VIEW AND IS_NOT OWNER) OR (IS EDIT)
+  message AccessFilter {
+    repeated .bitdrift.public.unary.admin.v1.AccessPermissionQuery.AllOf any_of = 1 [(validate.rules).repeated = {
+      min_items: 1
+      max_items: 20
+    }];
+  }
+
+  message Individual {
+    string user_id = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    .bitdrift.public.unary.admin.v1.AccessPermissionQuery.AccessFilter filter = 2;
+  }
+
+  oneof type {
+    option (validate.required) = true;
+    .bitdrift.public.unary.admin.v1.AccessPermissionQuery.Individual individual = 1;
+  }
+}

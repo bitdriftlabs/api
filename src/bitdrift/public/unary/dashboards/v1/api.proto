@@ -10,9 +10,12 @@ package bitdrift.public.unary.dashboards.v1;
 
 import "bitdrift/public/shared/platform/v1/platform.proto";
 import "bitdrift/public/shared/workflows/v1/time_series.proto";
+import "bitdrift/public/unary/admin/v1/access.proto";
 import "bitdrift/public/unary/charts/v1/chart_id.proto";
 import "bitdrift/public/unary/charts/v1/chart_metadata.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
+import "bitdrift/public/unary/workflows/v1/workflow.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
@@ -102,6 +105,202 @@ message ResolvedChart {
 
   // The deployment history of the workflow backing this chart, if applicable.
   .bitdrift.public.unary.dashboards.v1.ResolvedChart.BackingWorkflowDeploymentHistory backing_workflow_deployment_history = 22;
+}
+
+message DashboardLayoutSettings {
+  // The number of columns this chart/component should span in the dashboard.
+  optional uint32 column_span = 1 [(validate.rules).uint32 = {gt: 0}];
+
+  // The number of rows this chart/component should span in the dashboard.
+  optional uint32 row_span = 2 [(validate.rules).uint32 = {gt: 0}];
+
+  // If true, the chart should be hidden from the dashboard.
+  bool is_hidden = 3;
+
+  // The x/y position of the component within the dashboard. This, combined with the
+  // positions in the stylistic components, define the layout order of the dashboard. If not set,
+  // the chart will be placed at the end of the dashboard.
+  optional uint32 x = 4;
+
+  optional uint32 y = 5;
+}
+
+message DashboardGroup {
+  // All the charts that should be displayed on this dashboard.
+  repeated .bitdrift.public.unary.dashboards.v1.ResolvedChart charts = 1;
+
+  // The category corresponding to this dashboard group.
+  string category = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The minimum query interval for this group. For example, if this is set to
+  // 7 days, the default viewing window should be at least 7 days.
+  .google.protobuf.Duration minimum_query_interval = 3;
+}
+
+message DashboardIdentifier {
+  message HealthDashboard {
+    // An optional target platform. If not provided, the dashboard groups for the default app will be
+    // returned. The default app is the first element in the list of apps returned by the
+    // GetDashboardResponse.
+    .bitdrift.public.shared.platform.v1.Platform platform_target = 1;
+  }
+
+  message CustomDashboard {
+    string id = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+  }
+
+  oneof type {
+    option (validate.required) = true;
+    .bitdrift.public.unary.dashboards.v1.DashboardIdentifier.HealthDashboard health_dashboard = 1;
+
+    .bitdrift.public.unary.dashboards.v1.DashboardIdentifier.CustomDashboard custom_dashboard = 2;
+  }
+}
+
+message GetDashboardRequest {
+  // The identifier of the dashboard to fetch.
+  .bitdrift.public.unary.dashboards.v1.DashboardIdentifier id = 3;
+}
+
+message GetDashboardResponse {
+  .bitdrift.public.unary.dashboards.v1.Dashboard dashboard = 5;
+}
+
+message Dashboard {
+  message HealthDashboard {
+    .bitdrift.public.unary.dashboards.v1.DashboardIdentifier.HealthDashboard id = 1;
+
+    repeated .bitdrift.public.unary.dashboards.v1.DashboardGroup dashboard_group = 2;
+
+    // The possible platforms for this dashboard.
+    repeated .bitdrift.public.shared.platform.v1.Platform platforms = 3;
+  }
+
+  message CustomDashboard {
+    string id = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    // The display title for this dashboard.
+    optional string title = 7 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // The last time this dashboard was viewed by the current user.
+    .google.protobuf.Timestamp current_user_last_viewed = 8;
+
+    message DashboardTab {
+      message Chart {
+        string id = 1 [(validate.rules).string = {
+          min_len: 1
+          max_len: 100
+        }];
+
+        oneof resolved_chart {
+          option (validate.required) = true;
+          // The resolved chart information for this chart reference.
+          .bitdrift.public.unary.dashboards.v1.ResolvedChart chart = 2;
+
+          // Set to true if the backing chart no longer exists. For example, if the workflow
+          // backing the chart was deleted.
+          bool chart_not_found = 3 [(validate.rules).bool = {const: true}];
+        }
+      }
+
+      string id = 1 [(validate.rules).string = {
+        min_len: 1
+        max_len: 100
+      }];
+
+      string name = 2 [(validate.rules).string = {
+        min_len: 1
+        max_len: 255
+      }];
+
+      // All the charts that should be displayed on this dashboard.
+      repeated .bitdrift.public.unary.dashboards.v1.Dashboard.CustomDashboard.DashboardTab.Chart charts = 3;
+
+      // Stylistic components that should be displayed alongside the charts in this group.
+      // These components can be used to add dividers, text, or other stylistic elements to the dashboard.
+      repeated .bitdrift.public.unary.dashboards.v1.DashboardStylisticComponent components = 4;
+    }
+
+    repeated .bitdrift.public.unary.dashboards.v1.Dashboard.CustomDashboard.DashboardTab tabs = 2;
+
+    // The variables that can be used to filter the dashboard. These variables are the intersection
+    // of all common variables across the workflows that the charts belong to.
+    repeated .bitdrift.public.unary.dashboards.v1.DashboardVariable common_variables = 3;
+
+    // The owner of the dashboard. This refers to the user who created the dashboard.
+    // A dashboard may be editable by multiple users, if editing permissions are shared with an individual, team, or org.
+    .bitdrift.public.unary.common.v1.Owner owner = 4;
+
+    bool current_user_favorited = 5;
+
+    .bitdrift.public.unary.common.v1.Permission current_user_can_edit = 6;
+
+    // The variables that are applied to every chart referenced in this dashboard.
+    repeated .bitdrift.public.unary.workflows.v1.GroupBy.Value dashboard_variables = 9 [(validate.rules).repeated = {max_items: 10}];
+  }
+
+  oneof type {
+    option (validate.required) = true;
+    .bitdrift.public.unary.dashboards.v1.Dashboard.HealthDashboard health_dashboard = 2;
+
+    .bitdrift.public.unary.dashboards.v1.Dashboard.CustomDashboard custom_dashboard = 3;
+  }
+}
+
+message ListDashboardsRequest {
+  message Filters {
+    // Filters dashboards by access permission levels for a specified user.
+    // For example, callers can request dashboards where a user has EDIT access.
+    // Callers can also exclude dashboards where a user has OWNER access.
+    .bitdrift.public.unary.admin.v1.AccessPermissionQuery access = 1;
+
+    // A free text entry to filter dashboards by name or other metadata, including names of charts contained within the dashboard.
+    optional string free_entry = 2 [(validate.rules).string = {max_len: 255}];
+
+    // Whether to filter dashboards by those that are marked as favorites.
+    optional bool favorites = 3;
+  }
+
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      DASHBOARD_NAME = 1;
+      OWNER_NAME = 2;
+      LAST_VIEWED = 3;
+    }
+
+    // Selects which caller-visible dashboard attribute to order by.
+    .bitdrift.public.unary.dashboards.v1.ListDashboardsRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  .bitdrift.public.unary.common.v1.Pagination pagination = 1;
+
+  .bitdrift.public.unary.dashboards.v1.ListDashboardsRequest.Filters filters = 3;
+
+  repeated .bitdrift.public.unary.dashboards.v1.ListDashboardsRequest.Sort sort = 4 [(validate.rules).repeated = {max_items: 100}];
+}
+
+message ListDashboardsResponse {
+  repeated .bitdrift.public.unary.dashboards.v1.Dashboard dashboards = 1;
+
+  uint64 total = 2;
 }
 
 message GetWorkflowChartsRequest {
@@ -413,8 +612,184 @@ message GetUniqueAppIdsResponse {
   repeated .bitdrift.public.shared.platform.v1.Platform platforms = 6;
 }
 
+message DashboardStylisticComponent {
+  message Divider {}
+
+  message TextComponent {
+    // The text to display in the component.
+    string text = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 5000
+    }];
+
+    // The variant of the text component, e.g. "h1", "h2", "p", etc.
+    string variant = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 50
+    }];
+  }
+
+  oneof type {
+    option (validate.required) = true;
+    // A text component that displays a piece of text.
+    .bitdrift.public.unary.dashboards.v1.DashboardStylisticComponent.TextComponent text_component = 1;
+
+    // A divider component that can be used to separate sections of the dashboard.
+    .bitdrift.public.unary.dashboards.v1.DashboardStylisticComponent.Divider divider = 2;
+  }
+
+  // The ID of the component. This is used to uniquely identify the component
+  // within the dashboard. It is not required to be globally unique, but it must
+  // be unique within the dashboard. Generated by the server when the component is created.
+  string id = 3 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  .bitdrift.public.unary.dashboards.v1.DashboardLayoutSettings dashboard_layout_settings = 4;
+}
+
+message DashboardVariable {
+  oneof variable_type {
+    option (validate.required) = true;
+    // The value of the variable.
+    .bitdrift.public.unary.workflows.v1.GroupBy.Value value = 3;
+  }
+
+  // The earliest time this variable was continuously deployed across all workflows.
+  .google.protobuf.Timestamp earliest_contiguous_deployed_time = 2;
+}
+
+message ChartComponentLayout {
+  .bitdrift.public.unary.charts.v1.ChartIdentifier chart_id = 1;
+
+  .bitdrift.public.unary.dashboards.v1.DashboardLayoutSettings layout_settings = 2;
+
+  .bitdrift.public.unary.charts.v1.ChartMetadata chart_metadata = 3;
+}
+
+message FavoriteCustomDashboardRequest {
+  .bitdrift.public.unary.dashboards.v1.DashboardIdentifier identifier = 1;
+}
+
+message FavoriteCustomDashboardResponse {}
+
+message UpsertCustomDashboardRequest {
+  message DashboardTab {
+    message Chart {
+      // Optional ID of the chart being upsert. If not provided, the API will assume the chart needs to be created.
+      optional string id = 1 [(validate.rules).string = {
+        min_len: 1
+        max_len: 100
+      }];
+
+      // The combination of chart identifier, layout, and metadata
+      .bitdrift.public.unary.dashboards.v1.ChartComponentLayout chart_component_layout = 2;
+    }
+
+    // Optional ID of the tab being upsert. If not provided, the API will assume the tab needs to be created.
+    optional string id = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    // The overlay of layout information for the charts in the dashboard. This array *MUST
+    // include all components, whether they are being updated or not.
+    repeated .bitdrift.public.unary.dashboards.v1.UpsertCustomDashboardRequest.DashboardTab.Chart charts = 2 [(validate.rules).repeated = {max_items: 500}];
+
+    // List of all stylistic components that should be rendered on the dashboard. The array *MUST*
+    // include all components, whether they are being updated or not.
+    repeated .bitdrift.public.unary.dashboards.v1.DashboardStylisticComponent stylistic_components = 3 [(validate.rules).repeated = {max_items: 500}];
+
+    // Optional display name/title for this dashboard tab. If unset, the tab will not have an explicit
+    // stored name and clients may derive an appropriate default label when rendering.
+    optional string name = 4 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+  }
+
+  // If id is provided, the existing dashboard with this ID will be updated. If not provided, a new dashboard will be created.
+  optional string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  string name = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  repeated .bitdrift.public.unary.dashboards.v1.UpsertCustomDashboardRequest.DashboardTab tabs = 3 [(validate.rules).repeated = {max_items: 100}];
+
+  // The variables that are applied to every chart referenced in this dashboard.
+  repeated .bitdrift.public.unary.workflows.v1.GroupBy.Value dashboard_variables = 5 [(validate.rules).repeated = {max_items: 10}];
+}
+
+message UpsertCustomDashboardResponse {
+  .bitdrift.public.unary.dashboards.v1.Dashboard.CustomDashboard dashboard = 1;
+}
+
+message DeleteCustomDashboardRequest {
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message DeleteCustomDashboardResponse {}
+
+message ListChartsRequest {
+  // Filters to apply when listing charts.
+  // Filters are additive; only charts that match all specified filters will be returned.
+  message Filters {
+    // Filters charts by access permission levels for a specified user.
+    // For example, callers can request charts where a user has EDIT access.
+    // Callers can also exclude charts where a user has OWNER access.
+    .bitdrift.public.unary.admin.v1.AccessPermissionQuery access = 1;
+
+    // An optional view ID to filter charts by. Filtering by view ID will return
+    // all charts contained within workflows that belong to that view.
+    // If workflow_id is also provided, it will take precedence over view_id.
+    optional string view_id = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    // An optional workflow ID to filter charts by. If provided, it will take precedence over view_id.
+    // Filtering by workflow ID will return all charts contained within the specified workflow.
+    optional string workflow_id = 3 [(validate.rules).string = {
+      min_len: 1
+      max_len: 4096
+    }];
+
+    // An optional partial chart name to filter charts by. This will return all charts whose names contain the provided string, case-insensitively.
+    optional string chart_name = 4 [(validate.rules).string = {max_len: 255}];
+  }
+
+  .bitdrift.public.unary.common.v1.Pagination pagination = 1;
+
+  .bitdrift.public.unary.dashboards.v1.ListChartsRequest.Filters filters = 3;
+}
+
+message ListChartsResponse {
+  repeated .bitdrift.public.unary.dashboards.v1.ResolvedChart charts = 1;
+
+  uint32 total_count = 2;
+}
+
 // Provides access to dashboards and chart data, including layout and time series metrics.
 service DashboardService {
+  // Retrieves a single dashboard by its unique identifier.
+  //
+  // Returns a list of charts that should be displayed on the dashboard, along
+  // with the metadata required to render them. The chart IDs should be used to
+  // fetch the data.
+  rpc GetDashboard(.bitdrift.public.unary.dashboards.v1.GetDashboardRequest) returns (.bitdrift.public.unary.dashboards.v1.GetDashboardResponse);
+
+  // Lists all dashboards available to the authenticated user.
+  rpc ListDashboards(.bitdrift.public.unary.dashboards.v1.ListDashboardsRequest) returns (.bitdrift.public.unary.dashboards.v1.ListDashboardsResponse);
+
   // Retrieves the chart configuration for a single workflow.
   //
   // Returns a list of all charts to be displayed for this workflow. The chart
@@ -438,4 +813,16 @@ service DashboardService {
   // Returns the distinct platform, app ID, and app version combinations seen in
   // the specified time range.
   rpc GetUniqueAppIds(.bitdrift.public.unary.dashboards.v1.GetUniqueAppIdsRequest) returns (.bitdrift.public.unary.dashboards.v1.GetUniqueAppIdsResponse);
+
+  // Toggles the favorite status of a custom dashboard for the current user.
+  rpc FavoriteCustomDashboard(.bitdrift.public.unary.dashboards.v1.FavoriteCustomDashboardRequest) returns (.bitdrift.public.unary.dashboards.v1.FavoriteCustomDashboardResponse);
+
+  // Upserts a custom dashboard.
+  rpc UpsertCustomDashboard(.bitdrift.public.unary.dashboards.v1.UpsertCustomDashboardRequest) returns (.bitdrift.public.unary.dashboards.v1.UpsertCustomDashboardResponse);
+
+  // Deletes a custom dashboard.
+  rpc DeleteCustomDashboard(.bitdrift.public.unary.dashboards.v1.DeleteCustomDashboardRequest) returns (.bitdrift.public.unary.dashboards.v1.DeleteCustomDashboardResponse);
+
+  // Lists all charts available to the user.
+  rpc ListCharts(.bitdrift.public.unary.dashboards.v1.ListChartsRequest) returns (.bitdrift.public.unary.dashboards.v1.ListChartsResponse);
 }

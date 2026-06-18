@@ -12,6 +12,7 @@ import "bitdrift/public/unary/timeline/v1/hydration.proto";
 import "bitdrift/public/unary/timeline/v1/info.proto";
 import "bitdrift/public/unary/timeline/v1/logs.proto";
 import "bitdrift/public/unary/timeline/v1/search.proto";
+import "bitdrift/public/unary/timeline/v1/spans.proto";
 
 // Provides access to session timeline data, including logs, metadata, and hydration state.
 service TimelineService {
@@ -36,6 +37,11 @@ service TimelineService {
   // Returns the gRPC NOT_FOUND status if hydration has not been triggered for the
   // session yet.
   rpc GetHydrationStatus(.bitdrift.public.unary.timeline.v1.GetHydrationStatusRequest) returns (.bitdrift.public.unary.timeline.v1.GetHydrationStatusResponse);
+
+  // Searches spans within a session.
+  //
+  // Supports filtering by span name or span ID and can limit returned child depth and top-level pagination.
+  rpc SearchSpans(.bitdrift.public.unary.timeline.v1.SessionSearchSpanRequest) returns (.bitdrift.public.unary.timeline.v1.SessionSearchSpanResponse);
 
   // Performs an advanced search across logs in a session.
   //

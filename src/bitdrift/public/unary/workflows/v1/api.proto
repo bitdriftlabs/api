@@ -39,6 +39,9 @@ service WorkflowService {
   // Renames a workflow without modifying any other fields.
   rpc RenameWorkflow(.bitdrift.public.unary.workflows.v1.RenameWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.RenameWorkflowResponse);
 
+  // Assigns tags to a workflow.
+  rpc UpsertWorkflowTags(.bitdrift.public.unary.workflows.v1.UpsertWorkflowTagsRequest) returns (.bitdrift.public.unary.workflows.v1.UpsertWorkflowTagsResponse);
+
   // Deletes a workflow permanently.
   //
   // This removes the workflow and its configuration from the system. This operation
@@ -53,6 +56,12 @@ service WorkflowService {
 
   // Stops a running workflow.
   rpc StopWorkflow(.bitdrift.public.unary.workflows.v1.StopWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.StopWorkflowResponse);
+
+  // Lists all available workflow tags.
+  rpc ListTags(.bitdrift.public.unary.workflows.v1.ListTagsRequest) returns (.bitdrift.public.unary.workflows.v1.ListTagsResponse);
+
+  // Updates whether a workflow is favorited for the current user.
+  rpc FavoriteWorkflow(.bitdrift.public.unary.workflows.v1.FavoriteWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.FavoriteWorkflowResponse);
 
   // Creates or updates chart metadata for a workflow.
   //

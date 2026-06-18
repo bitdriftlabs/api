@@ -1,0 +1,114 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.timeline.v1;
+
+import "bitdrift/public/unary/timeline/v1/logs.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+// Represents a span captured within a session.
+message Span {
+  // Identifies this span instance within the session.
+  string id = 1 [(validate.rules).string = {min_len: 1}];
+
+  // Records when the span started.
+  .google.protobuf.Timestamp started_at = 2 [(validate.rules).timestamp.required = true];
+
+  // Records when the span finished.
+  .google.protobuf.Timestamp finished_at = 3 [(validate.rules).timestamp.required = true];
+
+  // Names the span. Multiple span instances can share the same name.
+  string name = 4 [(validate.rules).string = {min_len: 1}];
+
+  // Identifies the parent span when this span is nested under another span.
+  optional string parent_id = 5;
+
+  // Contains structured fields from the log that completed the span.
+  .bitdrift.public.unary.timeline.v1.Log.LogFields fields = 6;
+}
+
+// Requests spans for a session using filters, depth limits, and pagination.
+message SessionSearchSpanRequest {
+  // Selects spans by name or by a specific span ID.
+  message Filter {
+    // Defines how the filter compares the provided value.
+    enum Operator {
+      EQUALS = 0;
+      PREFIX = 1;
+      SUBSTRING = 2;
+      NOT_EQUALS = 3;
+    }
+
+    oneof filter {
+      option (validate.required) = true;
+      // Matches spans by name.
+      string span_name = 1 [(validate.rules).string = {
+        min_len: 1
+        max_len: 200
+      }];
+
+      // Matches a specific span instance.
+      string span_id = 2 [(validate.rules).string = {
+        min_len: 1
+        max_len: 200
+      }];
+    }
+
+    // Controls how the selected field is compared.
+    .bitdrift.public.unary.timeline.v1.SessionSearchSpanRequest.Filter.Operator operator = 3 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Identifies the session to search.
+  string session_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // Applies AND-combined filters to the span search.
+  repeated .bitdrift.public.unary.timeline.v1.SessionSearchSpanRequest.Filter filters = 2 [(validate.rules).repeated = {
+    min_items: 1
+    max_items: 20
+  }];
+
+  // Limits how many levels of child spans are returned from each matched root.
+  //
+  // A value of `0` returns only the matched spans. If no `span_id` filter is supplied, the
+  // search starts from root spans. If a `span_id` filter is supplied, the search starts from
+  // that span.
+  optional uint32 max_depth = 3;
+
+  // Selects the results page. Defaults to `1` when omitted.
+  optional uint64 page = 4 [(validate.rules).uint64 = {gte: 1}];
+
+  // Limits how many top-level matched spans are returned per page. Defaults to `100` when omitted.
+  //
+  // Child spans included under each returned top-level span do not count toward this page size.
+  optional uint64 per_page = 5 [(validate.rules).uint64 = {
+    gte: 1
+    lte: 500
+  }];
+}
+
+// Returns the spans that matched a session span search.
+message SessionSearchSpanResponse {
+  // Represents one returned span and its immediate metadata.
+  message SpanNode {
+    // Identifies the log that completed the span.
+    int64 log_id = 1;
+
+    // Contains the span data for this result.
+    .bitdrift.public.unary.timeline.v1.Span span = 2;
+
+    // Indicates whether the span has child spans beyond those included in this response.
+    bool has_children = 3;
+  }
+
+  // Lists the spans that matched the search criteria.
+  repeated .bitdrift.public.unary.timeline.v1.SessionSearchSpanResponse.SpanNode spans = 1;
+}

@@ -10,6 +10,7 @@ package bitdrift.public.unary.workflows.v1;
 
 import "bitdrift/public/shared/annotations/api_ootb_fields.proto";
 import "bitdrift/public/shared/platform/v1/platform.proto";
+import "bitdrift/public/unary/admin/v1/access.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
 import "bitdrift/public/unary/workflows/v1/workflow_metadata.proto";
 import "bitdrift_public/protobuf/workflow/v1/save_field.proto";
@@ -97,6 +98,17 @@ message GroupBy {
 }
 
 message Workflow {
+  message WorkflowTag {
+    // The raw value of the tag. This is what gets stored and used for filtering.
+    string value = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    // The user who created this tag.
+    .bitdrift.public.unary.common.v1.Owner created_by = 2;
+  }
+
   enum WorkflowState {
     // The workflow is not currently running and it has not been deployed.
     IDLE = 0;
@@ -1767,6 +1779,95 @@ message Filter {
   }
 }
 
+// A list of potential queries used to fetch a list of workflows
+// Each query will be combined as a logical AND
+// For example: 'platform is android' AND 'workflow not owned by me' AND 'workflow is deployed'
+message WorkflowListQuery {
+  enum TagOperator {
+    UNSPECIFIED_OPERATOR = 0;
+    INCLUDES = 1;
+    EXCLUDES = 2;
+  }
+
+  enum TagMatch {
+    UNSPECIFIED_MATCH = 0;
+    ANY_OF = 1;
+    ALL_OF = 2;
+  }
+
+  // A single predicate over workflow tags.
+  // Example: "tags INCLUDES ANY_OF [foo, bar]" or "tags EXCLUDES ALL_OF [baz, qux]".
+  message TagCondition {
+    .bitdrift.public.unary.workflows.v1.WorkflowListQuery.TagOperator operator = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    .bitdrift.public.unary.workflows.v1.WorkflowListQuery.TagMatch match = 2 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    repeated string tags = 3 [(validate.rules).repeated = {
+      min_items: 1
+      max_items: 20
+      items: {
+        string: {
+          min_len: 1
+          max_len: 100
+        }
+      }
+    }];
+  }
+
+  // All tag conditions must be true (logical AND).
+  message TagAllOf {
+    repeated .bitdrift.public.unary.workflows.v1.WorkflowListQuery.TagCondition conditions = 1 [(validate.rules).repeated = {
+      min_items: 1
+      max_items: 20
+    }];
+  }
+
+  // A filter that matches when at least one TagAllOf group is satisfied (logical OR of ANDs).
+  // Example: (INCLUDES ALL_OF [foo, bar] AND EXCLUDES ANY_OF [baz]) OR (INCLUDES ANY_OF [qux])
+  message TagFilter {
+    repeated .bitdrift.public.unary.workflows.v1.WorkflowListQuery.TagAllOf any_of = 1 [(validate.rules).repeated = {
+      min_items: 1
+      max_items: 20
+    }];
+  }
+
+  // The platforms to filter workflows by. If empty, workflows for all platforms will be returned.
+  // Will be combined as logical OR
+  repeated .bitdrift.public.shared.platform.v1.Platform target_platforms = 1 [(validate.rules).repeated = {max_items: 100}];
+
+  // Filters workflows by access permission levels for a specified user.
+  // For example, callers can request workflows where a user has EDIT access.
+  // Callers can also exclude workflows where a user has OWNER access.
+  .bitdrift.public.unary.admin.v1.AccessPermissionQuery access = 2;
+
+  // The deployed state of the workflows to filter by. If empty, workflows in all states will be returned.
+  optional .bitdrift.public.unary.workflows.v1.Workflow.WorkflowState workflow_state = 3 [(validate.rules).enum = {defined_only: true}];
+
+  // An optional structured tag filter. This supports combining include and exclude predicates
+  // using logical OR of AND groups. If unset, workflows will not be filtered by tags.
+  .bitdrift.public.unary.workflows.v1.WorkflowListQuery.TagFilter tags = 4;
+
+  // An optional workflow id filter to filter workflows by ID. If empty, workflows will not be filtered by ID.
+  // This is intended to provide a way to create a view for ONLY specific workflows.
+  repeated string workflow_id = 5 [(validate.rules).repeated = {
+    max_items: 100
+    items: {string: {max_len: 100}}
+  }];
+
+  // An optional workflow name to filter by. This is a case insensitive substring match.
+  optional string workflow_name = 6 [(validate.rules).string = {max_len: 255}];
+
+  // An optional favorited filter to filter workflows by whether they are explicitly favorited by the current user, or explicitly NOT favorited by the current user.
+  // If unset, workflows will not be filtered by favorited status.
+  optional bool favorited = 7;
+}
+
 message ListWorkflowsRequest {
   message Sort {
     enum SortKey {
@@ -1925,6 +2026,34 @@ message RenameWorkflowResponse {
   repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 4;
 }
 
+message UpsertWorkflowTagsRequest {
+  // The ID of the workflow to update.
+  string workflow_id = 1 [(validate.rules).string = {max_len: 100}];
+
+  // The set of tags to assign to the workflow.
+  repeated string tags = 2 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      string: {
+        min_len: 1
+        max_len: 100
+      }
+    }
+  }];
+}
+
+message UpsertWorkflowTagsResponse {
+  // The tags that are assigned to the workflow after the update completes.
+  repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag tags = 1;
+}
+
+message ListTagsRequest {}
+
+message ListTagsResponse {
+  // The available workflow tags.
+  repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag tags = 1;
+}
+
 message DeleteWorkflowRequest {
   // The ID of the workflow to delete.
   string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
@@ -1975,3 +2104,13 @@ message StopWorkflowResponse {
   // The chart metadata that applies to this workflow.
   repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 3;
 }
+
+message FavoriteWorkflowRequest {
+  // The ID of the workflow to favorite.
+  string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
+
+  // Will favorite (or unfavorite) the workflow for the current user.
+  bool favorite = 3;
+}
+
+message FavoriteWorkflowResponse {}
