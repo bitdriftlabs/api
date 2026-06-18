@@ -114,6 +114,18 @@ message TimeRange {
   }
 }
 
+// Permissions for a resource or action. Indicates whether a user has permissions to perform an action or access a resource,
+// with the context of how the permission was granted.
+enum Permission {
+  UNKNOWN = 0;
+  YES_IS_OWNER = 1;
+  YES_SHARED_EXPLICITLY = 2;
+  YES_SHARED_WITH_TEAM = 3;
+  YES_SHARED_WITH_ORG = 4;
+  NO = 5;
+  YES_IS_ADMIN = 6;
+}
+
 message SessionStatusInfo {
   // If this is true the session is known but has been soft deleted due to account retention
   // policies. Contact support to recover the session if you believe this is in error.

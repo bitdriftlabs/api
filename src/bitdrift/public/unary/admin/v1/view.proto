@@ -10,6 +10,7 @@ package bitdrift.public.unary.admin.v1;
 
 import "bitdrift/public/unary/common/v1/common.proto";
 import "bitdrift/public/unary/issues/v1/issues.proto";
+import "bitdrift/public/unary/workflows/v1/workflow.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
@@ -27,6 +28,11 @@ message ViewFilters {
     .bitdrift.public.unary.issues.v1.IssueGroupQuery issue_group_query = 2;
   }
 
+  message WorkflowList {
+    // The workflow query saved in the view.
+    .bitdrift.public.unary.workflows.v1.WorkflowListQuery workflow_query = 1;
+  }
+
   // Selects the saved criteria for one supported view type.
   oneof type {
     option (validate.required) = true;
@@ -35,6 +41,9 @@ message ViewFilters {
 
     // The saved issue group query for an issue group view.
     .bitdrift.public.unary.admin.v1.ViewFilters.IssueGroupListQuery issue_group_list_new = 2;
+
+    // The saved criteria for a workflow view.
+    .bitdrift.public.unary.admin.v1.ViewFilters.WorkflowList workflow_list = 3;
   }
 }
 
@@ -44,6 +53,9 @@ message ViewSort {
     option (validate.required) = true;
     // Orders issue group views using issue group list sort criteria.
     .bitdrift.public.unary.issues.v1.ListIssueGroupsRequest.Sort issue_group = 1;
+
+    // Orders workflow views using workflow list sort criteria.
+    .bitdrift.public.unary.workflows.v1.ListWorkflowsRequest.Sort workflow = 2;
   }
 }
 
@@ -206,6 +218,8 @@ message ListViewsRequest {
     UNSPECIFIED = 0;
     // Returns issue group views.
     ISSUE_GROUP = 1;
+    // Returns workflow views.
+    WORKFLOWS = 2;
   }
 
   // Selects which service's views to return.
