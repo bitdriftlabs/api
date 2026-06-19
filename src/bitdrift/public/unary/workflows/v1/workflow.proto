@@ -1908,6 +1908,12 @@ message ListWorkflowsRequest {
   // targets. This is a logical OR. If no platforms are supplied, all workflows are returned.
   repeated .bitdrift.public.shared.platform.v1.Platform platform_targets = 5 [(validate.rules).repeated = {max_items: 100}];
 
+  // An optional query used to filter the returned workflows, for example to
+  // build a view of workflows matching specific criteria. If no query is
+  // supplied, all workflows are returned. When a query is supplied, it takes
+  // precedence over the other filter fields on this request.
+  .bitdrift.public.unary.workflows.v1.WorkflowListQuery query = 6;
+
   // Orders workflows by caller-visible attributes. Apply criteria in the order provided.
   repeated .bitdrift.public.unary.workflows.v1.ListWorkflowsRequest.Sort sort = 7 [(validate.rules).repeated = {max_items: 100}];
 }
