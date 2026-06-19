@@ -45,6 +45,18 @@ message Pagination {
   ];
 }
 
+message TokenPagination {
+  // The maximum number of items to return. The server returns at most
+  // min(items.count, limit, 100).
+  optional uint32 limit = 1 [
+    (validate.rules).uint32.gt = 0,
+    (validate.rules).uint32.lte = 100
+  ];
+
+  // Continues pagination after the previously returned page.
+  optional string page_token = 2 [(validate.rules).string.max_len = 4096];
+}
+
 enum Operator {
   // The operator supports a list of the elements on the right side.
   // The API supports a single string as the value on the right side of the
