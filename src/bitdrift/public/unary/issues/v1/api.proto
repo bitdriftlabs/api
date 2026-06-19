@@ -24,6 +24,9 @@ service IssueService {
   // Lists issues matching the specified filter criteria.
   rpc ListIssues(.bitdrift.public.unary.issues.v1.ListIssuesRequest) returns (.bitdrift.public.unary.issues.v1.ListIssuesResponse);
 
+  // Lists issues in an issue group that match the specified filter criteria.
+  rpc ListIssuesV2(.bitdrift.public.unary.issues.v1.ListIssuesV2Request) returns (.bitdrift.public.unary.issues.v1.ListIssuesV2Response);
+
   // Retrieves the feature flags associated with an issue.
   rpc GetIssueFeatureFlags(.bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsRequest) returns (.bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsResponse);
 

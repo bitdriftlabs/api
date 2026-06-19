@@ -490,6 +490,110 @@ message ListIssuesResponse {
   uint32 total_issues = 2;
 }
 
+message ListIssuesV2Request {
+  enum SessionCaptureFilter {
+    SESSION_CAPTURE_FILTER_UNSPECIFIED = 0;
+    // Returns all issues without additional session-capture filtering.
+    ALL_ISSUES = 1;
+    // Returns only issues whose associated session has captured data.
+    CAPTURED_SESSIONS_ONLY = 2;
+  }
+
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      // Orders results by the time each issue occurred.
+      OCCURRED_AT = 1;
+    }
+
+    // Selects which caller-visible issue attribute to order by.
+    .bitdrift.public.unary.issues.v1.ListIssuesV2Request.Sort.SortKey key = 1 [(validate.rules).enum = {defined_only: true}];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  message Query {
+    // Limits results to issues that occurred within the selected time range.
+    .bitdrift.public.unary.common.v1.TimeRange time_range = 1;
+
+    // Limits results to issues from the selected platforms.
+    repeated .bitdrift.public.shared.platform.v1.Platform platforms = 2 [(validate.rules).repeated = {max_items: 100}];
+
+    // Applies caller-specified field filters.
+    .bitdrift.public.unary.issues.v1.AdvancedFilter advanced_filters = 3;
+
+    // Limits results to issues associated with the selected feature flags.
+    repeated .bitdrift.public.unary.issues.v1.FeatureFlagFilter feature_flag_filters = 4 [(validate.rules).repeated = {max_items: 100}];
+  }
+
+  // Limits results to issues in the selected issue group.
+  string issue_group_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  oneof pagination_type {
+    // Continues pagination using an opaque server token.
+    .bitdrift.public.unary.common.v1.TokenPagination token_pagination = 6;
+  }
+
+  // Applies issue-level filters to the list request.
+  .bitdrift.public.unary.issues.v1.ListIssuesV2Request.Query query = 3;
+
+  // Orders issues by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.issues.v1.ListIssuesV2Request.Sort sort = 4 [(validate.rules).repeated = {max_items: 100}];
+
+  // Optionally limits the list to issues whose associated session has captured data.
+  .bitdrift.public.unary.issues.v1.ListIssuesV2Request.SessionCaptureFilter session_capture_filter = 5 [(validate.rules).enum = {defined_only: true}];
+}
+
+message IssueListItem {
+  // The unique identifier for the issue.
+  string id = 1 [(validate.rules).string = {min_len: 1}];
+
+  // The issue summary shown in the issue list.
+  string details = 2 [(validate.rules).string = {min_len: 1}];
+
+  // The time at which the issue occurred.
+  .google.protobuf.Timestamp occurred_at = 3 [(validate.rules).message = {required: true}];
+
+  // The app version associated with the issue.
+  string app_version = 4 [(validate.rules).string = {min_len: 1}];
+
+  // The platform-specific build identifier associated with the issue.
+  oneof build_number {
+    // The Apple bundle version associated with the issue.
+    string bundle_version = 5;
+
+    // The Android version code associated with the issue.
+    int64 version_code = 6;
+  }
+
+  // The device model associated with the issue.
+  optional string device_model = 7;
+
+  // The operating system associated with the issue.
+  optional string device_os = 8;
+
+  // The operating system version associated with the issue.
+  optional string device_os_version = 9;
+
+  // The session ID associated with the issue, when available.
+  optional string session_id = 10;
+}
+
+message ListIssuesV2Response {
+  // The issues that match the request.
+  repeated .bitdrift.public.unary.issues.v1.IssueListItem issues = 1;
+
+  // The total number of issues that match the request across all pages.
+  uint32 total_issues = 2;
+
+  // The opaque token to use for the next page, if more results remain.
+  optional string next_page_token = 3;
+}
+
 message GetIssueFeatureFlagsRequest {
   // The unique identifier for the issue.
   string issue_id = 1 [(validate.rules).string = {
