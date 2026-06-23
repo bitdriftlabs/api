@@ -71,10 +71,7 @@ message SessionSearchSpanRequest {
   }];
 
   // Applies AND-combined filters to the span search.
-  repeated .bitdrift.public.unary.timeline.v1.SessionSearchSpanRequest.Filter filters = 2 [(validate.rules).repeated = {
-    min_items: 1
-    max_items: 20
-  }];
+  repeated .bitdrift.public.unary.timeline.v1.SessionSearchSpanRequest.Filter filters = 2 [(validate.rules).repeated = {max_items: 20}];
 
   // Limits how many levels of child spans are returned from each matched root.
   //
