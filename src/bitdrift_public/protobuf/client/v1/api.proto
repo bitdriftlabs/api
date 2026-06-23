@@ -200,6 +200,24 @@ message LogUploadRequest {
   // The UUID (v4) of the buffer that is producing the logs.
   string buffer_uuid = 3 [(validate.rules).string = {min_len: 1}];
 
+  // Stable identifiers for the logical trigger instances that caused this upload.
+  //
+  // Current client behavior sends either zero or one entries:
+  // 1. zero entries for uploads that did not come from intent-negotiated trigger flushing, such
+  //    as continuous uploads, post-trigger streaming uploads, and remote-command-triggered flush
+  //    uploads
+  // 2. one entry for the original trigger upload that first completed intent negotiation
+  //
+  // If one log matches multiple flush actions, the client is expected to reuse one shared trigger
+  // UUID across all of the resulting intent negotiations for that triggering log/event. Logger-
+  // side active-buffer suppression may still collapse the resulting work into one concrete upload
+  // for the buffer, and that upload carries that same shared UUID.
+  //
+  // The field is repeated to future-proof the wire contract in case a future client revision
+  // needs one concrete upload to represent more than one accepted trigger instance. That does not
+  // happen today.
+  repeated string trigger_uuids = 6;
+
   // Whether the server should not respond to this upload. This is used for high
   // throughput, low value logs where the client does not need to know whether
   // the upload succeeded or failed.
