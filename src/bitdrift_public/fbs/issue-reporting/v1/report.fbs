@@ -407,9 +407,9 @@ table FeatureFlag {
     timestamp:common.v1.Timestamp;
 }
 
-tabel ProcessingResult {
+table ProcessingResult {
   // The key of the issue group this report was mapped to.
-  grouping_key:uint64
+  grouping_key:uint64;
 }
 
 table Report {
