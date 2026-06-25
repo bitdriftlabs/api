@@ -407,6 +407,11 @@ table FeatureFlag {
     timestamp:common.v1.Timestamp;
 }
 
+tabel ProcessingResult {
+  // The key of the issue group this report was mapped to.
+  grouping_key:uint64
+}
+
 table Report {
     sdk:SDKInfo;
 
@@ -435,6 +440,9 @@ table Report {
     // Arbitrary key/value pairs representing feature flags and their values at
     // the time the report was generated
     feature_flags:[FeatureFlag];
+
+    // Additional information added to the report during server-side processing.
+    processing_result:ProcessingResult;
 }
 
 root_type Report;
