@@ -11,7 +11,7 @@ namespace bitdrift_public.fbs.logging.v1;
 
 enum LogType: uint32 {
   // Normal logs, from application code.
-  Normal = 0
+  Normal = 0,
 
   // Session replay logs.
   Replay = 1,
