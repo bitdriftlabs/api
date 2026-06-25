@@ -429,11 +429,10 @@ table Report {
     // Thread stack traces
     binary_images:[BinaryImage];
 
-    // arbitrary key/value pairs representing custom fields added to the report
-    // by the application at runtime
-    state:[common.v1.Field];
+    // Key/value pairs representing out of the box present at the time of report creation
+    fields:[common.v1.Field];
 
-    // arbitrary key/value pairs representing feature flags and their values at
+    // Arbitrary key/value pairs representing feature flags and their values at
     // the time the report was generated
     feature_flags:[FeatureFlag];
 }
