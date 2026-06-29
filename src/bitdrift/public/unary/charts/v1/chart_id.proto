@@ -46,6 +46,26 @@ message ChartIdentifier {
     }];
   }
 
+  message WorkflowSessionCaptureChart {
+    // The workflow that owns this session capture chart.
+    string workflow_id = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // The flush rule that defines the session capture chart.
+    string flush_rule_id = 3 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+
+    // The action whose captured sessions should be returned.
+    string action_id = 4 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
+  }
+
   message WorkflowSankeyChart {
     // The workflow that owns this sankey chart.
     string workflow_id = 2 [(validate.rules).string = {
@@ -113,6 +133,9 @@ message ChartIdentifier {
 
     // A workflow-backed funnel chart.
     .bitdrift.public.unary.charts.v1.ChartIdentifier.WorkflowFunnelChart workflow_funnel_chart = 7;
+
+    // A workflow-backed session capture chart.
+    .bitdrift.public.unary.charts.v1.ChartIdentifier.WorkflowSessionCaptureChart workflow_session_capture_chart = 8;
 
     // An issue-stability chart as found on the stability tab in Instant Insights.
     .bitdrift.public.unary.charts.v1.ChartIdentifier.IssueStabilityChart issue_stability_chart = 9;

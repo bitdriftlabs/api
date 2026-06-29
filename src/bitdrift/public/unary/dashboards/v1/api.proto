@@ -14,6 +14,7 @@ import "bitdrift/public/unary/admin/v1/access.proto";
 import "bitdrift/public/unary/charts/v1/chart_id.proto";
 import "bitdrift/public/unary/charts/v1/chart_metadata.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
+import "bitdrift/public/unary/workflows/v1/captured_sessions.proto";
 import "bitdrift/public/unary/workflows/v1/workflow.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -249,6 +250,12 @@ message Dashboard {
 
     // The variables that are applied to every chart referenced in this dashboard.
     repeated .bitdrift.public.unary.workflows.v1.GroupBy.Value dashboard_variables = 9 [(validate.rules).repeated = {max_items: 10}];
+
+    // A long-form description for the dashboard.
+    optional string description = 10 [(validate.rules).string = {
+      min_len: 1
+      max_len: 1000
+    }];
   }
 
   oneof type {
@@ -350,6 +357,14 @@ message RateConfiguration {
   .bitdrift.public.shared.workflows.v1.Rate.RateAggregationType aggregation_type = 1 [(validate.rules).enum = {defined_only: true}];
 }
 
+message SessionCaptureConfiguration {
+  // Continues pagination using an opaque server token.
+  .bitdrift.public.unary.common.v1.TokenPagination token_pagination = 1;
+
+  // Additional optional filters. This filter is combined using a logical AND, while the inner filters are combined using a logical OR.
+  repeated .bitdrift.public.shared.workflows.v1.AndFilter or_filter = 2 [(validate.rules).repeated = {max_items: 10}];
+}
+
 message ChartRequest {
   // The identifier of the chart to fetch data for.
   .bitdrift.public.unary.charts.v1.ChartIdentifier chart_id = 1 [(validate.rules).message = {required: true}];
@@ -375,6 +390,9 @@ message ChartRequest {
   // Rate configuration for the chart. Currently this is only used for resolving which table
   // type to show in the case of a group by query.
   .bitdrift.public.unary.dashboards.v1.RateConfiguration rate_configuration = 9;
+
+  // Optional configuration for session capture charts.
+  .bitdrift.public.unary.dashboards.v1.SessionCaptureConfiguration session_capture_configuration = 13;
 
   // Override the display mode for this chart.
   // Uses the same oneof structure as RuleChartConfiguration.display_mode.
@@ -544,6 +562,17 @@ message HistogramBarChartResponse {
   repeated .bitdrift.public.unary.dashboards.v1.HistogramBarChartResponse.PerTimeSeries per_time_series = 1;
 }
 
+message SessionCaptureChartResponse {
+  // The captured sessions that matched the request.
+  repeated .bitdrift.public.unary.workflows.v1.CapturedSession captured_sessions = 1;
+
+  // The opaque token to use for the next page, if more results remain.
+  optional string next_page_token = 2;
+
+  // The number of captures remaining for the current day as of the time of the call.
+  uint32 daily_limit_remaining = 3;
+}
+
 message ChartData {
   // The chart that this data belongs to.
   .bitdrift.public.unary.charts.v1.ChartIdentifier chart_id = 1 [(validate.rules).message = {required: true}];
@@ -564,6 +593,9 @@ message ChartData {
 
     // Histogram-bar-chart data for the chart.
     .bitdrift.public.unary.dashboards.v1.HistogramBarChartResponse histogram_bar_chart_response = 10;
+
+    // Session capture data for the chart.
+    .bitdrift.public.unary.dashboards.v1.SessionCaptureChartResponse session_capture_data = 11;
 
     // Contains an error message when chart data could not be retrieved.
     string error = 6;
