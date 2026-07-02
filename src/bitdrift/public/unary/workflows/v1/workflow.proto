@@ -168,6 +168,10 @@ message Workflow {
   // Note that due to how LastSeen works, reading the workflow data counts as a "last seen" and will reset the
   // expiration time.
   .google.protobuf.Timestamp deployment_expiration_time = 24;
+
+  // A list of tags that have been assigned to this workflow. These can be used for filtering
+  // purposes within a view.
+  repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag tags = 32 [(validate.rules).repeated = {max_items: 100}];
 }
 
 // An individual flow within a workflow.

@@ -395,6 +395,9 @@ message Issue {
 
   // The unique id of the session that this issue occurred within.
   optional string session_id = 14 [(validate.rules).string = {min_len: 1}];
+
+  // The status of the session associated with this issue.
+  .bitdrift.public.unary.common.v1.SessionStatusInfo session_status_info = 20;
 }
 
 message GetIssueResponse {
