@@ -256,6 +256,9 @@ message Dashboard {
       min_len: 1
       max_len: 1000
     }];
+
+    // The union of tags associated with the workflows referenced in this dashboard.
+    repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag workflow_tags = 11 [(validate.rules).repeated = {max_items: 100}];
   }
 
   oneof type {
