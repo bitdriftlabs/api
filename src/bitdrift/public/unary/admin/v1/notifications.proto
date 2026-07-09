@@ -72,6 +72,15 @@ message NotificationGroup {
     .bitdrift.public.unary.admin.v1.NotificationGroup.DataDogNotification.DataDogSeverity severity = 5 [(validate.rules).enum = {defined_only: true}];
   }
 
+  message HttpsWebhook {
+    // The URL of the HTTPS webhook. The URL will receive a POST request with a JSON representation
+    // of the `WebhookNotification` message when a notification is sent to the webhook.
+    string url = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 2048
+    }];
+  }
+
   // The name of the notification group. Must be unique.
   string name = 1 [(validate.rules).string = {
     min_len: 1
@@ -84,14 +93,14 @@ message NotificationGroup {
   // The list of PagerDuty targets that are members of the notification group.
   repeated .bitdrift.public.unary.admin.v1.NotificationGroup.PagerDutyNotification pager_duty_notifications = 3 [(validate.rules).repeated = {max_items: 100}];
 
-  // The list of email addresses that are members of the notification group.
-  repeated string email_addresses = 4 [(validate.rules).repeated = {max_items: 100}];
-
   // The list of SNS topic ARNs that are members of the notification group.
   repeated string sns_topic_arns = 5 [(validate.rules).repeated = {max_items: 100}];
 
   // The list of DataDog On-Call targets that are members of the notification group.
   repeated .bitdrift.public.unary.admin.v1.NotificationGroup.DataDogNotification datadog_notifications = 6 [(validate.rules).repeated = {max_items: 100}];
+
+  // The list of HTTPS webhooks that are members of the notification group.
+  repeated .bitdrift.public.unary.admin.v1.NotificationGroup.HttpsWebhook https_webhooks = 7 [(validate.rules).repeated = {max_items: 5}];
 }
 
 // Requests the notification groups configured for the organization.

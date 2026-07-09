@@ -256,6 +256,9 @@ message Dashboard {
       min_len: 1
       max_len: 1000
     }];
+
+    // The union of tags associated with the workflows referenced in this dashboard.
+    repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag workflow_tags = 11 [(validate.rules).repeated = {max_items: 100}];
   }
 
   oneof type {
@@ -832,7 +835,9 @@ service DashboardService {
   //
   // Returns rendered chart output such as time-series values, labels, and table rows. For grouped
   // charts, callers can reuse each returned `TimeSeries.id` together with its full `labels` set to
-  // build `charts.v1.LimitStrategy.IdentifierMatch` in a later request.
+  // build `charts.v1.LimitStrategy.IdentifierMatch` in a later request. When unique-device counts
+  // are deferred, the response includes per-chart deferred dimensions and a response-level context
+  // that can be passed to HydrateChartsData.
   rpc GetChartsData(.bitdrift.public.unary.dashboards.v1.GetChartsDataRequest) returns (.bitdrift.public.unary.dashboards.v1.GetChartsDataResponse);
 
   // Gets the unique active devices for a given time range and filter conditions. Active devices in
