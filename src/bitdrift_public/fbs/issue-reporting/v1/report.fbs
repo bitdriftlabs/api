@@ -59,6 +59,23 @@ enum ErrorRelation : int8 {
     CausedBy = 1,
 }
 
+// Where crash evidence was collected relative to the crashing process.
+enum CrashReporterScope : int8 {
+    Unknown = 0,
+    InProcess,
+    OutOfProcess,
+}
+
+// The concrete implementation that collected a crash observation.
+enum CrashReporter : int8 {
+    Unknown = 0,
+    AppleMetricKit,
+    AppleKSCrash,
+    AppleBitdriftCrashReporter,
+    AndroidUncaughtExceptionHandler,
+    AndroidApplicationExitInfo,
+}
+
 enum PowerState : int8 {
     Unknown = 0,
     RunningOnBattery,
@@ -378,6 +395,93 @@ table Error {
     relation_to_next:ErrorRelation = CausedBy;
 }
 
+table NSException {
+    name:string;
+    reason:string;
+    user_info:[common.v1.Field];
+}
+
+table MachException {
+    type:uint32;
+    code:uint64;
+    subcode:uint64;
+}
+
+table PosixSignal {
+    number:int32;
+    name:string;
+    code:int32;
+    code_name:string;
+    errno:int32;
+    has_fault_address:bool;
+    fault_address:uint64;
+}
+
+// Apple specific information that accompanies a crash but is not represented
+// by Mach or POSIX exception fields (e.g. Watchdog kills)
+table AppleTermination {
+    // The Apple termination domain, such as RBSTerminateContext's domain (10)
+    domain:string;
+
+    // The termination code or well-known subtype (e.g. 0x8BADF00D)
+    code:string;
+
+    // The raw explanation string emitted by the platform for this termination
+    // (e.g. Failed to terminate gracefully after 5.0s)
+    explanation:string;
+
+    // The visibility state of the process at termination time, if reported
+    process_visibility:string;
+
+    // The process state at termination time, if reported (most of the times is Running)
+    process_state:string;
+
+    // The watchdog event name (process-exit, scene-update)
+    watchdog_event:string;
+
+    // The watchdog visibility classification (Foreground, Background, Unkown)
+    watchdog_visibility:string;
+}
+
+// Apple-specific crash facts. A reporter may provide more than one of these
+// fields for a single crash observation
+table AppleCrashDetails {
+    nsexception:NSException;
+    mach_exception:MachException;
+    posix_signal:PosixSignal;
+    termination:AppleTermination;
+}
+
+table AndroidCrashDetails {
+    // TBD
+}
+
+union CrashInfoDetails {
+    AppleCrashDetails,
+    AndroidCrashDetails,
+}
+
+// Evidence captured about one crash by one reporter. Report.errors remains a
+// compatibility summary; this table is the source of complete crash facts.
+table CrashInfo {
+    // Whether the reporter captured this crash from within the crashing process
+    // or from an external observer
+    reporter_scope:CrashReporterScope;
+
+    // The concrete implementation that produced this crash info entry
+    reporter:CrashReporter;
+
+    // The time at which this reporter observed or recorded the crash
+    occurred_at:Timestamp;
+
+    // Reporter-specific crash payload information
+    details:CrashInfoDetails;
+
+    // Thread state captured by this reporter. This may differ from the legacy
+    // report-level thread_details and from other crash_info entries
+    thread_details:ThreadDetails;
+}
+
 table BinaryImage {
     // identifier for the compiled binary - corresponds to Frame.image_id
     id:string;
@@ -443,6 +547,9 @@ table Report {
 
     // Additional information added to the report during server-side processing.
     processing_result:ProcessingResult;
+
+    // Complete source-specific crash evidence
+    crash_info:[CrashInfo];
 }
 
 root_type Report;
