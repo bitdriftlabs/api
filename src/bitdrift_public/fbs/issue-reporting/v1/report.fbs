@@ -467,10 +467,6 @@ table AndroidNativeCrash {
 
     // Additional native crash causes or summaries emitted by the platform
     causes:[string];
-
-    // Arbitrary structured native details that do not yet have first-class
-    // schema fields
-    details:[common.v1.Field];
 }
 
 // Android StrictMode violation information captured when the SDK reports a
@@ -484,9 +480,6 @@ table AndroidStrictModeViolation {
 
     // The message or summary associated with the violation
     message:string;
-
-    // Additional structured StrictMode metadata emitted by the reporter.
-    details:[common.v1.Field];
 }
 
 // Android ANR information captured from ANR diagnostics or equivalent sources
@@ -502,9 +495,6 @@ table AndroidAnr {
 
     // The ANR explanation or message provided by the platform
     message:string;
-
-    // Additional structured ANR metadata emitted by the reporter
-    details:[common.v1.Field];
 }
 
 table AndroidCrashDetails {
