@@ -409,9 +409,7 @@ table MachException {
 
 table PosixSignal {
     number:int32;
-    name:string;
     code:int32;
-    code_name:string;
     errno:int32;
     has_fault_address:bool;
     fault_address:uint64;
@@ -452,8 +450,68 @@ table AppleCrashDetails {
     termination:AppleTermination;
 }
 
+// JVM exception information captured by Android's uncaught exception handling
+table AndroidJVMCrash {
+    // The Java/Kotlin exception chain associated with the crash.
+    exceptions:[Error];
+}
+
+// Native Android crash information captured from tombstones or equivalent
+// crash-reporting sources
+table AndroidNativeCrash {
+    // The terminating signal, if one was reported for the native crash
+    signal:PosixSignal;
+
+    // The native abort message, if one was emitted by the runtime
+    abort_message:string;
+
+    // Additional native crash causes or summaries emitted by the platform
+    causes:[string];
+
+    // Arbitrary structured native details that do not yet have first-class
+    // schema fields
+    details:[common.v1.Field];
+}
+
+// Android StrictMode violation information captured when the SDK reports a
+// StrictMode issue.
+table AndroidStrictModeViolation {
+    // The StrictMode policy in effect when the violation occurred
+    policy:string;
+
+    // The violation class/category reported by StrictMode
+    violation_type:string;
+
+    // The message or summary associated with the violation
+    message:string;
+
+    // Additional structured StrictMode metadata emitted by the reporter.
+    details:[common.v1.Field];
+}
+
+// Android ANR information captured from ANR diagnostics or equivalent sources
+table AndroidAnr {
+    // The platform-reported ANR reason or category
+    reason:string;
+
+    // The activity or component implicated in the ANR, if reported
+    activity:string;
+
+    // The process/app state associated with the ANR
+    state:string;
+
+    // The ANR explanation or message provided by the platform
+    message:string;
+
+    // Additional structured ANR metadata emitted by the reporter
+    details:[common.v1.Field];
+}
+
 table AndroidCrashDetails {
-    // TBD
+    jvm:AndroidJVMCrash;
+    native:AndroidNativeCrash;
+    strict_mode:AndroidStrictModeViolation;
+    anr:AndroidAnr;
 }
 
 union CrashInfoDetails {
