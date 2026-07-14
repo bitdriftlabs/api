@@ -410,7 +410,7 @@ table MachException {
 table PosixSignal {
     number:int32;
     code:int32;
-    errno:int32;
+    errno_value:int32;
     has_fault_address:bool;
     fault_address:uint64;
 }
