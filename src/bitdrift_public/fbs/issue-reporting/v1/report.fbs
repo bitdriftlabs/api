@@ -450,13 +450,10 @@ table AppleCrashDetails {
     termination:AppleTermination;
 }
 
-table AndroidCrashDetails {
-    // TBD: Android crash/error structure still needs to be defined.
-}
-
+// Android crash details are intentionally not modeled yet. The optimal
+// structure and set of crash/error sources still need to be defined.
 union CrashInfoDetails {
     AppleCrashDetails,
-    AndroidCrashDetails,
 }
 
 // Evidence captured about one crash by one reporter. Report.errors remains a
