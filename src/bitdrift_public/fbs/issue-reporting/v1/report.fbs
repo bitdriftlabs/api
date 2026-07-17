@@ -271,6 +271,7 @@ table SourceFile {
     path:string;
     line:int64;
     column:int64;
+    abs_path:string;
 }
 
 table CPURegister {
