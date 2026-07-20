@@ -146,7 +146,9 @@ message IssueGroupQuery {
   // The status(es) of issue groups to filter by.
   repeated .bitdrift.public.unary.issues.v1.IssueGroupStatus issue_group_status = 2 [(validate.rules).repeated = {
     max_items: 100
-    items: {enum: {defined_only: true}}
+    items: {
+      enum: {defined_only: true}
+    }
   }];
 }
 
@@ -230,6 +232,18 @@ message IssueGroup {
   }
 }
 
+message GetIssueThreadsRequest {
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  string issue_group_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
 message GetIssueGroupRequest {
   // The identifier for the issue group.
   string id = 1 [(validate.rules).string = {
@@ -269,7 +283,9 @@ message ListIssueGroupsFilters {
     // The issue group IDs to filter the list by.
     repeated string value = 1 [(validate.rules).repeated = {
       max_items: 100
-      items: {string: {max_len: 100}}
+      items: {
+        string: {max_len: 100}
+      }
     }];
   }
 
@@ -416,6 +432,24 @@ message GetIssueResponse {
 
   // The status of the issue. If set to FOUND, the issue was found and the details are available.
   .bitdrift.public.unary.issues.v1.GetIssueResponse.Status status = 13 [(validate.rules).enum = {defined_only: true}];
+}
+
+message GetIssueThreadsResponse {
+  enum Status {
+    FOUND = 0;
+    // No reference to the issue was found.
+    NOT_FOUND = 1;
+    // The issue is still pending processing (or something went wrong).
+    PENDING = 2;
+    // The issue was processed but an error occurred during processing which prevents thread data from being available.
+    FAILED = 3;
+  }
+
+  // The thread state captured for the issue.
+  .bitdrift.public.unary.issues.v1.Report.ThreadDetails thread_details = 1;
+
+  // The status of the issue thread data.
+  .bitdrift.public.unary.issues.v1.GetIssueThreadsResponse.Status status = 2 [(validate.rules).enum = {defined_only: true}];
 }
 
 message ListIssuesRequest {
@@ -584,6 +618,9 @@ message IssueListItem {
 
   // The session ID associated with the issue, when available.
   optional string session_id = 10;
+
+  // The status of the session associated with this issue.
+  .bitdrift.public.unary.common.v1.SessionStatusInfo session_status_info = 11;
 }
 
 message ListIssuesV2Response {
@@ -671,7 +708,9 @@ message ListPossibleAssigneesRequest {
   // Filter assignees to those with matching user IDs.
   repeated string user_ids = 2 [(validate.rules).repeated = {
     max_items: 100
-    items: {string: {max_len: 100}}
+    items: {
+      string: {max_len: 100}
+    }
   }];
 
   // The starting offset for pagination. For example, set this to 10 to start
