@@ -1863,7 +1863,9 @@ message WorkflowListQuery {
   // This is intended to provide a way to create a view for ONLY specific workflows.
   repeated string workflow_id = 5 [(validate.rules).repeated = {
     max_items: 100
-    items: {string: {max_len: 100}}
+    items: {
+      string: {max_len: 100}
+    }
   }];
 
   // An optional workflow name to filter by. This is a case insensitive substring match.

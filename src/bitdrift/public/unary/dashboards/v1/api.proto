@@ -643,7 +643,7 @@ message GetUniqueAppIdsRequest {
 
 message GetUniqueAppIdsResponse {
   // The distinct platform, app ID, and app version combinations observed in the
-  // requested time range.
+  // requested time range. This is sorted by platform/app activity volume.
   repeated .bitdrift.public.shared.platform.v1.Platform platforms = 6;
 }
 
