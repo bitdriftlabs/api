@@ -74,6 +74,9 @@ message AdvancedFilter {
       LHS_TYPED_MODULE = 14;
       // The model manufacturer associated with the issue, e.g. "Google" for models like the Pixel.
       LHS_TYPED_MANUFACTURER = 15;
+      // The error details associated with a report.
+      // For exceptions, this is the exception message; for other crashes (for example, ANRs), this may be a larger diagnostic report.
+      LHS_TYPED_DETAILS = 16;
     }
 
     // The filter key to match against.
@@ -230,18 +233,6 @@ message IssueGroup {
     // android-specific version field
     int64 version_code = 9;
   }
-}
-
-message GetIssueThreadsRequest {
-  string id = 1 [(validate.rules).string = {
-    min_len: 1
-    max_len: 100
-  }];
-
-  string issue_group_id = 2 [(validate.rules).string = {
-    min_len: 1
-    max_len: 100
-  }];
 }
 
 message GetIssueGroupRequest {
@@ -432,24 +423,6 @@ message GetIssueResponse {
 
   // The status of the issue. If set to FOUND, the issue was found and the details are available.
   .bitdrift.public.unary.issues.v1.GetIssueResponse.Status status = 13 [(validate.rules).enum = {defined_only: true}];
-}
-
-message GetIssueThreadsResponse {
-  enum Status {
-    FOUND = 0;
-    // No reference to the issue was found.
-    NOT_FOUND = 1;
-    // The issue is still pending processing (or something went wrong).
-    PENDING = 2;
-    // The issue was processed but an error occurred during processing which prevents thread data from being available.
-    FAILED = 3;
-  }
-
-  // The thread state captured for the issue.
-  .bitdrift.public.unary.issues.v1.Report.ThreadDetails thread_details = 1;
-
-  // The status of the issue thread data.
-  .bitdrift.public.unary.issues.v1.GetIssueThreadsResponse.Status status = 2 [(validate.rules).enum = {defined_only: true}];
 }
 
 message ListIssuesRequest {
