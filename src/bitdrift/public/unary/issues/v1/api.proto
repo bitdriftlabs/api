@@ -21,9 +21,6 @@ service IssueService {
   // Retrieves a single issue by ID.
   rpc GetIssue(.bitdrift.public.unary.issues.v1.GetIssueRequest) returns (.bitdrift.public.unary.issues.v1.GetIssueResponse);
 
-  // Retrieves thread state for a single issue.
-  rpc GetIssueThreads(.bitdrift.public.unary.issues.v1.GetIssueThreadsRequest) returns (.bitdrift.public.unary.issues.v1.GetIssueThreadsResponse);
-
   // Lists issues matching the specified filter criteria.
   rpc ListIssues(.bitdrift.public.unary.issues.v1.ListIssuesRequest) returns (.bitdrift.public.unary.issues.v1.ListIssuesResponse);
 
