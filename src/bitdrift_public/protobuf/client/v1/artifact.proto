@@ -51,6 +51,7 @@ message ArtifactUploadIndex {
     StorageFormat storage_format = 9;
 
     // Client workflow continuations that should be evaluated when this report is processed.
+    // Only populated for issue-report artifacts; other artifact types must leave this unset.
     optional bitdrift_public.protobuf.workflow.v1.WorkflowReportHandoff workflow_report_handoff = 10;
   }
 

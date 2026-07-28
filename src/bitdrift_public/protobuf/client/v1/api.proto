@@ -382,6 +382,7 @@ message UploadArtifactRequest {
   repeated FeatureFlag feature_flags = 8;
 
   // Client workflow continuations that should be evaluated when this report is processed.
+  // Only populated for issue-report artifacts; other artifact types must leave this unset.
   optional workflow.v1.WorkflowReportHandoff workflow_report_handoff = 9;
 }
 
