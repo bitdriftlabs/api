@@ -381,8 +381,8 @@ message UploadArtifactRequest {
   // The set of feature flags that were active at the time of artifact emission.
   repeated FeatureFlag feature_flags = 8;
 
-  // Client workflow continuations that should be evaluated when this crash report is processed. This is only set for crash reports.
-  optional workflow.v1.WorkflowCrashHandoff workflow_crash_handoff = 9;
+  // Client workflow continuations that should be evaluated when this report is processed.
+  optional workflow.v1.WorkflowReportHandoff workflow_report_handoff = 9;
 }
 
 message UploadArtifactResponse {

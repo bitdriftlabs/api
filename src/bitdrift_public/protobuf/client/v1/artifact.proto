@@ -50,8 +50,8 @@ message ArtifactUploadIndex {
     // The storage format of the artifact, which determines whether we apply checksum validation during processing.
     StorageFormat storage_format = 9;
 
-    // Client workflow continuations that should be evaluated when a crash report is processed. This is only set for crash artifacts.
-    optional bitdrift_public.protobuf.workflow.v1.WorkflowCrashHandoff workflow_crash_handoff = 10;
+    // Client workflow continuations that should be evaluated when this report is processed.
+    optional bitdrift_public.protobuf.workflow.v1.WorkflowReportHandoff workflow_report_handoff = 10;
   }
 
   // List of files, in order of time, that are pending upload.
