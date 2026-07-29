@@ -13,6 +13,7 @@ import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
 import "bitdrift_public/protobuf/state/v1/matcher.proto";
 import "bitdrift_public/protobuf/state/v1/scope.proto";
 import "bitdrift_public/protobuf/workflow/v1/save_field.proto";
+import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 // The wrapper for the list of workflows. Top-level item used to send information
@@ -20,6 +21,27 @@ import "validate/validate.proto";
 message WorkflowsConfiguration {
   // An optional list of workflows.
   repeated Workflow workflows = 1;
+}
+
+// The state needed to continue a client workflow when a report is processed by the server.
+// Only workflows currently waiting on an OnReport transition are included.
+message WorkflowReportHandoff {
+  repeated WorkflowReportContinuation continuations = 1;
+}
+
+// A terminal IssueMatch rule with one or more waiting client continuations.
+message WorkflowReportContinuation {
+  // The canonical V3 rule hash of the terminal IssueMatch.
+  string issue_match_rule_hash = 1 [(validate.rules).string = {min_len: 1}];
+
+  // State extracted by preceding client workflow steps and consumed by the terminal report action.
+  repeated ReportTraversalContext traversals = 2 [(validate.rules).repeated = {min_items: 1}];
+}
+
+// State retained for a traversal that is waiting for an OnReport transition.
+message ReportTraversalContext {
+  map<string, string> extracted_fields = 1;
+  map<string, google.protobuf.Timestamp> extracted_timestamps = 2;
 }
 
 // Extracts multiple state entries and turns each match into a separate output item with two
@@ -119,9 +141,18 @@ message Workflow {
       RuleStateChangeMatch rule_state_change_match = 3;
       // This will match when a new session starts.
       bool on_new_session = 4;
+      // This will match when a report is processed.
+      OnReport on_report = 5;
     }
 
     reserved 2;
+  }
+
+  // A terminal transition that delegates IssueMatch evaluation to the server when a report is
+  // processed. The rule hash associates this client prefix with every matching server-side
+  // IssueMatch configuration.
+  message OnReport {
+    string issue_match_rule_hash = 1 [(validate.rules).string = {min_len: 1}];
   }
 
   // An extra configuration for a given transition.

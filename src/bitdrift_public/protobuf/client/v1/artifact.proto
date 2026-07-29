@@ -11,6 +11,7 @@ package bitdrift_public.protobuf.client.v1;
 
 import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
 import "google/protobuf/timestamp.proto";
 
 enum StorageFormat {
@@ -48,6 +49,10 @@ message ArtifactUploadIndex {
 
     // The storage format of the artifact, which determines whether we apply checksum validation during processing.
     StorageFormat storage_format = 9;
+
+    // Client workflow continuations that should be evaluated when this report is processed.
+    // Only populated for issue-report artifacts; other artifact types must leave this unset.
+    optional bitdrift_public.protobuf.workflow.v1.WorkflowReportHandoff workflow_report_handoff = 10;
   }
 
   // List of files, in order of time, that are pending upload.
