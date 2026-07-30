@@ -104,6 +104,13 @@ enum MemoryPressureLevel : int8 {
     Critical = 3,
 }
 
+enum AppEnvironment: int8 {
+    Debug = 0,
+    Adhoc = 1,          // Apple only
+    Testflight = 2,     // Apple only
+    Production = 3,
+}
+
 struct Timestamp {
   seconds:uint64;
   nanos:uint32;
@@ -167,6 +174,12 @@ table AppMetrics {
 
     // JavaScript engine used by the application (only relevant for React Native/JS apps)
     javascript_engine:JavaScriptEngine;
+
+    // The environment in which the app was running (debug, adhoc, production, etc).
+    app_environment:AppEnvironment;
+
+    // Apple's Developer Account team identifier.
+    team_identifier:string;
 
     // Memory pressure level at the time of the crash, as reported by the OS.
     memory_pressure_level:MemoryPressureLevel;
