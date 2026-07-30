@@ -490,6 +490,9 @@ table BinaryImage {
 
     // offset between the start of program memory and this image
     load_address:uint64;
+
+    // number of bytes in the image
+    length: uint64;
 }
 
 table SDKInfo {
