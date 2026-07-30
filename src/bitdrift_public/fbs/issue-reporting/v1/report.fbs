@@ -170,6 +170,9 @@ table AppMetrics {
 
     // Memory pressure level at the time of the crash, as reported by the OS.
     memory_pressure_level:MemoryPressureLevel;
+
+    // The moment the app launched
+    launch_time: Timestamp;
 }
 
 table OSBuild {
