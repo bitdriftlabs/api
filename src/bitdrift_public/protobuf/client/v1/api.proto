@@ -80,6 +80,28 @@ message StateUpdateRequest {
 
 // The initial request sent over the stream.
 message HandshakeRequest {
+  // Connection and stats pipeline analytics that are independent of the stats payload itself.
+  message Analytics {
+    // A durable stats-pipeline analytics report. The client resends it until the server accepts
+    // its stable ID, then starts accumulating the next report.
+    message StatsPipelineAnalyticsReport {
+      // Stable ID used by the server to deduplicate this ACK-reset report.
+      string report_id = 1;
+
+      // The ACK-reset counters for this report. This is also the durable on-disk representation,
+      // so storage and the handshake cannot diverge as counters are added.
+      StatsPipelineAnalytics analytics = 2;
+    }
+
+    // The number of handshake attempts since this client process started. This counter starts at
+    // one and is not persisted across process restarts.
+    uint64 connection_count_since_process_start = 1;
+
+    // Durable ACK-reset stats pipeline analytics. The server must deduplicate report_id before
+    // adding the counters to its totals and echo the ID in HandshakeResponse when accepted.
+    StatsPipelineAnalyticsReport stats_pipeline = 2;
+  }
+
   // A set of opaque metadata that identifies the connecting device. These will
   // remain static for the duration of this stream.
   // TODO(snowp): Support updating these throughout the session / move to StateUpdateRequest.
@@ -118,6 +140,14 @@ message HandshakeRequest {
   // multiple sessions included if some session transitions have happened while offline and have
   // not yet been sent to the server.
   StateUpdateRequest state_update = 9;
+
+  // Connection and stats pipeline analytics.
+  Analytics analytics = 10;
+
+  // A pending stats upload selected during client initialization. The server acknowledges it in a
+  // StatsUploadResponse after the handshake, allowing the client to avoid an additional
+  // request/response round trip before deleting the persisted source files.
+  StatsUploadRequest startup_stats_upload = 11;
 }
 
 // Notifies the server about the intent to upload one or more batches of logs. The client is expected (but
@@ -396,6 +426,12 @@ message UploadArtifactResponse {
 
 // The response sent as part of stream establishment.
 message HandshakeResponse {
+  message AnalyticsAck {
+    // The analytics report ID from HandshakeRequest.Analytics.StatsPipelineAnalytics that the
+    // server accepted. The client retains the report until this ID is echoed back.
+    string report_id = 1;
+  }
+
   message StreamSettings {
     // How often the client should ping the server. This informs the client how
     // often a ping request should be issued over the newly created stream.
@@ -420,6 +456,10 @@ message HandshakeResponse {
   // If set, the client should update or clear the corresponding state according to the provided
   // list of updates.
   repeated ClientStateUpdate client_state_updates = 4;
+
+  // The acknowledgement for the durable stats pipeline analytics report. If absent, the client
+  // resends the same report ID during its next handshake.
+  AnalyticsAck analytics_ack = 5;
 }
 
 // A general indication of rate limiting from server to client.
