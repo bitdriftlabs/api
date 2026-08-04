@@ -318,7 +318,7 @@ message SankeyPathUploadRequest {
   // to a single transition from a workflow origin state to a workflow target state.
   message Node {
     // The value extracted from the matched log.
-    string extracted_value = 1 [(validate.rules).string = {min_len: 1}];
+    string extracted_value = 1;
   }
 
   // Sankey diagram ID.
@@ -499,6 +499,9 @@ message StatsUploadRequest {
 
     // Upload triggered by a specific event, e.g., buffer flush.
     UPLOAD_REASON_EVENT_TRIGGERED = 2;
+
+    // Upload attached to the initial handshake for a new API stream.
+    UPLOAD_REASON_HANDSHAKE = 3;
   }
 
   // Upload UUID used to provide idempotence and to correlate a response with this request.
