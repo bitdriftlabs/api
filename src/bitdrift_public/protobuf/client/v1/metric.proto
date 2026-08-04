@@ -12,6 +12,38 @@ package bitdrift_public.protobuf.client.v1;
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
+// Durable ACK-reset analytics accumulated while stats files are managed on disk. A client seals
+// these counters into a report during the handshake and retains that report until the server
+// acknowledges its stable ID.
+message StatsPipelineAnalytics {
+  // Number of stats upload payloads acknowledged successfully since the prior accepted analytics
+  // report. This can be reconciled directly with received stats upload payloads.
+  uint64 stats_uploads_acknowledged_successfully = 1;
+
+  // Number of stats upload payloads acknowledged unsuccessfully since the prior accepted
+  // analytics report.
+  uint64 stats_uploads_acknowledged_unsuccessfully = 2;
+
+  // Number of persisted stats files dropped because standard rotation reached the configured
+  // maximum number of aggregated files.
+  uint64 stats_files_dropped_due_to_rotation = 3;
+
+  // Number of active stats snapshot files dropped because their on-disk contents could not be
+  // read while preparing to merge a new snapshot.
+  uint64 stats_files_dropped_due_to_active_snapshot_corruption = 4;
+
+  // Number of pending stats snapshot files dropped because their on-disk contents could not be
+  // read while preparing an upload.
+  uint64 stats_files_dropped_due_to_pending_snapshot_corruption = 5;
+
+  // Number of persisted stats snapshot files dropped when recovering from a corrupt or unreadable
+  // aggregation index.
+  uint64 stats_files_dropped_due_to_index_recovery = 6;
+
+  // Number of aggregation-index recovery events that discarded an existing stats directory.
+  uint64 stats_index_recovery_events = 7;
+}
+
 // Used to track an index of pending aggregations that need to be uploaded. This is used by the
 // file manager to coordinate merging and uploads.
 message PendingAggregationIndex {
@@ -25,8 +57,21 @@ message PendingAggregationIndex {
     // indicates that the file is ready for upload.
     google.protobuf.Timestamp period_end = 3;
   }
+
+  // A sealed analytics report retained until the server acknowledges its stable identifier.
+  message PendingStatsPipelineAnalyticsReport {
+    string report_id = 1;
+    StatsPipelineAnalytics analytics = 2;
+  }
+
   // List of files, in order of period_start, that are pending upload.
   repeated PendingFile pending_files = 1;
+
+  // Analytics that have not yet been moved into a report for a handshake.
+  StatsPipelineAnalytics unreported_stats_pipeline_analytics = 2;
+
+  // Analytics report currently awaiting a server acknowledgement.
+  PendingStatsPipelineAnalyticsReport pending_stats_pipeline_analytics_report = 3;
 }
 
 message Counter {
