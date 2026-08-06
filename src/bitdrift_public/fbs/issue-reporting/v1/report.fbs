@@ -106,8 +106,8 @@ enum MemoryPressureLevel : int8 {
 
 enum AppEnvironment: int8 {
     Debug = 0,
-    Adhoc = 1,          // Apple only
-    Testflight = 2,     // Apple only
+    AdHoc = 1,          // Apple only
+    TestFlight = 2,     // Apple only
     Production = 3,
 }
 
@@ -179,10 +179,10 @@ table AppMetrics {
     memory_pressure_level:MemoryPressureLevel;
 
     // The moment the app launched
-    launch_time: Timestamp;
+    launch_time:Timestamp;
 
     // The environment in which the app was running (debug, adhoc, production, etc).
-    app_environment:AppEnvironment;
+    environment:AppEnvironment;
 
     // Apple's Developer Account team identifier.
     team_identifier:string;
