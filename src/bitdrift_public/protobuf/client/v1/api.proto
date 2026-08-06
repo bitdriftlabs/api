@@ -540,6 +540,14 @@ message StatsUploadRequest {
 
     // Workflow ID to debug data that occurred during this snapshot interval.
     map<string, DebugDataRequest.WorkflowDebugData> workflow_debug_data = 4;
+
+    // Number of prior attempts to upload this snapshot. The original upload is zero, which also
+    // preserves the behavior of clients that do not yet send this field.
+    uint32 retry_count = 5;
+
+    // Stable monotonic identifier assigned when this source snapshot is created. Zero indicates
+    // that the client does not support source sequence identifiers.
+    uint64 client_stats_sequence = 6;
   }
 
   // A collection of stats snapshots to be recorded by the backend.
