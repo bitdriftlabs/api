@@ -186,6 +186,9 @@ table AppMetrics {
 
     // Apple's Developer Account team identifier.
     team_identifier:string;
+
+    // Application bundle directory, like the Bundle.main.bundlePath on Apple platforms
+    bundle_path:string;
 }
 
 table OSBuild {
