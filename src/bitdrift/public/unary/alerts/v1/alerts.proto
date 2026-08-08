@@ -31,15 +31,14 @@ message BasicAlertConfig {
   // The condition that the threshold must meet for the alert to trigger.
   .bitdrift.public.unary.alerts.v1.ThresholdCondition condition = 2 [(validate.rules).enum = {defined_only: true}];
 
-  // The window over which the alert will be evaluated. Currently supported windows include: 5
-  // minutes, 1 hour, and 1 day. Regardless of the window, alerts are currently evaluated every 5
-  // minutes.
+  // The window over which the alert is evaluated. Supported windows are 5 minutes, 10 minutes,
+  // 1 hour, and 24 hours. Alerts are evaluated every 5 minutes.
   .google.protobuf.Duration window = 3 [(validate.rules).duration.gt = {}];
 
   // The number of consecutive data points that must meet the threshold condition for the alert to
-  // trigger. The aggregation window of each point depends on the evaluation window. For 5 minute
-  // and 1 hour evaluation windows, the aggregation window is 1 minute. For the 24 hour evaluation
-  // window, the aggregation window is 15 minutes. If not set defaults to 1.
+  // trigger. Data points use aggregation_window when set, or the default aggregation window for
+  // window otherwise. This cannot exceed the number of complete aggregation windows within
+  // window. If unset, defaults to 1.
   optional uint32 consecutive_data_points = 4;
 
   // Configuration for any histogram values within the aggregate ID. This is required if the
@@ -55,6 +54,13 @@ message BasicAlertConfig {
   // If specified, the alert will only trigger if at least this many unique devices are present in
   // each consecutive data point that breaches the threshold condition.
   optional uint32 unique_device_threshold = 7;
+
+  // The duration of each aggregated data point used to evaluate the alert. If unset, 5 minute,
+  // 10 minute, and 1 hour evaluation windows use 1 minute data points, and 24 hour evaluation
+  // windows use 15 minute data points. When set, this must be a positive, whole-number multiple
+  // of the default aggregation window and no longer than window. Alerts evaluate only complete
+  // aggregation windows ending at the most recent aggregation boundary.
+  optional .google.protobuf.Duration aggregation_window = 8 [(validate.rules).duration.gt = {}];
 }
 
 // SLO alerts can only be defined on rate time series. The config will be failed otherwise. The
