@@ -53,9 +53,6 @@ message SessionCaptureNotification {
   // Session identifier.
   string session_id = 3;
 
-  // Exploration name.
-  string exploration_name = 5;
-
   // Workflow name.
   string workflow_name = 6;
 
@@ -82,9 +79,6 @@ message AlertNotification {
 
   // Workflow URL
   string workflow_url = 4;
-
-  // Exploration name.
-  string exploration_name = 5;
 
   // Custom notification text.
   string custom_notification_text = 6;
