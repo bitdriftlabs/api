@@ -104,6 +104,9 @@ message CreateKeyRequest {
         enum: {defined_only: true}
       }
     }];
+
+    // An optional expiration time for the API key.
+    .google.protobuf.Timestamp expires_at = 3 [(validate.rules).timestamp.gt_now = true];
   }
 
   oneof key_type {
