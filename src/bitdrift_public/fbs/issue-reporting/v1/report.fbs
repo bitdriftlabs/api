@@ -105,10 +105,12 @@ enum MemoryPressureLevel : int8 {
 }
 
 enum AppEnvironment: int8 {
-    Debug = 0,
-    AdHoc = 1,          // Apple only
-    TestFlight = 2,     // Apple only
-    Production = 3,
+    Unknown = 0,
+    Debug = 1,
+    AdHoc = 2,          // Apple only
+    Enterprise = 3,     // Apple only
+    TestFlight = 4,     // Apple only
+    Production = 5,
 }
 
 struct Timestamp {
