@@ -93,8 +93,9 @@ message HandshakeRequest {
       StatsPipelineAnalytics analytics = 2;
     }
 
-    // The number of handshake attempts since this client process started. This counter starts at
-    // one and is not persisted across process restarts.
+    // The logical connection number since this client process started. It starts at one, advances
+    // only after the prior handshake receives a handshake response, and is not persisted across
+    // process restarts.
     uint64 connection_count_since_process_start = 1;
 
     // Durable ACK-reset stats pipeline analytics. The server must deduplicate report_id before
@@ -540,6 +541,14 @@ message StatsUploadRequest {
 
     // Workflow ID to debug data that occurred during this snapshot interval.
     map<string, DebugDataRequest.WorkflowDebugData> workflow_debug_data = 4;
+
+    // Number of prior attempts to upload this snapshot. The original upload is zero, which also
+    // preserves the behavior of clients that do not yet send this field.
+    uint32 retry_count = 5;
+
+    // Stable monotonic identifier assigned when this source snapshot is created. Zero indicates
+    // that the client does not support source sequence identifiers.
+    uint64 client_stats_sequence = 6;
   }
 
   // A collection of stats snapshots to be recorded by the backend.

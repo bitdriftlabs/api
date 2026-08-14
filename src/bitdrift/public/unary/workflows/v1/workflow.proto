@@ -1948,9 +1948,6 @@ message ListWorkflowsResponse {
 }
 
 message CreateWorkflowRequest {
-  // The ID of the parent exploration. This is mapped to the REST path.
-  string exploration_id = 1 [(validate.rules).string = {max_len: 100}];
-
   // The workflow configuration to create.
   .bitdrift.public.unary.workflows.v1.Workflow workflow = 2;
 

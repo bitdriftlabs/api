@@ -1,18 +1,17 @@
-
 filegroup(
-  name = "all_protos",
-  srcs = glob(["**/*.proto"]),
-  visibility = ["//visibility:public"],
+    name = "all_protos",
+    srcs = glob(["**/*.proto"]),
+    visibility = ["//visibility:public"],
 )
 
 filegroup(
-  name = "all_fbs",
-  srcs = glob(["**/*.fbs"]),
-  visibility = ["//visibility:public"],
+    name = "all_fbs",
+    srcs = glob(["**/*.fbs"]),
+    visibility = ["//visibility:public"],
 )
 
 filegroup(
-  name = "buffer_log",
-  srcs = ["src/bitdrift_public/fbs/logging/v1/buffer_log.fbs"],
-  visibility = ["//visibility:public"],
+    name = "buffer_log",
+    srcs = ["src/bitdrift_public/fbs/logging/v1/buffer_log.fbs"],
+    visibility = ["//visibility:public"],
 )
