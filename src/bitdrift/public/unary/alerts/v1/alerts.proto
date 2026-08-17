@@ -64,11 +64,19 @@ message BasicAlertConfig {
 }
 
 // SLO alerts can only be defined on rate time series. The config will be failed otherwise. The
-// Rate is assumed to be <good results> / <total results>. Ultimately the windows and burn rates
-// are what drives alerting, but the SLO duration is still required so that error budget
-// consumption can be calculated. Additionally, we can use the SLO duration to show SLO adherence
-// over the trailing window if we like.
+// rate must represent either successful or failed results divided by total results, as selected by
+// rate_type. Ultimately the windows and burn rates are what drives alerting, but the SLO duration
+// is still required so that error budget consumption can be calculated. Additionally, we can use
+// the SLO duration to show SLO adherence over the trailing window if we like.
 message SloAlertConfig {
+  // Identifies whether the rate time series represents successful or failed results.
+  enum RateType {
+    // The rate is successful results divided by total results. This is the default.
+    SUCCESS_RATE = 0;
+    // The rate is failed results divided by total results.
+    FAILURE_RATE = 1;
+  }
+
   // SLO alerts use MWMBR (Multi-Window/Multi-Burn Rate). Each alert evaluation looks at every
   // WindowAndBurnRate and alerts if any of them alert. For an individual WindowAndBurnRate to alert
   // both the short window AND long window must breach based on the SLO target and burn rate.
@@ -100,7 +108,9 @@ message SloAlertConfig {
   // Currently only supports 7 days and 30 days.
   .google.protobuf.Duration slo_duration = 1 [(validate.rules).duration.gt = {}];
 
-  // A percentage expressed as a number between 0 and 1. E.g., 0.99 for 99% or 0.95 for 95%.
+  // A percentage expressed as a number between 0 and 1. For SUCCESS_RATE, this is the desired
+  // success rate, such as 0.99 for 99%. For FAILURE_RATE, this is the maximum failure rate, such
+  // as 0.01 for 1%.
   double slo_target = 2;
 
   // Optional limit strategy to use for this alert. If this is omitted, a default value of limiting
@@ -115,6 +125,9 @@ message SloAlertConfig {
     min_items: 1
     max_items: 10
   }];
+
+  // Identifies how to interpret the rate time series and slo_target. Defaults to SUCCESS_RATE.
+  .bitdrift.public.unary.alerts.v1.SloAlertConfig.RateType rate_type = 5 [(validate.rules).enum = {defined_only: true}];
 }
 
 // Rate of change alerts are used to look at significant changes over a period of time. They work
