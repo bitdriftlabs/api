@@ -104,6 +104,15 @@ enum MemoryPressureLevel : int8 {
     Critical = 3,
 }
 
+enum AppEnvironment: int8 {
+    Unknown = 0,
+    Debug = 1,
+    AdHoc = 2,          // Apple only
+    Enterprise = 3,     // Apple only
+    TestFlight = 4,     // Apple only
+    Production = 5,
+}
+
 struct Timestamp {
   seconds:uint64;
   nanos:uint32;
@@ -170,6 +179,18 @@ table AppMetrics {
 
     // Memory pressure level at the time of the crash, as reported by the OS.
     memory_pressure_level:MemoryPressureLevel;
+
+    // The moment the app launched
+    launch_time:Timestamp;
+
+    // The environment in which the app was running (debug, adhoc, production, etc).
+    environment:AppEnvironment;
+
+    // Apple's Developer Account team identifier.
+    team_identifier:string;
+
+    // Application bundle directory, like the Bundle.main.bundlePath on Apple platforms
+    bundle_path:string;
 }
 
 table OSBuild {
@@ -487,6 +508,9 @@ table BinaryImage {
 
     // offset between the start of program memory and this image
     load_address:uint64;
+
+    // number of bytes in the image
+    length: uint64;
 }
 
 table SDKInfo {
