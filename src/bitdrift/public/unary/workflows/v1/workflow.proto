@@ -1885,6 +1885,7 @@ message ListWorkflowsRequest {
       STATUS = 3;
       OWNER_NAME = 4;
       FAVORITED = 5;
+      LAST_VIEWED = 6;
     }
 
     // Selects which caller-visible workflow attribute to order by.
