@@ -1,13 +1,8 @@
-// api - bitdrift's client/server API definitions
-// Copyright Bitdrift, Inc. All rights reserved.
-//
-// Use of this source code and APIs are governed by a source available license that can be found in
-// the LICENSE file or at:
-// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 syntax = "proto3";
 
 package bitdrift.public.unary.admin.v1;
 
+import "bitdrift/public/unary/admin/v1/access.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
 import "bitdrift/public/unary/issues/v1/issues.proto";
 import "bitdrift/public/unary/workflows/v1/workflow.proto";
@@ -95,11 +90,17 @@ message View {
   // The filters applied to this view.
   .bitdrift.public.unary.admin.v1.ViewFilters view_filters = 8;
 
+  // Whether the current user has permission to edit this view.
+  .bitdrift.public.unary.common.v1.Permission current_user_can_edit = 10;
+
   // Whether the current user has favorited this view.
   bool current_user_favorited = 11;
 
   // An optional icon for the view.
   .bitdrift.public.unary.admin.v1.View.ViewIcon icon = 12;
+
+  // The access permissions currently set for this view.
+  .bitdrift.public.unary.admin.v1.AccessPermission current_access_permissions = 13;
 
   // The default sort order for the view using service-specific sort criteria.
   .bitdrift.public.unary.admin.v1.ViewSortList default_sort = 14;
@@ -239,6 +240,10 @@ message ListViewsRequest {
 
   // If true, only returns views that the current user has favorited.
   bool favorites_only = 8;
+
+  // Filters results by configured access entries, such as specific users,
+  // teams, or ownership levels.
+  .bitdrift.public.unary.admin.v1.AccessPermissionQuery access = 9;
 }
 
 // Response with a list of views.

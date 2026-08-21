@@ -1,9 +1,3 @@
-// api - bitdrift's client/server API definitions
-// Copyright Bitdrift, Inc. All rights reserved.
-//
-// Use of this source code and APIs are governed by a source available license that can be found in
-// the LICENSE file or at:
-// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 syntax = "proto3";
 
 package bitdrift.public.unary.common.v1;
@@ -136,6 +130,15 @@ enum Permission {
   YES_SHARED_WITH_ORG = 4;
   NO = 5;
   YES_IS_ADMIN = 6;
+}
+
+message CanEditMetadata {
+  enum CanEditMetadata {
+    UNKNOWN = 0;
+    YES = 1;
+    // The user is not granted edit permissions for metadata either via ownership or other grant.
+    NO_PERMISSION_NOT_EDITOR = 2;
+  }
 }
 
 message SessionStatusInfo {

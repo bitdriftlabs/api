@@ -1,9 +1,3 @@
-// api - bitdrift's client/server API definitions
-// Copyright Bitdrift, Inc. All rights reserved.
-//
-// Use of this source code and APIs are governed by a source available license that can be found in
-// the LICENSE file or at:
-// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 syntax = "proto3";
 
 package bitdrift.public.unary.alerts.v1;
@@ -31,15 +25,14 @@ message BasicAlertConfig {
   // The condition that the threshold must meet for the alert to trigger.
   .bitdrift.public.unary.alerts.v1.ThresholdCondition condition = 2 [(validate.rules).enum = {defined_only: true}];
 
-  // The window over which the alert will be evaluated. Currently supported windows include: 5
-  // minutes, 1 hour, and 1 day. Regardless of the window, alerts are currently evaluated every 5
-  // minutes.
+  // The window over which the alert is evaluated. Supported windows are 5 minutes, 10 minutes,
+  // 1 hour, and 24 hours. Alerts are evaluated every 5 minutes.
   .google.protobuf.Duration window = 3 [(validate.rules).duration.gt = {}];
 
   // The number of consecutive data points that must meet the threshold condition for the alert to
-  // trigger. The aggregation window of each point depends on the evaluation window. For 5 minute
-  // and 1 hour evaluation windows, the aggregation window is 1 minute. For the 24 hour evaluation
-  // window, the aggregation window is 15 minutes. If not set defaults to 1.
+  // trigger. Data points use aggregation_window when set, or the default aggregation window for
+  // window otherwise. This cannot exceed the number of complete aggregation windows within
+  // window. If unset, defaults to 1.
   optional uint32 consecutive_data_points = 4;
 
   // Configuration for any histogram values within the aggregate ID. This is required if the
@@ -55,14 +48,29 @@ message BasicAlertConfig {
   // If specified, the alert will only trigger if at least this many unique devices are present in
   // each consecutive data point that breaches the threshold condition.
   optional uint32 unique_device_threshold = 7;
+
+  // The duration of each aggregated data point used to evaluate the alert. If unset, 5 minute,
+  // 10 minute, and 1 hour evaluation windows use 1 minute data points, and 24 hour evaluation
+  // windows use 15 minute data points. When set, this must be a positive, whole-number multiple
+  // of the default aggregation window and no longer than window. Alerts evaluate only complete
+  // aggregation windows ending at the most recent aggregation boundary.
+  optional .google.protobuf.Duration aggregation_window = 8 [(validate.rules).duration.gt = {}];
 }
 
 // SLO alerts can only be defined on rate time series. The config will be failed otherwise. The
-// Rate is assumed to be <good results> / <total results>. Ultimately the windows and burn rates
-// are what drives alerting, but the SLO duration is still required so that error budget
-// consumption can be calculated. Additionally, we can use the SLO duration to show SLO adherence
-// over the trailing window if we like.
+// rate must represent either successful or failed results divided by total results, as selected by
+// rate_type. Ultimately the windows and burn rates are what drives alerting, but the SLO duration
+// is still required so that error budget consumption can be calculated. Additionally, we can use
+// the SLO duration to show SLO adherence over the trailing window if we like.
 message SloAlertConfig {
+  // Identifies whether the rate time series represents successful or failed results.
+  enum RateType {
+    // The rate is successful results divided by total results. This is the default.
+    SUCCESS_RATE = 0;
+    // The rate is failed results divided by total results.
+    FAILURE_RATE = 1;
+  }
+
   // SLO alerts use MWMBR (Multi-Window/Multi-Burn Rate). Each alert evaluation looks at every
   // WindowAndBurnRate and alerts if any of them alert. For an individual WindowAndBurnRate to alert
   // both the short window AND long window must breach based on the SLO target and burn rate.
@@ -94,7 +102,9 @@ message SloAlertConfig {
   // Currently only supports 7 days and 30 days.
   .google.protobuf.Duration slo_duration = 1 [(validate.rules).duration.gt = {}];
 
-  // A percentage expressed as a number between 0 and 1. E.g., 0.99 for 99% or 0.95 for 95%.
+  // A percentage expressed as a number between 0 and 1. For SUCCESS_RATE, this is the desired
+  // success rate, such as 0.99 for 99%. For FAILURE_RATE, this is the maximum failure rate, such
+  // as 0.01 for 1%.
   double slo_target = 2;
 
   // Optional limit strategy to use for this alert. If this is omitted, a default value of limiting
@@ -109,6 +119,9 @@ message SloAlertConfig {
     min_items: 1
     max_items: 10
   }];
+
+  // Identifies how to interpret the rate time series and slo_target. Defaults to SUCCESS_RATE.
+  .bitdrift.public.unary.alerts.v1.SloAlertConfig.RateType rate_type = 5 [(validate.rules).enum = {defined_only: true}];
 }
 
 // Rate of change alerts are used to look at significant changes over a period of time. They work

@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package bitdrift.public.unary.admin.v1;
+
+import "bitdrift/public/unary/common/v1/common.proto";
+import "validate/validate.proto";
+
+message Team {
+  // The unique ID of the team.
+  string id = 1;
+
+  // The name of the team.
+  string name = 2;
+
+  // The description of the team.
+  optional string description = 3;
+
+  // Whether the current user can edit this team.
+  .bitdrift.public.unary.common.v1.CanEditMetadata.CanEditMetadata current_user_can_edit = 4;
+}
+
+message UpsertTeamRequest {
+  // The ID of the team to update. If omitted, a new team is created.
+  optional string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The name of the team.
+  string name = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The description of the team.
+  optional string description = 3 [(validate.rules).string = {max_len: 1000}];
+}
+
+message UpsertTeamResponse {
+  .bitdrift.public.unary.admin.v1.Team team = 1;
+}
+
+message DeleteTeamRequest {
+  // The ID of the team to delete.
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message DeleteTeamResponse {}
+
+message GetTeamRequest {
+  // The ID of the team to fetch.
+  string id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message GetTeamResponse {
+  .bitdrift.public.unary.admin.v1.Team team = 1;
+}
+
+message ListTeamsRequest {
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      DISPLAY_NAME = 1;
+      CREATION_TIME = 2;
+      UPDATED_TIME = 3;
+    }
+
+    // Selects which caller-visible team attribute to order by.
+    .bitdrift.public.unary.admin.v1.ListTeamsRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Orders teams by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.admin.v1.ListTeamsRequest.Sort sort = 1 [(validate.rules).repeated = {max_items: 100}];
+
+  .bitdrift.public.unary.common.v1.Pagination pagination = 2;
+
+  // An optional filter string to filter teams by name or description.
+  // This is a simple case-insensitive substring match across both fields.
+  optional string filter = 3 [(validate.rules).string = {max_len: 255}];
+}
+
+message ListTeamsResponse {
+  repeated .bitdrift.public.unary.admin.v1.Team teams = 1;
+
+  // The total number of teams available (for pagination).
+  uint32 total_count = 2;
+}
+
+message AddTeamMembersRequest {
+  // The ID of the team to add members to.
+  string team_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The IDs of users to add to the team.
+  repeated string user_ids = 2 [(validate.rules).repeated = {max_items: 100}];
+}
+
+message AddTeamMembersResponse {}
+
+message RemoveTeamMembersRequest {
+  // The ID of the team to remove members from.
+  string team_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The IDs of users to remove from the team.
+  repeated string user_ids = 2 [(validate.rules).repeated = {max_items: 100}];
+}
+
+message RemoveTeamMembersResponse {}

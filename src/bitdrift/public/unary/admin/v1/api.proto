@@ -1,16 +1,12 @@
-// api - bitdrift's client/server API definitions
-// Copyright Bitdrift, Inc. All rights reserved.
-//
-// Use of this source code and APIs are governed by a source available license that can be found in
-// the LICENSE file or at:
-// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 syntax = "proto3";
 
 package bitdrift.public.unary.admin.v1;
 
+import "bitdrift/public/unary/admin/v1/access.proto";
 import "bitdrift/public/unary/admin/v1/connector.proto";
 import "bitdrift/public/unary/admin/v1/keys.proto";
 import "bitdrift/public/unary/admin/v1/notifications.proto";
+import "bitdrift/public/unary/admin/v1/teams.proto";
 import "bitdrift/public/unary/admin/v1/view.proto";
 
 // Manages administrative settings including Slack integrations, notification groups, views, API/SDK keys, users, teams, and connectors.
@@ -53,8 +49,31 @@ service AdminService {
   // Revokes an API key or SDK key by ID.
   rpc RevokeKey(.bitdrift.public.unary.admin.v1.RevokeKeyRequest) returns (.bitdrift.public.unary.admin.v1.RevokeKeyResponse);
 
+  // Creates or updates a team in the organization.
+  rpc UpsertTeam(.bitdrift.public.unary.admin.v1.UpsertTeamRequest) returns (.bitdrift.public.unary.admin.v1.UpsertTeamResponse);
+
+  // Deletes a team from the organization.
+  rpc DeleteTeam(.bitdrift.public.unary.admin.v1.DeleteTeamRequest) returns (.bitdrift.public.unary.admin.v1.DeleteTeamResponse);
+
+  // Retrieves a team by ID.
+  rpc GetTeam(.bitdrift.public.unary.admin.v1.GetTeamRequest) returns (.bitdrift.public.unary.admin.v1.GetTeamResponse);
+
+  // Lists all teams in the organization.
+  rpc ListTeams(.bitdrift.public.unary.admin.v1.ListTeamsRequest) returns (.bitdrift.public.unary.admin.v1.ListTeamsResponse);
+
+  // Adds members to a team.
+  rpc AddTeamMembers(.bitdrift.public.unary.admin.v1.AddTeamMembersRequest) returns (.bitdrift.public.unary.admin.v1.AddTeamMembersResponse);
+
+  // Removes members from a team.
+  rpc RemoveTeamMembers(.bitdrift.public.unary.admin.v1.RemoveTeamMembersRequest) returns (.bitdrift.public.unary.admin.v1.RemoveTeamMembersResponse);
+
   // Marks or unmarks a view as a favorite for the authenticated user.
   rpc FavoriteView(.bitdrift.public.unary.admin.v1.FavoriteViewRequest) returns (.bitdrift.public.unary.admin.v1.FavoriteViewResponse);
+
+  // Sets access permissions for a dashboard, view, or workflow.
+  //
+  // Requires the current user to have edit permission on the target.
+  rpc SetAccess(.bitdrift.public.unary.admin.v1.SetAccessRequest) returns (.bitdrift.public.unary.admin.v1.SetAccessResponse);
 
   // Lists all connectors for the organization.
   rpc GetConnectors(.bitdrift.public.unary.admin.v1.GetConnectorsRequest) returns (.bitdrift.public.unary.admin.v1.GetConnectorsResponse);
