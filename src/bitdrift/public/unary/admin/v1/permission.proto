@@ -38,6 +38,8 @@ enum Permission {
   CONNECTOR_READ = 17;
   // Allows reading debug file metadata.
   DEBUG_FILE_READ = 15;
+  // Allows uploading debug files and symbols.
+  DEBUG_FILE_UPLOAD = 35;
   // Allows reading system status information.
   SYSTEM_STATUS_READ = 18;
   // Allows creating, editing, and deleting issue workflows that the user owns.
