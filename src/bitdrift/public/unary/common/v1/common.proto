@@ -138,6 +138,15 @@ enum Permission {
   YES_IS_ADMIN = 6;
 }
 
+message CanEditMetadata {
+  enum CanEditMetadata {
+    UNKNOWN = 0;
+    YES = 1;
+    // The user is not granted edit permissions for metadata either via ownership or other grant.
+    NO_PERMISSION_NOT_EDITOR = 2;
+  }
+}
+
 message SessionStatusInfo {
   // If this is true the session is known but has been soft deleted due to account retention
   // policies. Contact support to recover the session if you believe this is in error.
