@@ -8,7 +8,18 @@ syntax = "proto3";
 
 package bitdrift.public.unary.admin.v1;
 
+import "bitdrift/public/unary/admin/v1/teams.proto";
+import "bitdrift/public/unary/common/v1/common.proto";
 import "validate/validate.proto";
+
+// The level of access granted to a principal.
+//
+// In SetAccessRequest, an omitted access level defaults to VIEW.
+enum AccessLevel {
+  VIEW = 0;
+  EDIT = 1;
+  NONE = 2;
+}
 
 // Message used when receiving queries for access permission levels.
 message AccessPermissionQuery {
@@ -56,8 +67,150 @@ message AccessPermissionQuery {
     .bitdrift.public.unary.admin.v1.AccessPermissionQuery.AccessFilter filter = 2;
   }
 
+  message Team {
+    string team_id = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    .bitdrift.public.unary.admin.v1.AccessPermissionQuery.AccessFilter filter = 2;
+  }
+
   oneof type {
     option (validate.required) = true;
     .bitdrift.public.unary.admin.v1.AccessPermissionQuery.Individual individual = 1;
+
+    .bitdrift.public.unary.admin.v1.AccessPermissionQuery.Team team = 2;
   }
+}
+
+// Used to represent the current access permission of an entity.
+// This gives the full scope of which users/teams have what level of access,
+// the level of access given to the entire org, and the ownership of the entity (team or user).
+message AccessPermission {
+  message Individual {
+    // The user who currently has access.
+    .bitdrift.public.unary.common.v1.Owner details = 1;
+
+    // The access level currently granted to the user.
+    .bitdrift.public.unary.admin.v1.AccessLevel access = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  message Team {
+    // The team that currently has access.
+    .bitdrift.public.unary.admin.v1.Team details = 1;
+
+    // The access level currently granted to the team.
+    .bitdrift.public.unary.admin.v1.AccessLevel access = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  message Org {
+    // The access level currently granted to the organization.
+    .bitdrift.public.unary.admin.v1.AccessLevel access = 1 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  message Owner {
+    oneof id {
+      .bitdrift.public.unary.common.v1.Owner user = 1;
+
+      .bitdrift.public.unary.admin.v1.Team team = 2;
+    }
+  }
+
+  // The individual users that currently have access.
+  repeated .bitdrift.public.unary.admin.v1.AccessPermission.Individual individuals = 1 [(validate.rules).repeated = {max_items: 100}];
+
+  // The teams that currently have access.
+  repeated .bitdrift.public.unary.admin.v1.AccessPermission.Team teams = 2 [(validate.rules).repeated = {max_items: 100}];
+
+  // The access currently granted to the organization.
+  .bitdrift.public.unary.admin.v1.AccessPermission.Org org = 3;
+
+  // Only one entity with the owner level access will exist. i.e. a user reassigning their
+  // owner access to a team, will no longer have owner access _unless_ they belong to that team.
+  .bitdrift.public.unary.admin.v1.AccessPermission.Owner owner = 4;
+}
+
+message SetAccessRequest {
+  message SetAccessPermission {
+    message Individual {
+      // The ID of the user to set access for.
+      string id = 1 [(validate.rules).string = {
+        min_len: 1
+        max_len: 100
+      }];
+
+      // The access level to set for the user. Defaults to VIEW when omitted.
+      .bitdrift.public.unary.admin.v1.AccessLevel access = 2 [(validate.rules).enum = {defined_only: true}];
+    }
+
+    message Team {
+      // The ID of the team to set access for.
+      string id = 1 [(validate.rules).string = {
+        min_len: 1
+        max_len: 100
+      }];
+
+      // The access level to set for the team. Defaults to VIEW when omitted.
+      .bitdrift.public.unary.admin.v1.AccessLevel access = 2 [(validate.rules).enum = {defined_only: true}];
+    }
+
+    message Org {
+      // The access level to set for the organization. Defaults to VIEW when omitted.
+      .bitdrift.public.unary.admin.v1.AccessLevel access = 1 [(validate.rules).enum = {defined_only: true}];
+    }
+
+    message Owner {
+      oneof id {
+        option (validate.required) = true;
+        string user_id = 1 [(validate.rules).string = {
+          min_len: 1
+          max_len: 100
+        }];
+
+        string team_id = 2 [(validate.rules).string = {
+          min_len: 1
+          max_len: 100
+        }];
+      }
+    }
+
+    // A list of individual users to set access for.
+    repeated .bitdrift.public.unary.admin.v1.SetAccessRequest.SetAccessPermission.Individual individuals = 1 [(validate.rules).repeated = {max_items: 100}];
+
+    // A list of teams to set access for.
+    repeated .bitdrift.public.unary.admin.v1.SetAccessRequest.SetAccessPermission.Team teams = 2 [(validate.rules).repeated = {max_items: 100}];
+
+    // The access level to set for the entire organization.
+    .bitdrift.public.unary.admin.v1.SetAccessRequest.SetAccessPermission.Org org = 3;
+
+    // Only one entity with the owner level access will exist. i.e. a user reassigning their
+    // owner access to a team, will no longer have owner access _unless_ they belong to that team.
+    .bitdrift.public.unary.admin.v1.SetAccessRequest.SetAccessPermission.Owner owner = 4;
+  }
+
+  .bitdrift.public.unary.admin.v1.SetAccessRequest.SetAccessPermission access_permission = 1;
+
+  oneof target {
+    option (validate.required) = true;
+    string dashboard_id = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    string view_id = 3 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    string workflow_id = 4 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+  }
+}
+
+message SetAccessResponse {
+  // The new access permissions for the updated entity.
+  .bitdrift.public.unary.admin.v1.AccessPermission result = 1;
 }

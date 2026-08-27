@@ -292,6 +292,9 @@ message Dashboard {
 
     .bitdrift.public.unary.dashboards.v1.Dashboard.CustomDashboard custom_dashboard = 3;
   }
+
+  // The access permissions currently set for this dashboard.
+  .bitdrift.public.unary.admin.v1.AccessPermission current_access_permissions = 4;
 }
 
 message ListDashboardsRequest {

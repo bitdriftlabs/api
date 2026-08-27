@@ -155,6 +155,9 @@ message Workflow {
   // Read-only. The most recent deployment time. Unset until the workflow is deployed.
   .google.protobuf.Timestamp deployed_at = 13;
 
+  // Whether the authenticated user can edit this workflow.
+  bool current_user_can_edit = 14;
+
   // The platform targets for this workflow. If empty, this will match _any_ platform.
   repeated .bitdrift.public.shared.platform.v1.Platform platform_targets = 21 [(validate.rules).repeated = {max_items: 100}];
 
@@ -172,6 +175,9 @@ message Workflow {
   // A list of tags that have been assigned to this workflow. These can be used for filtering
   // purposes within a view.
   repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag tags = 32 [(validate.rules).repeated = {max_items: 100}];
+
+  // The access permissions currently set for this workflow.
+  .bitdrift.public.unary.admin.v1.AccessPermission current_access_permissions = 33;
 }
 
 // An individual flow within a workflow.
