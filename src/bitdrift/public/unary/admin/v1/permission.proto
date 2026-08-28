@@ -74,4 +74,6 @@ enum Permission {
   DASHBOARDS_WRITE = 33;
   // Allows reading dashboards.
   DASHBOARDS_READ = 34;
+  // Allows interactive device debugging and live log tailing.
+  DEVICE_DEBUG = 36;
 }
