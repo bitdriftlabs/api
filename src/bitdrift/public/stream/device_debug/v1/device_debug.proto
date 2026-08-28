@@ -1,0 +1,135 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.stream.device_debug.v1;
+
+import "bitdrift/public/unary/timeline/v1/logs.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message DebugDeviceRequest {
+  // The workflow to be debugged. This is optional. If not provided, the debugging session will
+  // just stream logs and no workflow transitions will be sent.
+  optional string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
+
+  oneof target_type {
+    option (validate.required) = true;
+    // The device code that has already been exchanged via the /device/code API.
+    string device_code = 3 [(validate.rules).string = {
+      min_len: 6
+      max_len: 6
+    }];
+
+    // The raw device ID.
+    string device_id = 4 [(validate.rules).string = {
+      max_len: 36
+      uuid: true
+    }];
+  }
+}
+
+message DeviceConnected {
+  // The device platform.
+  string platform = 1;
+
+  // The device operating system.
+  string os = 2;
+
+  // The device operating-system version.
+  string os_version = 3;
+
+  // The application identifier.
+  string app_id = 4;
+
+  // The application version.
+  string app_version = 5;
+
+  // The device model.
+  string model = 6;
+
+  // The device identifier.
+  string device_id = 7;
+
+  // The Capture SDK version running on the device.
+  string sdk_version = 8;
+
+  // Whether the connected device does not match the workflow platform filter. A workflow deployed
+  // with this filter does not run on the device.
+  bool device_does_not_match_workflow_platform_filter = 9;
+}
+
+message DeviceDisconnected {
+  // The disconnected device identifier.
+  string device_id = 1;
+}
+
+message DebugDeviceResponse {
+  message StreamedLogs {
+    // Logs from the device during the debugging session. These are not workflow scoped in any way.
+    repeated .bitdrift.public.unary.timeline.v1.Log logs = 1 [(validate.rules).repeated.max_items = 1000];
+
+    // An approximate number of logs dropped anywhere in the pipeline since the debugging session
+    // started, including drops caused by client or server buffer limits.
+    uint64 drops_since_debug_session_start = 2;
+  }
+
+  message WorkflowTransitions {
+    message WorkflowTransition {
+      // The ID that transitioned. This is current limited to OOTB match, generic match, and
+      // timeout.
+      // In v2 this is the rule ID.
+      // In v3 this is the match ID.
+      string id = 1;
+
+      // The number of times this rule has triggered since the debugging session started.
+      uint64 count = 2;
+
+      // The last time this rule triggered since the debugging session started.
+      .google.protobuf.Timestamp last_triggered_at = 3;
+    }
+
+    // A periodic batch of workflow transition information. This response is sent only when the
+    // debugging session includes a workflow ID.
+    repeated .bitdrift.public.stream.device_debug.v1.DebugDeviceResponse.WorkflowTransitions.WorkflowTransition transitions = 1 [(validate.rules).repeated.max_items = 1000];
+  }
+
+  message ShuttingDown {}
+
+  oneof response_type {
+    // Sent once when the device first connects to the stream.
+    .bitdrift.public.stream.device_debug.v1.DeviceConnected device_connected = 1;
+
+    // Streamed logs from the device during the debugging session. These are not workflow scoped in
+    // any way.
+    .bitdrift.public.stream.device_debug.v1.DebugDeviceResponse.StreamedLogs streamed_logs = 2;
+
+    // The number of times each workflow transition rule has triggered during the debugging
+    // session.
+    .bitdrift.public.stream.device_debug.v1.DebugDeviceResponse.WorkflowTransitions workflow_transitions = 3;
+
+    // The service is shutting down. The stream ends after this response.
+    .bitdrift.public.stream.device_debug.v1.DebugDeviceResponse.ShuttingDown shutting_down = 4;
+
+    // The device disconnected. This is sent once when the device disconnects. It may be extremely
+    // delayed or not sent at all depending on network conditions.
+    .bitdrift.public.stream.device_debug.v1.DeviceDisconnected device_disconnected = 5;
+  }
+}
+
+// Streams live debug data from a connected device.
+//
+// The client sends one request and reads responses until the stream ends. Ordering is preserved
+// for data emitted by this service, but connection and disconnection events are best effort.
+service DebugService {
+  // Starts a live debugging session for a device.
+  //
+  // Workflow transition responses are sent only when `workflow_id` is supplied. The stream can
+  // end with a canonical gRPC or Connect status when the device disconnects or the service shuts
+  // down. Clients can establish a new stream after it ends.
+  rpc DebugDevice(.bitdrift.public.stream.device_debug.v1.DebugDeviceRequest) returns (stream .bitdrift.public.stream.device_debug.v1.DebugDeviceResponse);
+}
