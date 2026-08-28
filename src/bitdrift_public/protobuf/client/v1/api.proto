@@ -34,6 +34,10 @@ message ClientKillFile {
   // The time the client will be killed until. After this time it will try to contact the server
   // again.
   google.protobuf.Timestamp kill_until = 2;
+
+  // This is the hash of the target domain. If the target domain changes, we will ignore the
+  // kill_until timestamp.
+  bytes target_domain_hash = 3;
 }
 
 // Used by the server to tell the client to clear or set state.
