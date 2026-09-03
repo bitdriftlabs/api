@@ -438,6 +438,14 @@ message ChartRequest {
   }
 }
 
+// Identifies chart data dimensions that may be deferred during GetChartsData and hydrated in a
+// follow-up call.
+enum DeferredChartsDataDimension {
+  DEFERRED_CHARTS_DATA_DIMENSION_UNSPECIFIED = 0;
+  // Unique-device counts present in chart data when TrackUnique is configured.
+  DEFERRED_CHARTS_DATA_DIMENSION_UNIQUE_DEVICES = 1;
+}
+
 message GetChartsDataRequest {
   // List of all charts to fetch data for.
   repeated .bitdrift.public.unary.dashboards.v1.ChartRequest charts = 1 [(validate.rules).repeated = {
@@ -453,6 +461,45 @@ message GetChartsDataRequest {
   // Optional filter to apply on top of the platform filter. This filter is
   // combined with the platform filter using a logical AND.
   .bitdrift.public.shared.workflows.v1.AndFilter and_filter = 7;
+
+  // If true, unique-device counts will be populated inline in the response when available.
+  // If false or unset, expensive unique-device work may be deferred and described by the
+  // response-level deferred context.
+  bool include_unique_device_counts = 9;
+}
+
+message DeferredChartsDataContext {
+  // The fully resolved chart requests for the original execution.
+  // When the original request relied on top-K selection, each stored chart request should encode
+  // the exact selected groups using charts.v1.LimitStrategy.IdentifierMatch so hydration
+  // reproduces the same chart groups.
+  repeated .bitdrift.public.unary.dashboards.v1.ChartRequest charts = 1 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      message: {required: true}
+    }
+  }];
+
+  // The fully resolved time range for the original execution. This should be fixed so deferred
+  // hydration runs against the same logical query window as GetChartsData. Use
+  // fixed_time_range rather than a relative time range.
+  .bitdrift.public.unary.common.v1.TimeRange time_range = 2 [(validate.rules).message = {required: true}];
+
+  // The platform filter applied to the original execution.
+  repeated .bitdrift.public.shared.platform.v1.Platform platform_filter = 3 [(validate.rules).repeated.max_items = 25];
+
+  // The AND filter applied to the original execution.
+  .bitdrift.public.shared.workflows.v1.AndFilter and_filter = 4;
+
+  // Dimensions that were intentionally left at their default values in the original response and
+  // can be hydrated with HydrateChartsData.
+  repeated .bitdrift.public.unary.dashboards.v1.DeferredChartsDataDimension deferred_dimensions = 5 [
+    (validate.rules).repeated.max_items = 100,
+    (validate.rules).repeated.items.enum = {
+      defined_only: true
+      not_in: [0]
+    }
+  ];
 }
 
 // Used for line charts. Each entry is a rendered time series for the request.
@@ -608,6 +655,18 @@ message ChartData {
   // The chart that this data belongs to.
   .bitdrift.public.unary.charts.v1.ChartIdentifier chart_id = 1 [(validate.rules).message = {required: true}];
 
+  // Dimensions that were intentionally left at their default values for this chart and can be
+  // hydrated in a follow-up call.
+  repeated .bitdrift.public.unary.dashboards.v1.DeferredChartsDataDimension deferred_dimensions = 13 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      enum: {
+        defined_only: true
+        not_in: [0]
+      }
+    }
+  }];
+
   oneof chart_response {
     option (validate.required) = true;
     // Line-chart data for the chart.
@@ -640,6 +699,44 @@ message GetChartsDataResponse {
   // Data for each of the requested data. The order of the data will match the
   // order of the chart ids in the request.
   repeated .bitdrift.public.unary.dashboards.v1.ChartData data = 1;
+
+  // Typed passthrough context used to hydrate deferred chart data for this specific execution.
+  // This carries the resolved query state needed to evaluate deferred dimensions against the same
+  // effective chart query as the original GetChartsData response.
+  .bitdrift.public.unary.dashboards.v1.DeferredChartsDataContext deferred_data_context = 2;
+}
+
+message HydrateChartsDataRequest {
+  // Typed passthrough context returned by GetChartsData for the original execution. The chart
+  // requests embedded in this context determine which charts are hydrated.
+  .bitdrift.public.unary.dashboards.v1.DeferredChartsDataContext deferred_data_context = 1 [(validate.rules).message = {required: true}];
+}
+
+message HydrateChartsDataResponse {
+  message ChartDataHydration {
+    // The hydrated chart data. Dimensions not included in hydrated_dimensions are left at their
+    // default values.
+    .bitdrift.public.unary.dashboards.v1.ChartData chart_data = 1 [(validate.rules).message = {required: true}];
+
+    // The chart dimensions populated in this hydration result.
+    repeated .bitdrift.public.unary.dashboards.v1.DeferredChartsDataDimension hydrated_dimensions = 2 [(validate.rules).repeated = {
+      max_items: 100
+      items: {
+        enum: {
+          defined_only: true
+          not_in: [0]
+        }
+      }
+    }];
+  }
+
+  // The hydrated data for the requested charts.
+  repeated .bitdrift.public.unary.dashboards.v1.HydrateChartsDataResponse.ChartDataHydration data = 1 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      message: {required: true}
+    }
+  }];
 }
 
 message GetActiveDevicesRequest {
@@ -867,6 +964,9 @@ service DashboardService {
   // are deferred, the response includes per-chart deferred dimensions and a response-level context
   // that can be passed to HydrateChartsData.
   rpc GetChartsData(.bitdrift.public.unary.dashboards.v1.GetChartsDataRequest) returns (.bitdrift.public.unary.dashboards.v1.GetChartsDataResponse);
+
+  // Hydrates deferred chart data for a prior GetChartsData execution.
+  rpc HydrateChartsData(.bitdrift.public.unary.dashboards.v1.HydrateChartsDataRequest) returns (.bitdrift.public.unary.dashboards.v1.HydrateChartsDataResponse);
 
   // Gets the unique active devices for a given time range and filter conditions. Active devices in
   // this context are *any* devices that connected to the platform, regardless of whether they sent
