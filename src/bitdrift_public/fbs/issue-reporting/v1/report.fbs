@@ -28,6 +28,9 @@ enum Platform : int8 {
     Android,
     iOS,
     macOS,
+    tvOS,
+    visionOS,
+    watchOS,
 }
 
 enum Architecture : int8 {
