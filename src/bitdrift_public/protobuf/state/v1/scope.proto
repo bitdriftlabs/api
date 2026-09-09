@@ -16,4 +16,10 @@ enum StateScope {
 
   // Used for internal state management, not driven by user-facing APIs.
   SYSTEM = 3;
+
+  // Persistent custom log fields set through the SDK's addField API.
+  CUSTOM_FIELDS = 4;
+
+  // Persistent SDK-owned log fields that take precedence over custom fields.
+  OOTB_FIELDS = 5;
 }

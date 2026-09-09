@@ -9,6 +9,8 @@ syntax = "proto3";
 
 package bitdrift_public.protobuf.state.v1;
 
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
+
 // The payload for a state value stored within the state sub-system.
 //
 // A state value is either a value or a deletion marker. If none of the value fields are set,
@@ -19,5 +21,8 @@ message StateValue {
     int64 int_value = 2;
     double double_value = 3;
     bool bool_value = 4;
+
+    // A log field value that preserves every supported field type.
+    bitdrift_public.protobuf.logging.v1.Data data = 5;
   }
 }
