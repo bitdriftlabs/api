@@ -706,18 +706,29 @@ message DeviceCommandRequest {
   }
 }
 
+// Structured data supplied with a terminal device command result. Artifact bytes are uploaded
+// separately through `UploadArtifactRequest` and must not be included in this context.
+message DeviceCommandResultContext {
+  // Command- or transport-supplied fields describing the terminal result. Binary values are
+  // rejected; artifacts must use `UploadArtifactRequest`.
+  map<string, logging.v1.Data> fields = 1 [(validate.rules).map.max_pairs = 100];
+}
+
 // Reports an update from a device command.
 message DeviceCommandUpdate {
   // Confirms that the device accepted the command.
   message Accepted {}
 
   // Confirms that the command completed successfully.
-  message Completed {}
+  message Completed {
+    // Optional structured context supplied with the successful command result.
+    DeviceCommandResultContext context = 1;
+  }
 
   // Reports that command execution could not be completed.
   message Failed {
-    // A caller-safe reason that command execution failed.
-    string reason = 1 [(validate.rules).string.max_len = 1024];
+    // Optional structured context supplied with the failed command result.
+    DeviceCommandResultContext context = 1;
   }
 
   // The command ID from the corresponding DeviceCommandRequest.
