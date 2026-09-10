@@ -325,6 +325,9 @@ message GetAllAlertsRequest {
       LAST_TRIGGERED = 2;
       LAST_RESOLVED = 3;
       OWNER_NAME = 4;
+      ALERT_STATUS = 5;
+      ALERT_TYPE = 6;
+      LAST_DURATION = 7;
     }
 
     // Selects which caller-visible alert attribute to order by.

@@ -188,6 +188,20 @@ message Report {
     repeated .bitdrift.public.unary.issues.v1.Report.ThreadDetails.Thread threads = 2;
   }
 
+  message BinaryImage {
+    // globally unique identifier for this image
+    string id = 1 [(validate.rules).string = {min_len: 1}];
+
+    // path to the binary on disk or base name if unavailable
+    string path = 2 [(validate.rules).string = {min_len: 1}];
+
+    // mount point of the image at runtime in bytes
+    uint64 load_address = 3;
+
+    // size of the image in bytes
+    uint64 length = 4;
+  }
+
   repeated .bitdrift.public.unary.issues.v1.Report.Error errors = 1;
 
   .bitdrift.public.unary.issues.v1.Report.DeviceMetrics device_metrics = 2;
@@ -199,4 +213,7 @@ message Report {
 
   // Additional report fields captured from the client report payload.
   repeated .bitdrift.public.unary.issues.v1.Report.Field fields = 5;
+
+  // Binary images present in the thread stack traces of the report
+  repeated .bitdrift.public.unary.issues.v1.Report.BinaryImage binary_images = 6;
 }

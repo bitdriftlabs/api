@@ -14,7 +14,7 @@ import "bitdrift/public/unary/timeline/v1/logs.proto";
 import "bitdrift/public/unary/timeline/v1/search.proto";
 import "bitdrift/public/unary/timeline/v1/spans.proto";
 
-// Provides access to session timeline data, including logs, metadata, and hydration state.
+// Provides access to session timeline data, including logs, metadata, feature flags, and hydration state.
 service TimelineService {
   // Retrieves the logs for a session.
   //
