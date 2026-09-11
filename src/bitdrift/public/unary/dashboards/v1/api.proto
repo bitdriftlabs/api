@@ -566,6 +566,13 @@ message Table {
   // The total count of cardinality overflows for this time series that occurred during the
   // query time period.
   .bitdrift.public.shared.workflows.v1.CardinalityOverflows cardinality_overflows = 6;
+
+  // The ID that associates this table with its configured metric time series in the resolved
+  // chart metadata.
+  string time_series_id = 7 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
 }
 
 message TableValue {
@@ -634,6 +641,13 @@ message HistogramBarChartResponse {
     // A set of buckets for every group by combination for this time series. If there are no group
     // by fields, there will be a single entry in this list.
     repeated .bitdrift.public.unary.dashboards.v1.HistogramBarChartResponse.PerGroupBy per_group_by = 4;
+
+    // The ID that associates this data with its configured metric time series in the resolved
+    // chart metadata.
+    string time_series_id = 5 [(validate.rules).string = {
+      min_len: 1
+      max_len: 255
+    }];
   }
 
   // Histogram data for each time series in the chart.
