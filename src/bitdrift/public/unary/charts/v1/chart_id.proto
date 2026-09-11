@@ -88,11 +88,12 @@ message ChartIdentifier {
     enum ActiveDevicesChartType {
       // This is a standard chart using 1m/15m/2h resolutions.
       NORMAL = 0;
-      // Includes three daily series: DAU for that day, WAU for the trailing 7 days, and MAU for
-      // the trailing 30 days. This chart is returned in a dashboard group with a minimum query
-      // interval of 7 days, so smaller time windows may return no data.
+      // Includes three daily series: daily active devices (DAD) for that day, weekly active devices
+      // (WAD) for the trailing 7 days, and monthly active devices (MAD) for the trailing 30 days.
+      // This chart is returned in a dashboard group with a minimum query interval of 7 days, so
+      // smaller time windows may return no data.
       LONG_TERM = 1;
-      // Shows stickiness as DAU/MAU, with the same minimum time-window expectations as LONG_TERM.
+      // Shows stickiness as DAD/MAD, with the same minimum time-window expectations as LONG_TERM.
       STICKINESS = 2;
     }
 
