@@ -13,6 +13,7 @@ import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
 import "bitdrift_public/protobuf/state/v1/matcher.proto";
 import "bitdrift_public/protobuf/state/v1/scope.proto";
 import "bitdrift_public/protobuf/workflow/v1/save_field.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
@@ -68,6 +69,31 @@ message MultiTag {
 
   // Filters matched state values. If not specified, all values match.
   optional string value_regex = 5;
+}
+
+// Selects one locally registered or built-in workflow command.
+message WorkflowCommandSelector {
+  // Built-in commands supported directly by the client workflow runtime.
+  message BuiltinCommand {
+    oneof command_type {
+      option (validate.required) = true;
+
+      // Captures one application screenshot using the platform's configured defaults.
+      TakeScreenshot take_screenshot = 1;
+    }
+
+    message TakeScreenshot {}
+  }
+
+  oneof command_selector {
+    option (validate.required) = true;
+
+    // An opaque customer-registered command handler identifier.
+    string registered_command_id = 1 [(validate.rules).string.uuid = true];
+
+    // A strongly typed command implemented by the client workflow runtime.
+    BuiltinCommand builtin_command = 2;
+  }
 }
 
 // A complete workflow configuration. Each traversal of the state machine defined
@@ -143,9 +169,28 @@ message Workflow {
       bool on_new_session = 4;
       // This will match when a report is processed.
       OnReport on_report = 5;
+      MatchRunCommand match_run_command = 6;
     }
 
     reserved 2;
+
+    // Starts a locally registered or built-in command and waits for its terminal synthetic outcome
+    // log. The transition advances after that outcome when `outcome_log_matcher` is absent;
+    // otherwise it advances only when the matching execution's outcome log satisfies the matcher.
+    message MatchRunCommand {
+      // Exactly one command to execute.
+      WorkflowCommandSelector command_selector = 1 [(validate.rules).message = {required: true}];
+
+      // Minimum interval between command starts for this matcher on a device.
+      google.protobuf.Duration minimum_execution_interval = 2 [(validate.rules).duration = {
+        required: true
+        gt: {}
+      }];
+
+      // Optional matcher for the synthetic outcome log of this command execution. When absent,
+      // every terminal outcome advances the transition.
+      matcher.v1.LogMatcher outcome_log_matcher = 3;
+    }
   }
 
   // A terminal transition that delegates IssueMatch evaluation to the server when a report is
@@ -228,10 +273,11 @@ message Workflow {
       ActionFlushBuffers action_flush_buffers = 1;
       ActionEmitMetric action_emit_metric = 2;
       ActionEmitSankeyDiagram action_emit_sankey_diagram = 3;
-      ActionTakeScreenshot action_take_screenshot = 4;
       ActionGenerateLog action_generate_log = 5;
       ActionStartTracing action_start_tracing = 6;
     }
+
+    reserved 4;
 
     // Specifies that the current session will start trace sampling. Tracing will stop when the
     // workflow run ends. The exception to this is if the run results in a flush. If this happens,
@@ -467,11 +513,6 @@ message Workflow {
 
       reserved 5;
       reserved "feature_flag_extracted";
-    }
-
-    // Emit a log containing application screenshot.
-    message ActionTakeScreenshot {
-      reserved 1;
     }
   }
 
