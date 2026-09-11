@@ -1,0 +1,58 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.usage.v1;
+
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message GetMonthlyActiveDevicesUsageRequest {
+  // The number of UTC calendar months to return. Defaults to 12 when unset.
+  optional uint32 months = 1 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 60
+  }];
+}
+
+message MonthlyActiveDevicesUsage {
+  message AppUsage {
+    // The app ID associated with the active-device count.
+    string app_id = 1 [
+      (validate.rules).string.min_len = 1,
+      (validate.rules).string.max_len = 255
+    ];
+
+    // The number of distinct active devices associated with the app ID during the month.
+    uint64 active_devices = 2;
+  }
+
+  // The start of the UTC calendar month represented by this usage summary.
+  .google.protobuf.Timestamp month = 1;
+
+  // The number of distinct active devices across all apps during the month.
+  //
+  // This is calculated independently and may differ from the sum of app-level counts because a
+  // device can be active in more than one app.
+  uint64 active_devices = 2;
+
+  // The active-device counts for each app with a non-empty app ID during the month.
+  repeated .bitdrift.public.unary.usage.v1.MonthlyActiveDevicesUsage.AppUsage apps = 3;
+}
+
+message GetMonthlyActiveDevicesUsageResponse {
+  // The monthly active-device usage summaries, ordered from newest to oldest.
+  repeated .bitdrift.public.unary.usage.v1.MonthlyActiveDevicesUsage usage = 1;
+}
+
+// Provides monthly active-device usage summaries for an organization.
+service UsageService {
+  // Retrieves monthly active-device usage across all apps.
+  //
+  // Results include the current partial UTC calendar month and are ordered from newest to oldest.
+  rpc GetMonthlyActiveDevicesUsage(.bitdrift.public.unary.usage.v1.GetMonthlyActiveDevicesUsageRequest) returns (.bitdrift.public.unary.usage.v1.GetMonthlyActiveDevicesUsageResponse);
+}
