@@ -8,6 +8,7 @@ syntax = "proto3";
 
 package bitdrift.public.webhook.v1;
 
+import "bitdrift/public/unary/issues/v1/issues.proto";
 import "google/protobuf/timestamp.proto";
 
 // Describes a webhook notification event delivered to an external destination.
@@ -156,4 +157,7 @@ message IssueNotification {
 
   // Issue reason/description.
   string reason = 6;
+
+  // Representative issue that created the issue group.
+  .bitdrift.public.unary.issues.v1.Issue issue = 7;
 }
