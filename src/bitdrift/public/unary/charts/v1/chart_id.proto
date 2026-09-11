@@ -101,6 +101,23 @@ message ChartIdentifier {
     .bitdrift.public.unary.charts.v1.ChartIdentifier.ActiveDevicesChart.ActiveDevicesChartType type = 1 [(validate.rules).enum = {defined_only: true}];
   }
 
+  // Active entities are explicitly configured by SDKs and are not tied to an action ID. Use
+  // request-level platform filtering to narrow results. This chart returns line-chart data and
+  // resolves to a line chart in dashboard metadata.
+  message ActiveEntitiesChart {
+    enum ActiveEntitiesChartType {
+      // Includes three daily series: daily active entities (DAE) for that day, weekly active
+      // entities (WAE) for the trailing 7 days, and monthly active entities (MAE) for the trailing
+      // 30 days.
+      LONG_TERM = 0;
+      // Shows stickiness as DAE/MAE.
+      STICKINESS = 1;
+    }
+
+    // The active-entities chart variant to query.
+    .bitdrift.public.unary.charts.v1.ChartIdentifier.ActiveEntitiesChart.ActiveEntitiesChartType type = 1 [(validate.rules).enum = {defined_only: true}];
+  }
+
   // Shows issue-stability metrics that are not tied to a specific action ID. Results are filtered
   // by platform and app ID.
   message IssueStabilityChart {
@@ -129,7 +146,7 @@ message ChartIdentifier {
     // A workflow-backed sankey chart.
     .bitdrift.public.unary.charts.v1.ChartIdentifier.WorkflowSankeyChart sankey_chart = 5;
 
-    // An active-devices chart as found on the devices tab in Instant Insights.
+    // An active-devices chart as found on the activity tab in Instant Insights.
     .bitdrift.public.unary.charts.v1.ChartIdentifier.ActiveDevicesChart active_devices_chart = 6;
 
     // A workflow-backed funnel chart.
@@ -140,6 +157,9 @@ message ChartIdentifier {
 
     // An issue-stability chart as found on the stability tab in Instant Insights.
     .bitdrift.public.unary.charts.v1.ChartIdentifier.IssueStabilityChart issue_stability_chart = 9;
+
+    // An active-entities chart as found on the activity tab in Instant Insights.
+    .bitdrift.public.unary.charts.v1.ChartIdentifier.ActiveEntitiesChart active_entities_chart = 11;
   }
 }
 
