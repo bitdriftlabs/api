@@ -11,6 +11,7 @@ package bitdrift.public.unary.issues.v1;
 import "bitdrift/public/shared/platform/v1/platform.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
 import "bitdrift/public/unary/issues/v1/crash.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
@@ -155,13 +156,12 @@ message IssueGroupQuery {
   }];
 }
 
-// An aggregate of the number of instances of the issue group.
-// With the count being the sum of instances within a time window.
+// A time-series data point that counts issue occurrences in an aggregation interval.
 message Event {
-  // The timestamp at which the time window begins.
+  // The start of the aggregation interval.
   .google.protobuf.Timestamp period_start = 1 [(validate.rules).message = {required: true}];
 
-  // The number of instances within the time window.
+  // The number of issue occurrences in the aggregation interval.
   uint64 count = 2;
 }
 
@@ -605,6 +605,26 @@ message ListIssuesV2Response {
 
   // The opaque token to use for the next page, if more results remain.
   optional string next_page_token = 3;
+}
+
+// Requests occurrence time-series data for issues matching a query.
+message GetAggregateIssueEventsRequest {
+  // Selects the issues included in the occurrence time series.
+  .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 4;
+
+  // Optionally sets the duration of each aggregation interval. The value must be a positive whole
+  // number of minutes that does not exceed the queried time range. If omitted, the server selects
+  // an interval based on the queried time range.
+  optional .google.protobuf.Duration aggregation_window = 5;
+}
+
+// Returns occurrence time-series data for the requested issues.
+message GetAggregateIssueEventsResponse {
+  // Occurrence counts, ordered by aggregation interval start time.
+  repeated .bitdrift.public.unary.issues.v1.Event events = 1;
+
+  // The duration of each aggregation interval used to produce events.
+  .google.protobuf.Duration aggregation_window = 2;
 }
 
 message GetIssueFeatureFlagsRequest {
