@@ -53,6 +53,9 @@ message ArtifactUploadIndex {
     // Client workflow continuations that should be evaluated when this report is processed.
     // Only populated for issue-report artifacts; other artifact types must leave this unset.
     optional bitdrift_public.protobuf.workflow.v1.WorkflowReportHandoff workflow_report_handoff = 10;
+
+    // The remote command that produced this artifact. This survives local uploader restarts.
+    optional string command_id = 11;
   }
 
   // List of files, in order of time, that are pending upload.

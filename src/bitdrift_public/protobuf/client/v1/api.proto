@@ -257,6 +257,10 @@ message LogUploadRequest {
   // throughput, low value logs where the client does not need to know whether
   // the upload succeeded or failed.
   bool ackless = 4;
+
+  // Optional buffer-dump command whose persisted log bytes this upload contributes to. The outer
+  // upload_uuid is this batch's stable idempotency key.
+  optional string command_id = 8 [(validate.rules).string.uuid = true];
 }
 
 // Empty message to maintain a application layer keep alive mechanism.
@@ -308,6 +312,7 @@ message ApiRequest {
     UploadArtifactIntentRequest artifact_intent = 13;
     DebugDataRequest debug_data = 14;
     StateUpdateRequest state_update = 15;
+    DeviceCommandUpdate device_command_update = 16;
   }
 
   reserved 8;
@@ -419,6 +424,10 @@ message UploadArtifactRequest {
   // Client workflow continuations that should be evaluated when this report is processed.
   // Only populated for issue-report artifacts; other artifact types must leave this unset.
   optional workflow.v1.WorkflowReportHandoff workflow_report_handoff = 9;
+
+  // The remote command that produced this artifact. Only command-correlated artifact uploads set
+  // this field; workflow command artifacts remain session artifacts and leave it unset.
+  optional string command_id = 10 [(validate.rules).string.uuid = true];
 }
 
 message UploadArtifactResponse {
@@ -668,6 +677,106 @@ message FlushBuffers {
   workflow.v1.Workflow.Action.ActionFlushBuffers.Streaming streaming = 2;
 }
 
+// Structured data supplied with a terminal device command result. Artifact bytes are uploaded
+// separately through `UploadArtifactRequest` and must not be included in this context.
+message DeviceCommandResultContext {
+  // Command- or transport-supplied fields describing the terminal result. Binary values are
+  // rejected; artifacts must use `UploadArtifactRequest`.
+  map<string, logging.v1.Data> fields = 1 [(validate.rules).map.max_pairs = 100];
+}
+
+// Reports an update from a device command.
+message DeviceCommandUpdate {
+  // Confirms that the device accepted the command.
+  message Accepted {
+    // The immutable total number of result payload bytes expected from the command.
+    optional uint64 total_result_bytes = 1;
+  }
+
+  // Confirms that the command completed successfully.
+  message Completed {
+    // Declares the complete logical attachment produced by the command. The server verifies this
+    // declaration against its durable attachment catalog before reporting the command as
+    // succeeded.
+    message Attachment {
+      // The command completed without an attachment.
+      message None {}
+
+      // The command produced one artifact uploaded through UploadArtifactRequest.
+      message Artifact {
+        // The stable artifact ID from the acknowledged upload.
+        string artifact_id = 1 [(validate.rules).string.uuid = true];
+      }
+
+      // The command produced log batches uploaded through LogUploadRequest.
+      message LogBatches {
+        // The immutable total number of result payload bytes across all acknowledged batches.
+        uint64 total_result_bytes = 1;
+      }
+
+      oneof attachment_type {
+        option (validate.required) = true;
+
+        // The command completed without an attachment.
+        None none = 1;
+
+        // The command completed with one artifact.
+        Artifact artifact = 2;
+
+        // The command completed with one logical attachment made from log batches.
+        LogBatches log_batches = 3;
+      }
+    }
+
+    // Whether output was limited before the command completed.
+    bool output_truncated = 1;
+
+    // Optional structured context supplied with the successful command result.
+    DeviceCommandResultContext context = 2;
+
+    // The attachment the device completed after uploading. This is optional only for compatibility
+    // with older clients; new command implementations must always set it.
+    Attachment attachment = 3;
+  }
+
+  // Reports that command execution could not be completed.
+  message Failed {
+    // Optional structured context supplied with the failed command result.
+    DeviceCommandResultContext context = 1;
+  }
+
+  // The command ID from the corresponding DeviceCommandRequest.
+  string command_id = 1 [(validate.rules).string.uuid = true];
+
+  // The monotonically increasing sequence number for this command update.
+  uint64 update_sequence_number = 2;
+
+  oneof update_type {
+    option (validate.required) = true;
+
+    // Confirms that the device accepted the command.
+    Accepted accepted = 3;
+
+    // Confirms that the command completed successfully.
+    Completed completed = 4;
+
+    // Reports that command execution could not be completed.
+    Failed failed = 5;
+  }
+}
+
+// Acknowledges that the server persisted a command update.
+message DeviceCommandUpdateAck {
+  // The command ID from the corresponding DeviceCommandRequest.
+  string command_id = 1 [(validate.rules).string.uuid = true];
+
+  // The command update sequence number that was persisted.
+  uint64 update_sequence_number = 2;
+
+  // A non-empty error means the server did not persist the update and the client should retry it.
+  string error = 3;
+}
+
 // The response to Sankey diagram path upload request.
 message SankeyPathUploadResponse {
   // The UUID corresponding to the upload request.
@@ -758,6 +867,7 @@ message ApiResponse {
     UploadArtifactResponse artifact_upload = 14;
     UploadArtifactIntentResponse artifact_intent = 15;
     StateUpdateResponse state_update = 16;
+    DeviceCommandUpdateAck device_command_update_ack = 17;
   }
 
   reserved 10;

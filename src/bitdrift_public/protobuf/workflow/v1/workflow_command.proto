@@ -1,0 +1,43 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.workflow.v1;
+
+import "validate/validate.proto";
+
+// Selects one locally registered or built-in workflow command.
+message WorkflowCommandSelector {
+  // Selects a command registered by the embedding application. Additional command-specific
+  // configuration can be added here without changing the selector's oneof shape.
+  message RegisteredCommand {
+    string registered_command_id = 1 [(validate.rules).string.uuid = true];
+  }
+
+  // Built-in commands supported directly by the client workflow runtime.
+  message BuiltinCommand {
+    oneof command_type {
+      option (validate.required) = true;
+
+      // Captures one application screenshot using the platform's configured defaults.
+      TakeScreenshot take_screenshot = 1;
+    }
+
+    message TakeScreenshot {}
+  }
+
+  oneof command_selector {
+    option (validate.required) = true;
+
+    // A strongly typed command implemented by the client workflow runtime.
+    BuiltinCommand builtin_command = 1;
+
+    // A command implemented by the embedding application.
+    RegisteredCommand registered_command = 2;
+  }
+}
