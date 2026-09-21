@@ -13,6 +13,12 @@ import "validate/validate.proto";
 
 // Selects one locally registered or built-in workflow command.
 message WorkflowCommandSelector {
+  // Selects a command registered by the embedding application. Additional command-specific
+  // configuration can be added here without changing the selector's oneof shape.
+  message RegisteredCommand {
+    string registered_command_id = 1 [(validate.rules).string.uuid = true];
+  }
+
   // Built-in commands supported directly by the client workflow runtime.
   message BuiltinCommand {
     oneof command_type {
@@ -28,10 +34,10 @@ message WorkflowCommandSelector {
   oneof command_selector {
     option (validate.required) = true;
 
-    // An opaque customer-registered command handler identifier.
-    string registered_command_id = 1 [(validate.rules).string.uuid = true];
-
     // A strongly typed command implemented by the client workflow runtime.
-    BuiltinCommand builtin_command = 2;
+    BuiltinCommand builtin_command = 1;
+
+    // A command implemented by the embedding application.
+    RegisteredCommand registered_command = 2;
   }
 }
