@@ -16,7 +16,7 @@ message WorkflowCommandSelector {
   // Selects a command registered by the embedding application. Additional command-specific
   // configuration can be added here without changing the selector's oneof shape.
   message RegisteredCommand {
-    string registered_command_id = 1 [(validate.rules).string.uuid = true];
+    string registered_command_id = 1 [(validate.rules).string.min_len = 1];
   }
 
   // Built-in commands supported directly by the client workflow runtime.
