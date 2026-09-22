@@ -394,6 +394,14 @@ message UploadArtifactIntentResponse {
   }
 }
 
+enum ArtifactPayloadEncoding {
+  // The request contains logical artifact bytes.
+  ARTIFACT_PAYLOAD_ENCODING_RAW = 0;
+
+  // The request contains zlib-compressed artifact bytes.
+  ARTIFACT_PAYLOAD_ENCODING_ZLIB = 1;
+}
+
 message UploadArtifactRequest {
   // Upload UUID used to provide idempotence and to correlate a response with this request.
   string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
@@ -428,6 +436,9 @@ message UploadArtifactRequest {
   // The remote command that produced this artifact. Only command-correlated artifact uploads set
   // this field; workflow command artifacts remain session artifacts and leave it unset.
   optional string command_id = 10 [(validate.rules).string.uuid = true];
+
+  // The encoding of contents. Only workflow and direct command attachments may use zlib encoding.
+  ArtifactPayloadEncoding payload_encoding = 11;
 }
 
 message UploadArtifactResponse {
