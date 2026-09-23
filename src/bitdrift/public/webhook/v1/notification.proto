@@ -26,6 +26,12 @@ message WebhookNotification {
     // An entity recording request completed.
     .bitdrift.public.webhook.v1.EntityRecordingCompletedNotification entity_recording_completed = 8;
 
+    // A workflow alert resolved.
+    .bitdrift.public.webhook.v1.AlertResolutionNotification alert_resolved = 9;
+
+    // An issue alert resolved.
+    .bitdrift.public.webhook.v1.IssueAlertResolutionNotification issue_alert_resolved = 10;
+
     // A workflow alert fired.
     .bitdrift.public.webhook.v1.AlertNotification alert = 4;
 
@@ -88,6 +94,15 @@ message AlertNotification {
   map<string, string> labels = 7;
 }
 
+// Describes a resolution for a workflow alert notification.
+message AlertResolutionNotification {
+  // Original workflow alert notification.
+  .bitdrift.public.webhook.v1.AlertNotification alert = 1;
+
+  // Time when the alert resolved.
+  .google.protobuf.Timestamp resolved_at = 2;
+}
+
 // Describes an issue referenced by an issue webhook notification.
 message IssueDetails {
   // Issue URL.
@@ -117,6 +132,9 @@ message IssueAlertNotification {
   // View name.
   string view_name = 3;
 
+  // Alert name.
+  string alert_name = 8;
+
   oneof scope {
     // Global alert (no per issue details).
     .bitdrift.public.webhook.v1.IssueAlertNotification.GlobalAlert global = 4;
@@ -130,6 +148,15 @@ message IssueAlertNotification {
 
   // Additional labels attached to the alert.
   map<string, string> labels = 7;
+}
+
+// Describes a resolution for an issue alert notification.
+message IssueAlertResolutionNotification {
+  // Original issue alert notification.
+  .bitdrift.public.webhook.v1.IssueAlertNotification issue_alert = 1;
+
+  // Time when the alert resolved.
+  .google.protobuf.Timestamp resolved_at = 2;
 }
 
 // Describes a webhook notification for a newly created issue report.
