@@ -616,6 +616,10 @@ message GetAggregateIssueEventsRequest {
   // number of minutes that does not exceed the queried time range. If omitted, the server selects
   // an interval based on the queried time range.
   optional .google.protobuf.Duration aggregation_window = 5;
+
+  // Limits events to groups matching the current status and assignee filters, including for past
+  // time ranges. When supplied, overrides status and assignee filters in the legacy filters field.
+  .bitdrift.public.unary.issues.v1.IssueGroupQuery issue_group_query = 6;
 }
 
 // Returns occurrence time-series data for the requested issues.
