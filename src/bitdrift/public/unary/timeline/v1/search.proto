@@ -134,15 +134,12 @@ message SessionAdvancedSearchRequest {
     }];
   }
 
-  // All AndQuery groups are combined with logical OR.
+  // All AndQuery groups are combined with logical OR. An empty list returns logs in session order.
   //
   // (or_query[0].conditions[0] AND or_query[0].conditions[1] AND or_query[0].conditions[2])
   //                            OR
   // (or_query[1].conditions[0] AND or_query[1].conditions[1])
-  repeated .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchRequest.AndQuery or_query = 7 [(validate.rules).repeated = {
-    min_items: 1
-    max_items: 20
-  }];
+  repeated .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchRequest.AndQuery or_query = 7 [(validate.rules).repeated = {max_items: 20}];
 }
 
 message SessionAdvancedSearchResponse {
