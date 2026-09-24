@@ -1733,8 +1733,15 @@ message StateCondition {
   // comparison.
   .bitdrift.public.unary.workflows.v1.MatchType match_type = 1 [(validate.rules).enum = {defined_only: true}];
 
-  // The comparison operator to apply after converting values according to `match_type`.
-  .bitdrift.public.unary.workflows.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
+  // The comparison operator to apply after converting values according to `match_type`. `SET` and
+  // `NOT_SET` are not supported for state change conditions.
+  .bitdrift.public.unary.workflows.v1.Operator operator = 2 [(validate.rules).enum = {
+    defined_only: true
+    not_in: [
+      12,
+      13
+    ]
+  }];
 
   // The comparison value, encoded as a string. Its format must match `match_type`. For example,
   // use `1.2.3` for `SEMVER` or `42` for `INT`.
