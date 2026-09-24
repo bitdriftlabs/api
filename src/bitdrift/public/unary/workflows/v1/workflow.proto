@@ -1759,7 +1759,10 @@ message Violation {
 
 message GetWorkflowRequest {
   // The ID of the workflow to retrieve.
-  string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
+  string workflow_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
 }
 
 message GetWorkflowResponse {
