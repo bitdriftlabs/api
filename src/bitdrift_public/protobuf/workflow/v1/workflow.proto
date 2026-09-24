@@ -14,6 +14,7 @@ import "bitdrift_public/protobuf/state/v1/matcher.proto";
 import "bitdrift_public/protobuf/state/v1/scope.proto";
 import "bitdrift_public/protobuf/workflow/v1/save_field.proto";
 import "bitdrift_public/protobuf/workflow/v1/workflow_command.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
@@ -144,6 +145,8 @@ message Workflow {
       bool on_new_session = 4;
       // This will match when a report is processed.
       OnReport on_report = 5;
+      // Starts a command and waits for its terminal outcome before this transition advances.
+      MatchRunCommand match_run_command = 6;
     }
 
     reserved 2;
@@ -154,6 +157,22 @@ message Workflow {
   // IssueMatch configuration.
   message OnReport {
     string issue_match_rule_hash = 1 [(validate.rules).string = {min_len: 1}];
+  }
+
+  // Starts a locally registered or built-in command after the preceding workflow step matches.
+  message MatchRunCommand {
+    // Exactly one command to execute.
+    WorkflowCommandSelector command_selector = 1 [(validate.rules).message = {required: true}];
+
+    // The minimum interval between starts for this matcher on a device.
+    google.protobuf.Duration minimum_execution_interval = 2 [(validate.rules).duration = {
+      required: true
+      gt: {}
+    }];
+
+    // If present, only a terminal outcome whose synthetic log matches this matcher advances the
+    // transition. Otherwise every terminal outcome advances it.
+    matcher.v1.LogMatcher outcome_log_matcher = 3;
   }
 
   // An extra configuration for a given transition.

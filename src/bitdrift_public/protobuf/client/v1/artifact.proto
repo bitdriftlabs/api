@@ -9,6 +9,7 @@ syntax = "proto3";
 
 package bitdrift_public.protobuf.client.v1;
 
+import "bitdrift_public/protobuf/client/v1/api.proto";
 import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
@@ -56,6 +57,9 @@ message ArtifactUploadIndex {
 
     // The remote command that produced this artifact. This survives local uploader restarts.
     optional string command_id = 11;
+
+    // The encoding of the retained artifact payload. This survives local uploader restarts.
+    ArtifactPayloadEncoding payload_encoding = 12;
   }
 
   // List of files, in order of time, that are pending upload.
