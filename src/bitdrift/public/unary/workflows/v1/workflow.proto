@@ -1757,6 +1757,57 @@ message Violation {
   string match_or_rule_id = 3;
 }
 
+message GetWorkflowDeploymentHistoryRequest {
+  // Used to paginate through results. To get the next page result, set this to
+  // the desired starting offset. For example, setting to 10 will start with the
+  // 10th record. The default value is 0.
+  optional uint32 offset = 1;
+
+  // This defines the upper bound of the number of items returned. The maximum
+  // value supported is 100.
+  optional uint32 limit = 2 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
+
+  // When set, returns deployment history only for the specified workflows. When empty, returns
+  // deployment history across the organization.
+  repeated string workflow_id = 3 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      string: {
+        min_len: 1
+        max_len: 100
+      }
+    }
+  }];
+}
+
+message GetWorkflowDeploymentHistoryResponse {
+  // The workflow deployment history entries that match the request.
+  repeated .bitdrift.public.unary.workflows.v1.HistoricalWorkflowDeployment deployments = 1;
+
+  // The total number of matching deployments available regardless of pagination.
+  uint32 total_deployments = 2;
+}
+
+message HistoricalWorkflowDeployment {
+  // The deployment version.
+  uint64 version = 1;
+
+  // The workflow configuration captured by this deployment.
+  .bitdrift.public.unary.workflows.v1.Workflow workflow = 2;
+
+  // The time when this workflow version was deployed.
+  .google.protobuf.Timestamp deployed_at = 4;
+
+  // The time when this workflow version was stopped. Unset for an active deployment.
+  .google.protobuf.Timestamp stopped_at = 5;
+
+  // The user who deployed this workflow version.
+  .bitdrift.public.unary.common.v1.Owner deployed_by_user_id = 6;
+}
+
 message GetWorkflowRequest {
   // The ID of the workflow to retrieve.
   string workflow_id = 2 [(validate.rules).string = {
