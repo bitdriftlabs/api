@@ -28,6 +28,12 @@ service WorkflowService {
   // Also updates the last viewed time of the workflow for the current user.
   rpc GetWorkflow(.bitdrift.public.unary.workflows.v1.GetWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.GetWorkflowResponse);
 
+  // Retrieves workflow deployment history.
+  //
+  // Requests filtered to specific workflows require view access to every requested workflow.
+  // Requests without a workflow filter return history for workflows the caller can view.
+  rpc GetWorkflowDeploymentHistory(.bitdrift.public.unary.workflows.v1.GetWorkflowDeploymentHistoryRequest) returns (.bitdrift.public.unary.workflows.v1.GetWorkflowDeploymentHistoryResponse);
+
   // Lists all workflows available to the authenticated user.
   rpc ListWorkflows(.bitdrift.public.unary.workflows.v1.ListWorkflowsRequest) returns (.bitdrift.public.unary.workflows.v1.ListWorkflowsResponse);
 
