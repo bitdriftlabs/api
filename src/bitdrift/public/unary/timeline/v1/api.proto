@@ -8,6 +8,7 @@ syntax = "proto3";
 
 package bitdrift.public.unary.timeline.v1;
 
+import "bitdrift/public/unary/timeline/v1/feature_flags.proto";
 import "bitdrift/public/unary/timeline/v1/hydration.proto";
 import "bitdrift/public/unary/timeline/v1/info.proto";
 import "bitdrift/public/unary/timeline/v1/logs.proto";
@@ -20,6 +21,12 @@ service TimelineService {
   //
   // Returns the gRPC NOT_FOUND status if the session has not been hydrated yet.
   rpc GetSessionLogs(.bitdrift.public.unary.timeline.v1.GetSessionLogsRequest) returns (.bitdrift.public.unary.timeline.v1.GetSessionLogsResponse);
+
+  // Retrieves feature flag exposures visible during a session.
+  //
+  // Feature flag state may carry across sessions in the same process, but a process start clears
+  // that state.
+  rpc GetFeatureFlags(.bitdrift.public.unary.timeline.v1.GetFeatureFlagsRequest) returns (.bitdrift.public.unary.timeline.v1.GetFeatureFlagsResponse);
 
   // Retrieves metadata and attributes for a session.
   //

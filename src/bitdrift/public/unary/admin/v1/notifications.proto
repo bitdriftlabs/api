@@ -79,6 +79,20 @@ message NotificationGroup {
       min_len: 1
       max_len: 2048
     }];
+
+    // Additional HTTP headers included in requests to this webhook. GetNotificationGroups returns
+    // nonempty header values as "<redacted>". When upserting a group, submitting "<redacted>"
+    // preserves the existing value for a webhook with the same URL and header name (case-insensitive).
+    // Omitted headers are removed; new values replace existing values.
+    map<string, string> headers = 2 [(validate.rules).map = {
+      max_pairs: 20
+      keys: {
+        string: {max_len: 256}
+      }
+      values: {
+        string: {max_len: 4096}
+      }
+    }];
   }
 
   // The name of the notification group. Must be unique.

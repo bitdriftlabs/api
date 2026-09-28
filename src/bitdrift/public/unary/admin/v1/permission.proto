@@ -76,4 +76,8 @@ enum Permission {
   DASHBOARDS_READ = 34;
   // Allows interactive device debugging and live log tailing.
   DEVICE_DEBUG = 36;
+  // Allows managing registered device commands.
+  DEVICE_COMMAND_WRITE = 37;
+  // Allows listing registered device commands.
+  DEVICE_COMMAND_READ = 38;
 }
