@@ -19,8 +19,8 @@ message WorkflowCommandSelector {
   message RegisteredCommand {
     string registered_command_id = 1 [(validate.rules).string.min_len = 1];
 
-    // Positional typed arguments passed to the registered command handler.
-    repeated bitdrift_public.protobuf.logging.v1.Data arguments = 2;
+    // Named typed arguments passed to the registered command handler.
+    map<string, bitdrift_public.protobuf.logging.v1.Data> arguments = 2;
   }
 
   // Built-in commands supported directly by the client workflow runtime.
