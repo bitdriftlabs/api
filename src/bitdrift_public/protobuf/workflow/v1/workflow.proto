@@ -12,6 +12,7 @@ package bitdrift_public.protobuf.workflow.v1;
 import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
 import "bitdrift_public/protobuf/state/v1/matcher.proto";
 import "bitdrift_public/protobuf/state/v1/scope.proto";
+import "bitdrift_public/protobuf/value_matcher/v1/value_matcher.proto";
 import "bitdrift_public/protobuf/workflow/v1/save_field.proto";
 import "bitdrift_public/protobuf/workflow/v1/workflow_command.proto";
 import "google/protobuf/duration.proto";
@@ -534,10 +535,16 @@ message Workflow {
 
     message Exact {}
 
-    // For now we only support exact match, but in the future we might support more complex
-    // extraction logic like regex captures. If not specified, the default is exact match.
+    // Traverses a JSON string or structured value to a scalar leaf. Missing paths, nulls,
+    // containers, and parsing failures yield no value.
+    message JsonPath {
+      repeated value_matcher.v1.JsonPathValueMatch.KeyOrIndex key_or_index = 1;
+    }
+
+    // If not specified, the default is exact extraction.
     oneof extraction_type {
       Exact exact = 2;
+      JsonPath json_path = 3;
     }
   }
 
