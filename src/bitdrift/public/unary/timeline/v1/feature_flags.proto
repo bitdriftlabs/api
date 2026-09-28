@@ -1,0 +1,51 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.timeline.v1;
+
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message GetFeatureFlagsRequest {
+  // The session ID whose feature flag exposures to retrieve.
+  string session_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message FeatureFlagExposure {
+  // An explicit removal of a feature flag value.
+  message Tombstone {}
+
+  // The feature flag key.
+  string key = 1;
+
+  oneof update {
+    option (validate.required) = true;
+    // The feature flag value exposed at `effective_at`.
+    string value = 2;
+
+    // The feature flag value was removed at `effective_at`.
+    .bitdrift.public.unary.timeline.v1.FeatureFlagExposure.Tombstone tombstone = 3;
+  }
+
+  // The time when the feature flag state changed.
+  .google.protobuf.Timestamp effective_at = 4;
+
+  // Whether the flag was already active when the requested session began. Inherited state can
+  // come only from earlier sessions in the same process; a process start clears feature flags.
+  bool inherited = 5;
+}
+
+message GetFeatureFlagsResponse {
+  // Feature flag state changes visible during the requested session, in exposure-time order.
+  // State can be inherited only from earlier sessions in the same process; a process start clears
+  // feature flags.
+  repeated .bitdrift.public.unary.timeline.v1.FeatureFlagExposure exposures = 1;
+}
