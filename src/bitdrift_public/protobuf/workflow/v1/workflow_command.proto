@@ -10,29 +10,79 @@ syntax = "proto3";
 package bitdrift_public.protobuf.workflow.v1;
 
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "google/protobuf/descriptor.proto";
 import "validate/validate.proto";
+
+// Defines one named argument accepted by a device command. Invocation values are supplied in
+// WorkflowCommandSelector.arguments using this name and type.
+message DeviceCommandArgumentDefinition {
+  // The corresponding variant of bitdrift_public.protobuf.logging.v1.Data.
+  enum Type {
+    // Not a valid argument type for a command definition.
+    TYPE_UNSPECIFIED = 0;
+    // Data.string_data.
+    STRING = 1;
+    // Data.binary_data.
+    BINARY = 2;
+    // Data.int_data (an unsigned 64-bit integer).
+    UINT64 = 3;
+    // Data.double_data.
+    DOUBLE = 4;
+    // Data.sint_data (a signed 64-bit integer).
+    INT64 = 5;
+    // Data.bool_data.
+    BOOL = 6;
+  }
+
+  // The name used as the key in the command invocation's arguments map.
+  string name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 128
+  }];
+  // The required value type; TYPE_UNSPECIFIED is not a usable definition.
+  Type type = 2 [(validate.rules).enum.defined_only = true];
+  // A human-readable explanation of the argument for command authors.
+  string description = 3 [(validate.rules).string = {
+    min_len: 1
+    max_len: 1000
+  }];
+  // Whether callers may omit this argument from an invocation.
+  bool optional = 4;
+}
+
+message WellKnownCommandOptions {
+  string key = 1;
+  string description = 2;
+  repeated DeviceCommandArgumentDefinition argument_definitions = 3;
+}
+
+extend google.protobuf.EnumValueOptions {
+  WellKnownCommandOptions well_known_command_options = 51000;
+}
+
+// Commands implemented by the client without application registration.
+enum WellKnownCommandType {
+  TYPE_UNSPECIFIED = 0;
+  DUMP_DEVICE_BUFFER = 1 [(well_known_command_options) = {
+    key: "dump_device_buffer"
+    description: "Requests the device's buffered logs."
+  }];
+  TAKE_SCREENSHOT = 2 [(well_known_command_options) = {
+    key: "take_screenshot"
+    description: "Captures the device's current screen as a JPEG image."
+  }];
+}
 
 // Selects one locally registered or built-in workflow command.
 message WorkflowCommandSelector {
-  // Selects a command registered by the embedding application. Additional command-specific
-  // configuration can be added here without changing the selector's oneof shape.
+  // Selects a command registered by the embedding application.
   message RegisteredCommand {
     string registered_command_id = 1 [(validate.rules).string.min_len = 1];
-
-    // Named typed arguments passed to the registered command handler.
-    map<string, bitdrift_public.protobuf.logging.v1.Data> arguments = 2;
   }
 
-  // Built-in commands supported directly by the client workflow runtime.
+  // A command implemented by the client.
   message BuiltinCommand {
-    oneof command_type {
-      option (validate.required) = true;
-
-      // Captures one application screenshot using the platform's configured defaults.
-      TakeScreenshot take_screenshot = 1;
-    }
-
-    message TakeScreenshot {}
+    WellKnownCommandType type = 1 [(validate.rules).enum.defined_only = true];
   }
 
   oneof command_selector {
@@ -44,4 +94,7 @@ message WorkflowCommandSelector {
     // A command implemented by the embedding application.
     RegisteredCommand registered_command = 2;
   }
+
+  // Named typed arguments passed to the selected command.
+  map<string, bitdrift_public.protobuf.logging.v1.Data> arguments = 3;
 }
