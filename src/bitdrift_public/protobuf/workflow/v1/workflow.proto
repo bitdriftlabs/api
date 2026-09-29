@@ -536,7 +536,10 @@ message Workflow {
     message Exact {}
 
     // Traverses a JSON string or structured value to a scalar leaf. Missing paths, nulls,
-    // containers, and parsing failures yield no value.
+    // containers, and parsing failures encountered while locating the leaf yield no value.
+    // JSON string traversal stops once the selected scalar is found; trailing siblings and
+    // the remaining input are not validated. Numeric metric values use the same conversion
+    // and recording rules as exact field extraction.
     message JsonPath {
       repeated value_matcher.v1.JsonPathValueMatch.KeyOrIndex key_or_index = 1;
     }
