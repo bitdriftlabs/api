@@ -26,8 +26,65 @@ message OotbFieldDescriptor {
   // Optional unit of measurement (e.g., "ms", "KB", "percent"). Empty when not applicable.
   string unit = 4;
 
-  // Which platform emits this field. Defaults to ALL (both Android and iOS).
+  // Which platform emits this field. Defaults to ALL (all supported platforms).
   .bitdrift.public.shared.annotations.OotbFieldPlatform platform = 5;
+
+  // Human-readable label. Empty for documented fields not offered in the field selector.
+  string title = 6;
+
+  // Supported comparison operators, in preferred order.
+  repeated .bitdrift.public.shared.annotations.OotbFieldOperator supported_operators = 7;
+
+  // Supported aggregations: group, histogram, counter, or averageCount.
+  repeated .bitdrift.public.shared.annotations.OotbFieldAggregation suitable_for = 8;
+
+  // Predefined values and their display labels. Empty for free-form values.
+  repeated .bitdrift.public.shared.annotations.OotbFieldChoice choices = 9;
+
+  // Overrides the semantic type for comparison, preserving existing matching semantics.
+  optional .bitdrift.public.shared.annotations.OotbFieldType comparison_type = 10;
+
+  // A representative raw log-field value, for explaining the field in selector UI.
+  // This is an example, not a constraint on values accepted by the matcher.
+  string example_value = 11;
+
+  // References a canonical descriptor on OotbCommonField. Other populated fields are limited to
+  // platform and example_value overrides. UNSPECIFIED means this is a complete inline field.
+  .bitdrift.public.shared.annotations.OotbCommonField common_field = 12;
+}
+
+// A predefined field value and its display label.
+message OotbFieldChoice {
+  string value = 1;
+
+  string title = 2;
+}
+
+// Operators available to a field in the matcher UI. These mirror workflow operators without
+// introducing a dependency from shared annotations back to the workflow schema.
+enum OotbFieldOperator {
+  OOTB_FIELD_OPERATOR_EQUAL = 0;
+  OOTB_FIELD_OPERATOR_NOT_EQUAL = 1;
+  OOTB_FIELD_OPERATOR_GREATER_THAN = 2;
+  OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL = 3;
+  OOTB_FIELD_OPERATOR_LESS_THAN = 4;
+  OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL = 5;
+  OOTB_FIELD_OPERATOR_REGEX = 6;
+  OOTB_FIELD_OPERATOR_IN = 7;
+  OOTB_FIELD_OPERATOR_NOT_IN = 8;
+  OOTB_FIELD_OPERATOR_NOT_REGEX = 9;
+  OOTB_FIELD_OPERATOR_WILDCARD = 10;
+  OOTB_FIELD_OPERATOR_NOT_WILDCARD = 11;
+  OOTB_FIELD_OPERATOR_SET = 12;
+  OOTB_FIELD_OPERATOR_NOT_SET = 13;
+}
+
+// Chart capabilities advertised for an OOTB field.
+enum OotbFieldAggregation {
+  OOTB_FIELD_AGGREGATION_GROUP = 0;
+  OOTB_FIELD_AGGREGATION_HISTOGRAM = 1;
+  OOTB_FIELD_AGGREGATION_COUNTER = 2;
+  OOTB_FIELD_AGGREGATION_AVERAGE_COUNT = 3;
 }
 
 // The semantic type of a well-known field value.
@@ -40,11 +97,13 @@ enum OotbFieldType {
   OOTB_FIELD_TYPE_FLOAT = 2;
   // A boolean value encoded as "1" (true) or "0" (false).
   OOTB_FIELD_TYPE_BOOL = 3;
+  // A semantic version encoded as a string.
+  OOTB_FIELD_TYPE_SEMVER = 4;
 }
 
 // Platform applicability for a well-known field.
 enum OotbFieldPlatform {
-  // Emitted on both Android and iOS.
+  // Emitted on all platforms supporting the event.
   OOTB_FIELD_PLATFORM_ALL = 0;
   // Emitted only on Android.
   OOTB_FIELD_PLATFORM_ANDROID = 1;
@@ -52,13 +111,408 @@ enum OotbFieldPlatform {
   OOTB_FIELD_PLATFORM_IOS = 2;
 }
 
+extend .google.protobuf.EnumValueOptions {
+  .bitdrift.public.shared.annotations.OotbFieldDescriptor ootb_common_field_descriptor = 50005;
+}
+
+enum OotbCommonField {
+  OOTB_COMMON_FIELD_UNSPECIFIED = 0;
+  OOTB_COMMON_FIELD_SCENE = 1 [(ootb_common_field_descriptor) = {
+    key: "_scene"
+    description: "The application scene associated with the event."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "main"
+    platform: OOTB_FIELD_PLATFORM_IOS
+    title: "Scene"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+  OOTB_COMMON_FIELD_APP_EXIT_DETAILS_JS = 2 [(ootb_common_field_descriptor) = {
+    key: "_app_exit_details"
+    description: "The error message associated with the exit."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "Unhandled exception"
+    title: "Error Message"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+  }];
+  OOTB_COMMON_FIELD_APP_EXIT_INFO_JS = 3 [(ootb_common_field_descriptor) = {
+    key: "_app_exit_info"
+    description: "The error name associated with the exit."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "TypeError"
+    title: "Error Name"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+  OOTB_COMMON_FIELD_DURATION_MS = 4 [(ootb_common_field_descriptor) = {
+    key: "_duration_ms"
+    description: "The duration recorded for this event, in milliseconds."
+    type: OOTB_FIELD_TYPE_INT
+    example_value: "250"
+    unit: "ms"
+    title: "Duration"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+    supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+    supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+    suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+    suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+  }];
+  OOTB_COMMON_FIELD_HOST = 5 [(ootb_common_field_descriptor) = {
+    key: "_host"
+    description: "Request host."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "api.example.com"
+    title: "Host"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_SET
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+  OOTB_COMMON_FIELD_METHOD = 6 [(ootb_common_field_descriptor) = {
+    key: "_method"
+    description: "HTTP method."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "GET"
+    title: "HTTP Method"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_IN
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+    choices: {
+      value: "CONNECT"
+      title: "CONNECT"
+    }
+    choices: {
+      value: "DELETE"
+      title: "DELETE"
+    }
+    choices: {
+      value: "GET"
+      title: "GET"
+    }
+    choices: {
+      value: "HEAD"
+      title: "HEAD"
+    }
+    choices: {
+      value: "OPTIONS"
+      title: "OPTIONS"
+    }
+    choices: {
+      value: "PATCH"
+      title: "PATCH"
+    }
+    choices: {
+      value: "POST"
+      title: "POST"
+    }
+    choices: {
+      value: "PUT"
+      title: "PUT"
+    }
+    choices: {
+      value: "QUERY"
+      title: "QUERY"
+    }
+    choices: {
+      value: "TRACE"
+      title: "TRACE"
+    }
+  }];
+  OOTB_COMMON_FIELD_OPERATION_ID = 7 [(ootb_common_field_descriptor) = {
+    key: "_operation_id"
+    description: "GraphQL operation ID."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "operation-123"
+    title: "Operation ID"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_SET
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+  }];
+  OOTB_COMMON_FIELD_OPERATION_NAME = 8 [(ootb_common_field_descriptor) = {
+    key: "_operation_name"
+    description: "GraphQL operation name."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "GetUser"
+    title: "Operation Name"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_SET
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+  OOTB_COMMON_FIELD_OPERATION_TYPE = 9 [(ootb_common_field_descriptor) = {
+    key: "_operation_type"
+    description: "GraphQL operation type (query/mutation/subscription)."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "query"
+    title: "Operation Type"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_IN
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+    choices: {
+      value: "query"
+      title: "Query"
+    }
+    choices: {
+      value: "mutation"
+      title: "Mutation"
+    }
+    choices: {
+      value: "subscription"
+      title: "Subscription"
+    }
+  }];
+  OOTB_COMMON_FIELD_GQL_PATH = 10 [(ootb_common_field_descriptor) = {
+    key: "_path"
+    description: "The path component of the network request."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "/users/123"
+    title: "Path"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_SET
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+  }];
+  OOTB_COMMON_FIELD_GQL_PATH_TEMPLATE = 11 [(ootb_common_field_descriptor) = {
+    key: "_path_template"
+    description: "Format: gql-{operation_name}."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "gql-GetUser"
+    title: "Path Template"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_SET
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+  OOTB_COMMON_FIELD_GQL_QUERY = 12 [(ootb_common_field_descriptor) = {
+    key: "_query"
+    description: "The query component of the network request."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "page=1"
+    title: "Query"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_SET
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+  }];
+  OOTB_COMMON_FIELD_SPAN_ID = 13 [(ootb_common_field_descriptor) = {
+    key: "_span_id"
+    description: "Span identifier."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "span-123"
+  }];
+  OOTB_COMMON_FIELD_ROUND_TRIP_DURATION_MS = 14 [(ootb_common_field_descriptor) = {
+    key: "_duration_ms"
+    description: "Round-trip duration."
+    type: OOTB_FIELD_TYPE_INT
+    example_value: "250"
+    unit: "ms"
+    title: "Duration"
+    supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+    supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+    supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+    suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+    suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+  }];
+  OOTB_COMMON_FIELD_STATUS_CODE = 15 [(ootb_common_field_descriptor) = {
+    key: "_status_code"
+    description: "HTTP status code."
+    type: OOTB_FIELD_TYPE_INT
+    example_value: "200"
+    title: "HTTP Status Code"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+    supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+    supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_SET
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+  OOTB_COMMON_FIELD_THRESHOLD_MEMORY_KB = 16 [(ootb_common_field_descriptor) = {
+    key: "_threshold_mem_kb"
+    description: "The reported low-memory threshold, in kilobytes."
+    type: OOTB_FIELD_TYPE_INT
+    example_value: "32768"
+    unit: "kb"
+    platform: OOTB_FIELD_PLATFORM_ANDROID
+    title: "JVM Low Mem Threshold"
+    supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+    supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+    supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+    suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+    suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+  }];
+  OOTB_COMMON_FIELD_NETWORK_PATH = 17 [(ootb_common_field_descriptor) = {
+    key: "_path"
+    description: "Full request path (high cardinality)."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "/users/123"
+    title: "Path"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_SET
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+  }];
+  OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE = 18 [(ootb_common_field_descriptor) = {
+    key: "_path_template"
+    description: "Normalized path template (prefer for group_by)."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "/users/{id}"
+    title: "Path Template"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_SET
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+  OOTB_COMMON_FIELD_NETWORK_QUERY = 19 [(ootb_common_field_descriptor) = {
+    key: "_query"
+    description: "Query string."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "page=1"
+    title: "Query"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_SET
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+  }];
+  OOTB_COMMON_FIELD_SPAN_NAME = 20 [(ootb_common_field_descriptor) = {
+    key: "_span_name"
+    description: "Span name."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "checkout"
+    title: "Span Name"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+  }];
+  OOTB_COMMON_FIELD_SPAN_PARENT_ID = 21 [(ootb_common_field_descriptor) = {
+    key: "_span_parent_id"
+    description: "Parent span identifier."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "parent-span-123"
+  }];
+  OOTB_COMMON_FIELD_ANDROID_DEVICE_MODEL = 22 [(ootb_common_field_descriptor) = {
+    key: "model"
+    description: "The device model reported with the event."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "Pixel 8"
+    title: "Device Model"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+  OOTB_COMMON_FIELD_APP_EXIT_DETAILS_APPLE = 23 [(ootb_common_field_descriptor) = {
+    key: "_app_exit_details"
+    description: "Additional details describing the application exit."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "Process exited unexpectedly"
+    title: "Details"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+  }];
+  OOTB_COMMON_FIELD_APPLE_DEVICE_MODEL = 24 [(ootb_common_field_descriptor) = {
+    key: "model"
+    description: "The device model reported with the event."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "iPhone 15"
+    title: "Device Model"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+  OOTB_COMMON_FIELD_APP_EXIT_INFO_APPLE = 25 [(ootb_common_field_descriptor) = {
+    key: "_app_exit_info"
+    description: "The reported name or type of the application exit."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "TypeError"
+    title: "Name"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+  OOTB_COMMON_FIELD_MODEL = 26 [(ootb_common_field_descriptor) = {
+    key: "model"
+    description: "The device model reported with the event."
+    type: OOTB_FIELD_TYPE_STRING
+    example_value: "MacBook Pro"
+    title: "Model"
+    supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+    supported_operators: OOTB_FIELD_OPERATOR_REGEX
+    supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+  }];
+}
+
 // Structured metadata for an OOTB condition type enum value, describing the event and its
 // well-known log fields.
 message OotbEventMetadata {
   // The well-known log fields this event carries, available for matching via generic_match.
   repeated .bitdrift.public.shared.annotations.OotbFieldDescriptor well_known_fields = 1;
+
+  // Human-readable event label.
+  string title = 2;
+
+  // Describes when the event is emitted.
+  string description = 3;
 }
 
 extend .google.protobuf.EnumValueOptions {
   .bitdrift.public.shared.annotations.OotbEventMetadata ootb_event_metadata = 50002;
+}
+
+// Fields available through generic matching on OOTB events.
+message OotbDefaultFieldMetadata {
+  repeated .bitdrift.public.shared.annotations.OotbFieldDescriptor fields = 1;
+}
+
+extend .google.protobuf.MessageOptions {
+  .bitdrift.public.shared.annotations.OotbDefaultFieldMetadata ootb_default_field_metadata = 50004;
 }

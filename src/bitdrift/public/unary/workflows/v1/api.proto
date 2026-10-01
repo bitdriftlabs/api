@@ -24,8 +24,7 @@ import "validate/validate.proto";
 // between flows.
 service WorkflowService {
   // Retrieves a workflow by ID.
-  //
-  // Also updates the last viewed time of the workflow for the current user.
+  // Reading a workflow may refresh its last-seen deployment expiration.
   rpc GetWorkflow(.bitdrift.public.unary.workflows.v1.GetWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.GetWorkflowResponse);
 
   // Retrieves workflow deployment history.

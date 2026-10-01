@@ -46,4 +46,7 @@ message GetSessionInfoResponse {
 
   // The version of the operating system of the device.
   string os_version = 11;
+
+  // The Capture SDK version associated with the session.
+  string sdk_version = 12;
 }
