@@ -325,6 +325,235 @@ message StateChangeMatch {
 }
 
 message OotbMatch {
+  option (shared.annotations.ootb_default_field_metadata) = {
+    fields: {
+      key: "log"
+      description: "The log message body attached to the event."
+      type: OOTB_FIELD_TYPE_STRING
+      example_value: "Checkout completed"
+      title: "Log Body"
+      supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_REGEX
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    }
+    fields: {
+      key: "app_id"
+      description: "The identifier of the application that emitted the event."
+      type: OOTB_FIELD_TYPE_STRING
+      example_value: "com.example.app"
+      title: "App Identifier"
+      supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_REGEX
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+      suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+    }
+    fields: {
+      key: "app_version"
+      description: "The application version, compared using semantic-version operators."
+      type: OOTB_FIELD_TYPE_SEMVER
+      example_value: "1.2.3"
+      title: "App Version"
+      supported_operators: OOTB_FIELD_OPERATOR_WILDCARD
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_WILDCARD
+      supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+      supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+      supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+      suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+    }
+    fields: {
+      key: "foreground"
+      description: "Whether the application was in the foreground when the event was recorded."
+      type: OOTB_FIELD_TYPE_BOOL
+      example_value: "1"
+      title: "Foreground"
+      comparison_type: OOTB_FIELD_TYPE_STRING
+      supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+      suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+      choices: {
+        value: "1"
+        title: "Yes"
+      }
+      choices: {
+        value: "0"
+        title: "No"
+      }
+    }
+    fields: {
+      key: "_locale"
+      description: "The locale reported by the device."
+      type: OOTB_FIELD_TYPE_STRING
+      example_value: "en-US"
+      title: "Locale"
+      supported_operators: OOTB_FIELD_OPERATOR_REGEX
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+      suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+    }
+    fields: {
+      key: "log_level"
+      description: "The severity level of the log associated with the event."
+      type: OOTB_FIELD_TYPE_INT
+      example_value: "2"
+      title: "Log Level"
+      supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_IN
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+      supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+      supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+      supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+      suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+      choices: {
+        value: "0"
+        title: "Trace"
+      }
+      choices: {
+        value: "1"
+        title: "Debug"
+      }
+      choices: {
+        value: "2"
+        title: "Info"
+      }
+      choices: {
+        value: "3"
+        title: "Warning"
+      }
+      choices: {
+        value: "4"
+        title: "Error"
+      }
+      choices: {
+        value: "5"
+        title: "Critical"
+      }
+    }
+    fields: {common_field: OOTB_COMMON_FIELD_MODEL}
+    fields: {
+      common_field: OOTB_COMMON_FIELD_MODEL
+      platform: OOTB_FIELD_PLATFORM_IOS
+      example_value: "iPhone 15"
+    }
+    fields: {
+      common_field: OOTB_COMMON_FIELD_MODEL
+      platform: OOTB_FIELD_PLATFORM_ANDROID
+      example_value: "Pixel 8"
+    }
+    fields: {
+      key: "network_type"
+      description: "The network connection type reported with the event."
+      type: OOTB_FIELD_TYPE_STRING
+      example_value: "wlan"
+      title: "Network Type"
+      supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_IN
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+      suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+      choices: {
+        value: "wlan"
+        title: "Wi-Fi"
+      }
+      choices: {
+        value: "ethernet"
+        title: "Ethernet"
+      }
+      choices: {
+        value: "wwan"
+        title: "Cellular"
+      }
+      choices: {
+        value: "other"
+        title: "Other"
+      }
+    }
+    fields: {
+      key: "os"
+      description: "The operating system reported with the event."
+      type: OOTB_FIELD_TYPE_STRING
+      example_value: "Android"
+      title: "Operating System"
+      supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_WILDCARD
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_WILDCARD
+      supported_operators: OOTB_FIELD_OPERATOR_REGEX
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+      suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+    }
+    fields: {
+      key: "os_version"
+      description: "The operating system version, compared using semantic-version operators."
+      type: OOTB_FIELD_TYPE_SEMVER
+      example_value: "14.0.0"
+      title: "OS Version"
+      supported_operators: OOTB_FIELD_OPERATOR_WILDCARD
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_WILDCARD
+      supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+      supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+      supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+      suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+    }
+    fields: {
+      key: "_network_quality"
+      description: "The network quality classification reported with the event."
+      type: OOTB_FIELD_TYPE_STRING
+      example_value: "offline"
+      title: "Network Quality"
+      supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_SET
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+      choices: {
+        value: "offline"
+        title: "Offline"
+      }
+    }
+    fields: {
+      key: "_device_id"
+      description: "The device identifier associated with the event."
+      type: OOTB_FIELD_TYPE_STRING
+      example_value: "device-123"
+      title: "Device ID"
+      supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_WILDCARD
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_WILDCARD
+      supported_operators: OOTB_FIELD_OPERATOR_REGEX
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+    }
+    fields: {
+      key: "_build_number"
+      description: "The application build number reported with the event."
+      type: OOTB_FIELD_TYPE_SEMVER
+      example_value: "42"
+      platform: OOTB_FIELD_PLATFORM_IOS
+      title: "Build Number"
+      supported_operators: OOTB_FIELD_OPERATOR_WILDCARD
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_WILDCARD
+      supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+      supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+      supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+    }
+    fields: {
+      key: "_app_version_code"
+      description: "The Android application version code reported with the event."
+      type: OOTB_FIELD_TYPE_INT
+      example_value: "42"
+      platform: OOTB_FIELD_PLATFORM_ANDROID
+      title: "App Version Code"
+      supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+      supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+      supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+      supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+    }
+  };
   // Cross-platform OOTB condition types. These events are emitted on all supported platforms.
   // Where applicable, enum value documentation and metadata describe the well-known log fields
   // carried by that event and matchable via `generic_match`. Platform-specific enums below share
@@ -335,51 +564,80 @@ message OotbMatch {
       // Invalid placeholder value. Do not use.
       UNKNOWN = 0;
       // App moves out of the foreground and begins backgrounding.
-      APP_BACKGROUND = 1;
+      APP_BACKGROUND = 1 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Scene Did Enter Background"
+        description: "App moves out of the foreground and begins backgrounding."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SCENE}
+      }];
       // The SDK's built-in JS error handler captures a fatal JavaScript error.
-      APP_BUILT_IN_JS_FATAL_ERROR = 2;
+      APP_BUILT_IN_JS_FATAL_ERROR = 2 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Fatal Issue - JavaScript"
+        description: "The SDK's built-in JS error handler captures a fatal JavaScript error."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_DETAILS_JS}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_INFO_JS}
+      }];
       // The SDK's built-in JS error handler captures a non-fatal JavaScript error.
-      APP_BUILT_IN_JS_NON_FATAL_ERROR = 3;
+      APP_BUILT_IN_JS_NON_FATAL_ERROR = 3 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Non Fatal Issue - JavaScript"
+        description: "The SDK's built-in JS error handler captures a non-fatal JavaScript error."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_DETAILS_JS}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_INFO_JS}
+      }];
       // App leaves the screen and its foreground UI closes.
-      APP_CLOSE = 4;
+      APP_CLOSE = 4 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "App Close"
+        description: "App leaves the screen and its foreground UI closes."
+      }];
       // App moves into the foreground and becomes active.
-      APP_FOREGROUND = 5;
+      APP_FOREGROUND = 5 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Scene Will Enter Foreground"
+        description: "App moves into the foreground and becomes active."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SCENE}
+      }];
       // App launch completes for a new process.
       APP_LAUNCH = 6 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "App Did Finish Launching"
+        description: "App launch completes for a new process."
         well_known_fields: {
           key: "startup_type"
           description: "COLD, WARM, or HOT."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "COLD"
           platform: OOTB_FIELD_PLATFORM_ANDROID
         }
         well_known_fields: {
           key: "startup_reason"
           description: "Why the app was launched."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "user"
           platform: OOTB_FIELD_PLATFORM_ANDROID
         }
         well_known_fields: {
           key: "startup_state"
           description: "Startup state at launch time."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "foreground"
           platform: OOTB_FIELD_PLATFORM_ANDROID
         }
         well_known_fields: {
           key: "startup_launch_mode"
           description: "Activity launch mode."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "standard"
           platform: OOTB_FIELD_PLATFORM_ANDROID
         }
         well_known_fields: {
           key: "startup_was_forced_stopped"
           description: "Whether the app was previously force-stopped."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "false"
           platform: OOTB_FIELD_PLATFORM_ANDROID
         }
         well_known_fields: {
           key: "startup_time_to_initial_display_ms"
           description: "Time from process start to first frame, if available."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "300"
           unit: "ms"
           platform: OOTB_FIELD_PLATFORM_ANDROID
         }
@@ -387,180 +645,695 @@ message OotbMatch {
           key: "startup_intent_action"
           description: "Intent action that triggered the launch, if present."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "android.intent.action.MAIN"
           platform: OOTB_FIELD_PLATFORM_ANDROID
         }
         well_known_fields: {
           key: "_launch_type"
           description: "Launch type (e.g., remote notification)."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "remote notification"
           platform: OOTB_FIELD_PLATFORM_IOS
         }
         well_known_fields: {
           key: "_scene"
           description: "Scene that is activated."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "main"
           platform: OOTB_FIELD_PLATFORM_IOS
         }
       }];
       // App reached time-to-interactive after launch. Carries the same fields as APP_LAUNCH.
-      APP_LAUNCH_TTI = 7;
+      APP_LAUNCH_TTI = 7 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "App Launch TTI"
+        description: "App reached time-to-interactive after launch. Carries the same fields as APP_LAUNCH."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_DURATION_MS}
+      }];
       // App opens into the foreground, either on a cold start or when reopened from the
       // background.
-      APP_OPEN = 8;
+      APP_OPEN = 8 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "App Open"
+        description: "App opens into the foreground, either on a cold start or when reopened from the background."
+      }];
       // An app termination is recorded. On Android this includes OS-reported exit information; on
       // Apple this corresponds to the app termination notification.
       APP_TERMINATION = 9 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "App Will Terminate"
+        description: "An app termination is recorded. On Android this includes OS-reported exit information; on Apple this corresponds to the app termination notification."
+        well_known_fields: {
+          key: "_app_exit_description"
+          description: "The description reported for the application exit."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "Process exited unexpectedly"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "App Exit Description"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+        }
+        well_known_fields: {
+          key: "_app_exit_importance"
+          description: "The process importance reported when the application exited."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "FOREGROUND"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "App Exit Importance"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "CACHED"
+            title: "Cached"
+          }
+          choices: {
+            value: "CANT_SAVE_STATE"
+            title: "Can't save state"
+          }
+          choices: {
+            value: "FOREGROUND"
+            title: "Foreground"
+          }
+          choices: {
+            value: "FOREGROUND_SERVICE"
+            title: "Foreground Service"
+          }
+          choices: {
+            value: "GONE"
+            title: "Gone"
+          }
+          choices: {
+            value: "PERCEPTIBLE"
+            title: "Perceptible"
+          }
+          choices: {
+            value: "SERVICE"
+            title: "Service"
+          }
+          choices: {
+            value: "TOP_SLEEPING"
+            title: "Top Sleeping"
+          }
+          choices: {
+            value: "VISIBLE"
+            title: "Visible"
+          }
+          choices: {
+            value: "UNKNOWN"
+            title: "Unknown"
+          }
+        }
         well_known_fields: {
           key: "_app_exit_reason"
-          description: "iOS: \"app_will_terminate_notification\". Android: ApplicationExitInfo reason."
+          description: "The app termination notification reason on iOS."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "app_will_terminate_notification"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "App Exit Reason"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          choices: {
+            value: "app_will_terminate_notification"
+            title: "App Will Terminate Notification"
+          }
+        }
+        well_known_fields: {
+          key: "_app_exit_reason"
+          description: "The Android ApplicationExitInfo reason for the app exit."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "CRASH"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "App Exit Reason"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "CRASH"
+            title: "Crash"
+          }
+          choices: {
+            value: "CRASH_NATIVE"
+            title: "Crash Native"
+          }
+          choices: {
+            value: "ANR"
+            title: "ANR"
+          }
+          choices: {
+            value: "LOW_MEMORY"
+            title: "Low Memory"
+          }
+          choices: {
+            value: "USER_REQUESTED"
+            title: "User Requested"
+          }
+          choices: {
+            value: "USER_STOPPED"
+            title: "User Stopped"
+          }
+          choices: {
+            value: "EXIT_SELF"
+            title: "Exit Self"
+          }
+          choices: {
+            value: "SIGNALED"
+            title: "Signaled"
+          }
+          choices: {
+            value: "INITIALIZATION_FAILURE"
+            title: "Initialization Failure"
+          }
+          choices: {
+            value: "PERMISSION_CHANGE"
+            title: "Permission Change"
+          }
+          choices: {
+            value: "EXCESSIVE_RESOURCE_USAGE"
+            title: "Excessive Resource Usage"
+          }
+          choices: {
+            value: "DEPENDENCY_DIED"
+            title: "Dependency Died"
+          }
+          choices: {
+            value: "OTHER"
+            title: "Other"
+          }
+          choices: {
+            value: "FREEZER"
+            title: "Freezer"
+          }
+          choices: {
+            value: "UNKNOWN"
+            title: "Unknown"
+          }
+        }
+        well_known_fields: {
+          key: "_app_exit_status"
+          description: "The exit status reported for the application process."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "1"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "App Exit Status"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_memory_class"
+          description: "The memory class reported for the application."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "256"
+          unit: "mb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Memory Class"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_app_exit_pss"
+          description: "The proportional set size reported for the exited process."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "65536"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Memory Proportional Set Size (PSS)"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_app_exit_rss"
+          description: "The resident set size reported for the exited process."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "131072"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Memory Resident Set Size (RSS)"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_app_exit_process_name"
+          description: "The name of the process that exited."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "com.example.app"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Process Name"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
         }
       }];
       // App updates to a new version.
-      APP_UPDATE = 10;
+      APP_UPDATE = 10 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "App Update"
+        description: "App updates to a new version."
+        well_known_fields: {
+          key: "_app_install_size_bytes"
+          description: "The reported application installation size in bytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "10485760"
+          unit: "bytes"
+          title: "App Installation Size"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_previous_app_version"
+          description: "The application version recorded before the change."
+          type: OOTB_FIELD_TYPE_SEMVER
+          example_value: "1.2.2"
+          title: "Previous App Version"
+          supported_operators: OOTB_FIELD_OPERATOR_WILDCARD
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_WILDCARD
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_previous_build_number"
+          description: "The application build number recorded before the change."
+          type: OOTB_FIELD_TYPE_SEMVER
+          example_value: "41"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Previous Build Number"
+          supported_operators: OOTB_FIELD_OPERATOR_WILDCARD
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_WILDCARD
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+        }
+        well_known_fields: {
+          key: "_previous_app_version_code"
+          description: "The Android version code recorded before the change."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "41"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Previous App Version Code"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+        }
+      }];
       // Device battery state changes.
       BATTERY_STATE_CHANGE = 11 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Battery State Change"
+        description: "Device battery state changes."
         well_known_fields: {
           key: "_state"
           description: "Android: \"charging\"/\"unplugged\". iOS: UIDevice battery state string."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "charging"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Battery state change"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "charging"
+            title: "charging"
+          }
+          choices: {
+            value: "unplugged"
+            title: "unplugged"
+          }
+          choices: {
+            value: "full"
+            title: "full"
+          }
+        }
+        well_known_fields: {
+          key: "_state"
+          description: "Android: \"charging\"/\"unplugged\". iOS: UIDevice battery state string."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "charging"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Battery State Change"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "charging"
+            title: "charging"
+          }
+          choices: {
+            value: "unplugged"
+            title: "unplugged"
+          }
         }
         well_known_fields: {
           key: "_battery_level"
           description: "Battery percentage."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "75"
           unit: "percent"
         }
         well_known_fields: {
           key: "_battery_val"
           description: "Battery level as a float."
           type: OOTB_FIELD_TYPE_FLOAT
+          example_value: "0.75"
         }
       }];
       // A GraphQL request starts. Requires supported network instrumentation so the SDK can emit
       // the underlying HTTP and GraphQL span data.
       GQL_REQUEST = 12 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "GraphQL Request"
+        description: "A GraphQL request starts. Requires supported network instrumentation so the SDK can emit the underlying HTTP and GraphQL span data."
         well_known_fields: {
-          key: "_method"
-          description: "HTTP method."
-          type: OOTB_FIELD_TYPE_STRING
+          key: "_request_body_bytes_expected_to_send_count"
+          description: "The expected size of the request body, in bytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "1024"
+          unit: "bytes"
+          title: "Body Size (Expected)"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_COUNTER
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
-        well_known_fields: {
-          key: "_host"
-          description: "Request host."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_path_template"
-          description: "Format: gql-{operation_name}."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_operation_name"
-          description: "GraphQL operation name."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_operation_type"
-          description: "GraphQL operation type (query/mutation/subscription)."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_operation_id"
-          description: "GraphQL operation ID."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_span_id"
-          description: "Span identifier."
-          type: OOTB_FIELD_TYPE_STRING
-        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_METHOD}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_OPERATION_ID}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_OPERATION_NAME}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_OPERATION_TYPE}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_GQL_PATH}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_GQL_PATH_TEMPLATE}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_GQL_QUERY}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_ID}
       }];
       // A GraphQL response completes. Requires supported network instrumentation and carries all
       // GQL_REQUEST fields plus response-specific fields.
       GQL_RESPONSE = 13 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "GraphQL Response"
+        description: "A GraphQL response completes. Requires supported network instrumentation and carries all GQL_REQUEST fields plus response-specific fields."
         well_known_fields: {
-          key: "_method"
-          description: "HTTP method."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_host"
-          description: "Request host."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_path_template"
-          description: "Format: gql-{operation_name}."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_operation_name"
-          description: "GraphQL operation name."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_operation_type"
-          description: "GraphQL operation type (query/mutation/subscription)."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_operation_id"
-          description: "GraphQL operation ID."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_status_code"
-          description: "HTTP status code."
+          key: "_dns_resolution_duration_ms"
+          description: "Time spent resolving DNS for the network request."
           type: OOTB_FIELD_TYPE_INT
-        }
-        well_known_fields: {
-          key: "_duration_ms"
-          description: "Round-trip duration."
-          type: OOTB_FIELD_TYPE_INT
+          example_value: "18"
           unit: "ms"
+          title: "DNS Resolution Duration"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_ROUND_TRIP_DURATION_MS}
+        well_known_fields: {
+          key: "_error_message"
+          description: "The error message reported with the event."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "Request failed"
+          title: "Error Message"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_METHOD}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_STATUS_CODE}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_OPERATION_ID}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_OPERATION_NAME}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_OPERATION_TYPE}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_GQL_PATH}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_GQL_PATH_TEMPLATE}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_GQL_QUERY}
+        well_known_fields: {
+          key: "_request_body_bytes_sent_count"
+          description: "The number of request-body bytes sent."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "1024"
+          unit: "bytes"
+          title: "Request Body Size (Sent)"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_COUNTER
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_request_headers_bytes_count"
+          description: "The size of the request headers, in bytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "256"
+          unit: "bytes"
+          title: "Request Headers Size"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_COUNTER
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_fetch_init_duration_ms"
+          description: "Time spent initializing the network request."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "12"
+          unit: "ms"
+          title: "Request Init Duration"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_response_body_bytes_received_count"
+          description: "The number of response-body bytes received."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "4096"
+          unit: "bytes"
+          title: "Response Body Size"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_COUNTER
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_response_headers_bytes_count"
+          description: "The size of the response headers, in bytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "256"
+          unit: "bytes"
+          title: "Response Headers Size"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_COUNTER
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_response_latency_ms"
+          description: "The response latency recorded for the network request, in milliseconds."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "250"
+          unit: "ms"
+          title: "Response Latency"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
         well_known_fields: {
           key: "_result"
           description: "\"success\" or \"failure\"."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "success"
+          title: "Result"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "success"
+            title: "Success"
+          }
+          choices: {
+            value: "failure"
+            title: "Failure"
+          }
+          choices: {
+            value: "canceled"
+            title: "Canceled"
+          }
         }
         well_known_fields: {
-          key: "_span_id"
-          description: "Span identifier."
-          type: OOTB_FIELD_TYPE_STRING
+          key: "_tcp_duration_ms"
+          description: "Time spent establishing the TCP connection."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "25"
+          unit: "ms"
+          title: "TCP Handshake Duration"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
+        well_known_fields: {
+          key: "_tls_duration_ms"
+          description: "Time spent establishing the TLS connection."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "40"
+          unit: "ms"
+          title: "TLS Handshake Duration"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_ID}
       }];
       // Device low-power mode toggles.
       LOW_POWER_MODE = 14 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
-        well_known_fields: {
-          key: "_low_power_enabled"
-          description: "Power save mode state."
-          type: OOTB_FIELD_TYPE_BOOL
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
+        title: "Low Power Mode"
+        description: "Device low-power mode toggles."
         well_known_fields: {
           key: "_low_power_mode"
           description: "Low power mode state."
           type: OOTB_FIELD_TYPE_BOOL
+          example_value: "1"
           platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Low Power Mode Enabled"
+          comparison_type: OOTB_FIELD_TYPE_INT
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "1"
+            title: "Yes"
+          }
+          choices: {
+            value: "0"
+            title: "No"
+          }
+        }
+        well_known_fields: {
+          key: "_low_power_enabled"
+          description: "Power save mode state."
+          type: OOTB_FIELD_TYPE_BOOL
+          example_value: "1"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Low Power Mode Enabled"
+          comparison_type: OOTB_FIELD_TYPE_INT
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "1"
+            title: "Yes"
+          }
+          choices: {
+            value: "0"
+            title: "No"
+          }
         }
         well_known_fields: {
           key: "_battery_val"
           description: "Battery level as a float."
           type: OOTB_FIELD_TYPE_FLOAT
+          example_value: "0.75"
           platform: OOTB_FIELD_PLATFORM_IOS
         }
         well_known_fields: {
           key: "_state"
           description: "Battery charging state."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "charging"
           platform: OOTB_FIELD_PLATFORM_IOS
         }
         well_known_fields: {
           key: "_battery_level"
           description: "Battery percentage."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "75"
           unit: "percent"
           platform: OOTB_FIELD_PLATFORM_IOS
         }
@@ -569,265 +1342,568 @@ message OotbMatch {
       // the configured low-memory threshold. On Apple this is emitted for system memory pressure
       // notifications.
       MEMORY_PRESSURE = 15 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Memory Pressure"
+        description: "App memory pressure is recorded. On Android this is emitted when app memory usage meets the configured low-memory threshold. On Apple this is emitted for system memory pressure notifications."
         well_known_fields: {
-          key: "_jvm_used_kb"
-          description: "JVM heap currently used."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_jvm_total_kb"
-          description: "JVM heap currently allocated/committed."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_jvm_max_kb"
-          description: "JVM heap maximum size."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_jvm_used_percent"
-          description: "JVM used as percent of max."
+          key: "_app_used_percent"
+          description: "App used memory as a percent of the estimated limit."
           type: OOTB_FIELD_TYPE_FLOAT
-          unit: "percent"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_native_used_kb"
-          description: "Native heap allocated."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_native_total_kb"
-          description: "Native heap total size."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_memory_class"
-          description: "Per-app memory class reported by Android."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "MB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
+          example_value: "50.0"
+          unit: "%"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "App Memory Used Percent"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
         well_known_fields: {
           key: "_is_memory_low"
           description: "Whether app memory usage is at or above the configured low-memory threshold."
           type: OOTB_FIELD_TYPE_BOOL
+          example_value: "1"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Is App Memory Low"
+          comparison_type: OOTB_FIELD_TYPE_INT
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "1"
+            title: "Yes"
+          }
+          choices: {
+            value: "0"
+            title: "No"
+          }
         }
         well_known_fields: {
-          key: "_app_used_kb"
-          description: "App physical memory footprint."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_IOS
-        }
-        well_known_fields: {
-          key: "_app_limit_kb"
-          description: "Estimated app memory limit before termination."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_IOS
-        }
-        well_known_fields: {
-          key: "_device_kb"
-          description: "Total device RAM."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_IOS
-        }
-        well_known_fields: {
-          key: "_app_used_percent"
-          description: "App used memory as a percent of the estimated limit."
-          type: OOTB_FIELD_TYPE_FLOAT
-          unit: "percent"
-          platform: OOTB_FIELD_PLATFORM_IOS
+          key: "_is_memory_low"
+          description: "Whether app memory usage is at or above the configured low-memory threshold."
+          type: OOTB_FIELD_TYPE_BOOL
+          example_value: "1"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Is Low JVM Memory"
+          comparison_type: OOTB_FIELD_TYPE_INT
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "1"
+            title: "Yes"
+          }
+          choices: {
+            value: "0"
+            title: "No"
+          }
         }
         well_known_fields: {
           key: "_mem_level"
           description: "Apple memory pressure level: normal, warning, or critical."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "warning"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Memory Level"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "normal"
+            title: "Normal"
+          }
+          choices: {
+            value: "warning"
+            title: "Warning"
+          }
+          choices: {
+            value: "critical"
+            title: "Critical"
+          }
+        }
+        well_known_fields: {
+          key: "_app_limit_kb"
+          description: "Estimated app memory limit before termination."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "262144"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Memory Limit"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_app_used_kb"
+          description: "App physical memory footprint."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "131072"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Memory Usage"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_THRESHOLD_MEMORY_KB}
+        well_known_fields: {
+          key: "_jvm_max_kb"
+          description: "JVM heap maximum size."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "524288"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "JVM Max Memory"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_jvm_total_kb"
+          description: "JVM heap currently allocated/committed."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "262144"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "JVM Memory Limit"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_jvm_used_kb"
+          description: "JVM heap currently used."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "131072"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "JVM Memory Usage"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_jvm_used_percent"
+          description: "JVM used as percent of max."
+          type: OOTB_FIELD_TYPE_FLOAT
+          example_value: "50.0"
+          unit: "%"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "JVM Memory Used Percent"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_memory_class"
+          description: "Per-app memory class reported by Android."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "256"
+          unit: "mb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Memory Class"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_native_total_kb"
+          description: "Native heap total size."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "262144"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Native Memory Limit"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_native_used_kb"
+          description: "Native heap allocated."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "131072"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Native Memory Usage"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_device_kb"
+          description: "Total device RAM."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "4194304"
+          unit: "KB"
           platform: OOTB_FIELD_PLATFORM_IOS
         }
       }];
       // An HTTP network request starts. Requires supported network instrumentation integration.
       NETWORK_REQUEST = 16 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
-        well_known_fields: {
-          key: "_method"
-          description: "HTTP method."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_host"
-          description: "Request host."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_path"
-          description: "Full request path (high cardinality)."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_path_template"
-          description: "Normalized path template (prefer for group_by)."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_query"
-          description: "Query string."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_span_id"
-          description: "Span identifier."
-          type: OOTB_FIELD_TYPE_STRING
-        }
+        title: "Network Request"
+        description: "An HTTP network request starts. Requires supported network instrumentation integration."
         well_known_fields: {
           key: "_request_body_bytes_expected_to_send_count"
           description: "Expected request body size from Content-Length."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "1024"
           unit: "bytes"
+          title: "Body Size (Expected)"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_COUNTER
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_METHOD}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_QUERY}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_ID}
       }];
       // An HTTP network response completes. Requires supported network instrumentation integration.
       NETWORK_RESPONSE = 17 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Network Response"
+        description: "An HTTP network response completes. Requires supported network instrumentation integration."
         well_known_fields: {
-          key: "_method"
-          description: "HTTP method."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_host"
-          description: "Request host."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_path"
-          description: "Full request path (high cardinality)."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_path_template"
-          description: "Normalized path template (prefer for group_by)."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_query"
-          description: "Query string."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_status_code"
-          description: "HTTP status code."
+          key: "_dns_resolution_duration_ms"
+          description: "DNS lookup duration."
           type: OOTB_FIELD_TYPE_INT
-        }
-        well_known_fields: {
-          key: "_result"
-          description: "\"success\" or \"failure\". Prefer over _status_code for filtering."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_duration_ms"
-          description: "Round-trip duration."
-          type: OOTB_FIELD_TYPE_INT
+          example_value: "18"
           unit: "ms"
+          title: "DNS Resolution Duration"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
-        well_known_fields: {
-          key: "_error_type"
-          description: "Error type string (Android). iOS emits _error_code instead."
-          type: OOTB_FIELD_TYPE_STRING
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_ROUND_TRIP_DURATION_MS}
         well_known_fields: {
           key: "_error_code"
           description: "Numeric error code (iOS). Android emits _error_type instead."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "404"
           platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Error Code"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
         }
         well_known_fields: {
           key: "_error_message"
           description: "Human-readable error description."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "Request failed"
+          title: "Error Message"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
         }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_METHOD}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_STATUS_CODE}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_QUERY}
         well_known_fields: {
           key: "_request_body_bytes_sent_count"
           description: "Request body bytes sent."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "1024"
           unit: "bytes"
-        }
-        well_known_fields: {
-          key: "_response_body_bytes_received_count"
-          description: "Response body bytes received."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes"
+          title: "Request Body Size (Sent)"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_COUNTER
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
         well_known_fields: {
           key: "_request_headers_bytes_count"
           description: "Request header bytes."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "256"
           unit: "bytes"
-        }
-        well_known_fields: {
-          key: "_response_headers_bytes_count"
-          description: "Response header bytes."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes"
-        }
-        well_known_fields: {
-          key: "_dns_resolution_duration_ms"
-          description: "DNS lookup duration."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "ms"
-        }
-        well_known_fields: {
-          key: "_tls_duration_ms"
-          description: "TLS handshake duration."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "ms"
-        }
-        well_known_fields: {
-          key: "_tcp_duration_ms"
-          description: "TCP connection duration."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "ms"
+          title: "Request Headers Size"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_COUNTER
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
         well_known_fields: {
           key: "_fetch_init_duration_ms"
           description: "Fetch initialization duration."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "12"
           unit: "ms"
+          title: "Request Init Duration"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_response_body_bytes_received_count"
+          description: "Response body bytes received."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "4096"
+          unit: "bytes"
+          title: "Response Body Size"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_COUNTER
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_response_headers_bytes_count"
+          description: "Response header bytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "256"
+          unit: "bytes"
+          title: "Response Headers Size"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_COUNTER
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
         well_known_fields: {
           key: "_response_latency_ms"
           description: "Time to first response byte."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "250"
           unit: "ms"
+          title: "Response Latency"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_result"
+          description: "\"success\" or \"failure\". Prefer over _status_code for filtering."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "success"
+          title: "Result"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "success"
+            title: "Success"
+          }
+          choices: {
+            value: "failure"
+            title: "Failure"
+          }
+          choices: {
+            value: "canceled"
+            title: "Canceled"
+          }
+        }
+        well_known_fields: {
+          key: "_tcp_duration_ms"
+          description: "TCP connection duration."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "25"
+          unit: "ms"
+          title: "TCP Handshake Duration"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_tls_duration_ms"
+          description: "TLS handshake duration."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "40"
+          unit: "ms"
+          title: "TLS Handshake Duration"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_error_type"
+          description: "Error type string (Android). iOS emits _error_code instead."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "TimeoutException"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Error Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
         }
         well_known_fields: {
           key: "_protocol"
           description: "Protocol used (e.g., h2, http/1.1)."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "h2"
         }
-        well_known_fields: {
-          key: "_span_id"
-          description: "Span identifier."
-          type: OOTB_FIELD_TYPE_STRING
-        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_ID}
       }];
       // Device orientation changes.
       ORIENTATION_CHANGE = 18 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Orientation Change"
+        description: "Device orientation changes."
         well_known_fields: {
           key: "_orientation"
           description: "Android: \"portrait\"/\"landscape\". iOS: portrait, portraitUpsideDown, landscapeLeft, landscapeRight, faceUp, faceDown, unknown."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "portrait"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Orientation"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "portrait"
+            title: "Portrait"
+          }
+          choices: {
+            value: "portraitUpsideDown"
+            title: "Portrait Upside Down"
+          }
+          choices: {
+            value: "landscapeLeft"
+            title: "Landscape Left"
+          }
+          choices: {
+            value: "landscapeRight"
+            title: "Landscape Right"
+          }
+          choices: {
+            value: "faceUp"
+            title: "Face Up"
+          }
+          choices: {
+            value: "faceDown"
+            title: "Face Down"
+          }
+        }
+        well_known_fields: {
+          key: "_orientation"
+          description: "Android: \"portrait\"/\"landscape\". iOS: portrait, portraitUpsideDown, landscapeLeft, landscapeRight, faceUp, faceDown, unknown."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "portrait"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Orientation"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "portrait"
+            title: "Portrait"
+          }
+          choices: {
+            value: "landscape"
+            title: "Landscape"
+          }
         }
       }];
       // A periodic resource snapshot. Carries device and process resource metrics such as memory,
@@ -835,97 +1911,451 @@ message OotbMatch {
       // low-power fields are emitted on every snapshot; disk-usage fields are sampled at most once
       // every 24 hours.
       RESOURCE = 19 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
-        well_known_fields: {
-          key: "_jvm_used_kb"
-          description: "JVM heap currently used. Included on every Android RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_jvm_max_kb"
-          description: "JVM heap maximum size. Included on every Android RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_jvm_total_kb"
-          description: "JVM heap currently allocated or committed. Included on every Android RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_jvm_used_percent"
-          description: "JVM used as a percent of max. Included on every Android RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_FLOAT
-          unit: "percent"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_is_memory_low"
-          description: "Whether the configured low-memory threshold is currently met. Present only when low-memory detection is configured."
-          type: OOTB_FIELD_TYPE_BOOL
-        }
-        well_known_fields: {
-          key: "_native_used_kb"
-          description: "Native heap allocated. Included on every Android RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_native_total_kb"
-          description: "Native heap total size. Included on every Android RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_memory_class"
-          description: "Per-app memory class reported by Android. Included on every Android RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "MB"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_app_used_kb"
-          description: "App physical memory footprint. Included on every Apple RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_IOS
-        }
-        well_known_fields: {
-          key: "_app_limit_kb"
-          description: "Estimated app memory limit before termination. Included on every Apple RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_IOS
-        }
+        title: "Resource Utilization"
+        description: "A periodic resource snapshot. Carries device and process resource metrics such as memory, battery, power, disk, and network throughput fields. Memory, battery, and low-power fields are emitted on every snapshot; disk-usage fields are sampled at most once every 24 hours."
         well_known_fields: {
           key: "_app_used_percent"
           description: "App used memory as a percent of the estimated limit. Included on Apple snapshots when the memory limit estimate is valid."
           type: OOTB_FIELD_TYPE_FLOAT
-          unit: "percent"
+          example_value: "50.0"
+          unit: "%"
           platform: OOTB_FIELD_PLATFORM_IOS
+          title: "App Memory Used Percent"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
         well_known_fields: {
-          key: "_device_kb"
-          description: "Total device RAM. Included on every Apple RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "KB"
-          platform: OOTB_FIELD_PLATFORM_IOS
+          key: "_battery_level_change_per_min"
+          description: "Battery percentage-point change per minute. Positive means draining, negative means charging. Present only after the rolling 1-minute battery window is populated."
+          type: OOTB_FIELD_TYPE_FLOAT
+          example_value: "0.5"
+          title: "Battery Consumption"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
         well_known_fields: {
           key: "_battery_val"
           description: "Battery level as a float. Included on every RESOURCE snapshot. May be -1.0 on Apple simulator."
           type: OOTB_FIELD_TYPE_FLOAT
+          example_value: "0.75"
+          title: "Battery Level"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_state"
+          description: "Battery charging state. Included on every RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "charging"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Battery State Change"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "charging"
+            title: "charging"
+          }
+          choices: {
+            value: "unplugged"
+            title: "unplugged"
+          }
+          choices: {
+            value: "full"
+            title: "full"
+          }
+        }
+        well_known_fields: {
+          key: "_state"
+          description: "Battery charging state. Included on every RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "charging"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Battery State Change"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "charging"
+            title: "charging"
+          }
+          choices: {
+            value: "unplugged"
+            title: "unplugged"
+          }
+        }
+        well_known_fields: {
+          key: "_cache_dir_size_bytes"
+          description: "Cache directory size. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "4096"
+          unit: "bytes"
+          title: "Cache Directory Size"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_documents_dir_size_bytes"
+          description: "Documents directory size. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "8192"
+          unit: "bytes"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Documents Directory Size"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_is_memory_low"
+          description: "Whether the configured low-memory threshold is currently met. Present only when low-memory detection is configured."
+          type: OOTB_FIELD_TYPE_BOOL
+          example_value: "1"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Is App Memory Low"
+          comparison_type: OOTB_FIELD_TYPE_INT
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "1"
+            title: "Yes"
+          }
+          choices: {
+            value: "0"
+            title: "No"
+          }
+        }
+        well_known_fields: {
+          key: "_is_memory_low"
+          description: "Whether the configured low-memory threshold is currently met. Present only when low-memory detection is configured."
+          type: OOTB_FIELD_TYPE_BOOL
+          example_value: "1"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Is Low JVM Memory"
+          comparison_type: OOTB_FIELD_TYPE_INT
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "1"
+            title: "Yes"
+          }
+          choices: {
+            value: "0"
+            title: "No"
+          }
+        }
+        well_known_fields: {
+          key: "_app_limit_kb"
+          description: "Estimated app memory limit before termination. Included on every Apple RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "262144"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Memory Limit"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_app_used_kb"
+          description: "App physical memory footprint. Included on every Apple RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "131072"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Memory Usage"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_request_body_bytes_per_min_count"
+          description: "Outbound request-body bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "1024"
+          unit: "bytes"
+          title: "Request Body Bytes Per Minute"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_request_bytes_per_min_count"
+          description: "Total outbound bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "2048"
+          unit: "bytes"
+          title: "Request Bytes Per Minute"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_request_headers_bytes_per_min_count"
+          description: "Outbound request-header bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "256"
+          unit: "bytes"
+          title: "Request Headers Bytes Per Minute"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_response_body_bytes_per_min_count"
+          description: "Inbound response-body bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "4096"
+          unit: "bytes"
+          title: "Response Body Bytes Per Minute"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_response_bytes_per_min_count"
+          description: "Total inbound bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "4352"
+          unit: "bytes"
+          title: "Response Bytes Per Minute"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_response_headers_bytes_per_min_count"
+          description: "Inbound response-header bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "256"
+          unit: "bytes"
+          title: "Response Headers Bytes Per Minute"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_tmp_dir_size_bytes"
+          description: "Temporary directory size. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "4096"
+          unit: "bytes"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Temporary Directory Size"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_external_cache_dir_size_bytes"
+          description: "External cache directory size, when available. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "4096"
+          unit: "bytes"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "External Cache Directory Size"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_external_files_dir_size_bytes"
+          description: "External files directory size, when available. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "8192"
+          unit: "bytes"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "External Files Directory Size"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_files_dir_size_bytes"
+          description: "App files directory size. Sampled at most once every 24 hours."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "8192"
+          unit: "bytes"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Files Directory Size"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_THRESHOLD_MEMORY_KB}
+        well_known_fields: {
+          key: "_jvm_max_kb"
+          description: "JVM heap maximum size. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "524288"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "JVM Max Memory"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_jvm_total_kb"
+          description: "JVM heap currently allocated or committed. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "262144"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "JVM Memory Limit"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_jvm_used_kb"
+          description: "JVM heap currently used. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "131072"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "JVM Memory Usage"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_jvm_used_percent"
+          description: "JVM used as a percent of max. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_FLOAT
+          example_value: "50.0"
+          unit: "%"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "JVM Memory Used Percent"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_memory_class"
+          description: "Per-app memory class reported by Android. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "256"
+          unit: "mb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Memory Class"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_native_total_kb"
+          description: "Native heap total size. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "262144"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Native Memory Limit"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_native_used_kb"
+          description: "Native heap allocated. Included on every Android RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "131072"
+          unit: "kb"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Native Memory Usage"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_device_kb"
+          description: "Total device RAM. Included on every Apple RESOURCE snapshot."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "4194304"
+          unit: "KB"
+          platform: OOTB_FIELD_PLATFORM_IOS
         }
         well_known_fields: {
           key: "_battery_level"
           description: "Battery percentage. Included on every Android RESOURCE snapshot."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "75"
           unit: "percent"
           platform: OOTB_FIELD_PLATFORM_ANDROID
         }
@@ -933,175 +2363,212 @@ message OotbMatch {
           key: "_battery_level"
           description: "Battery percentage when the battery level is known. Omitted on Apple simulator and other unknown battery states."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "75"
           unit: "percent"
           platform: OOTB_FIELD_PLATFORM_IOS
-        }
-        well_known_fields: {
-          key: "_state"
-          description: "Battery charging state. Included on every RESOURCE snapshot."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_battery_level_change_per_min"
-          description: "Battery percentage-point change per minute. Positive means draining, negative means charging. Present only after the rolling 1-minute battery window is populated."
-          type: OOTB_FIELD_TYPE_FLOAT
         }
         well_known_fields: {
           key: "_low_power_enabled"
           description: "Low-power mode state. Included on every RESOURCE snapshot."
           type: OOTB_FIELD_TYPE_BOOL
-        }
-        well_known_fields: {
-          key: "_cache_dir_size_bytes"
-          description: "Cache directory size. Sampled at most once every 24 hours."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes"
-        }
-        well_known_fields: {
-          key: "_files_dir_size_bytes"
-          description: "App files directory size. Sampled at most once every 24 hours."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_external_cache_dir_size_bytes"
-          description: "External cache directory size, when available. Sampled at most once every 24 hours."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_external_files_dir_size_bytes"
-          description: "External files directory size, when available. Sampled at most once every 24 hours."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes"
-          platform: OOTB_FIELD_PLATFORM_ANDROID
-        }
-        well_known_fields: {
-          key: "_documents_dir_size_bytes"
-          description: "Documents directory size. Sampled at most once every 24 hours."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes"
-          platform: OOTB_FIELD_PLATFORM_IOS
-        }
-        well_known_fields: {
-          key: "_tmp_dir_size_bytes"
-          description: "Temporary directory size. Sampled at most once every 24 hours."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes"
-          platform: OOTB_FIELD_PLATFORM_IOS
-        }
-        well_known_fields: {
-          key: "_request_bytes_per_min_count"
-          description: "Total outbound bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes/min"
-        }
-        well_known_fields: {
-          key: "_request_body_bytes_per_min_count"
-          description: "Outbound request-body bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes/min"
-        }
-        well_known_fields: {
-          key: "_request_headers_bytes_per_min_count"
-          description: "Outbound request-header bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes/min"
-        }
-        well_known_fields: {
-          key: "_response_bytes_per_min_count"
-          description: "Total inbound bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes/min"
-        }
-        well_known_fields: {
-          key: "_response_body_bytes_per_min_count"
-          description: "Inbound response-body bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes/min"
-        }
-        well_known_fields: {
-          key: "_response_headers_bytes_per_min_count"
-          description: "Inbound response-header bytes over the preceding minute of tracked HTTP traffic. Present once the rolling 1-minute tracker has enough history."
-          type: OOTB_FIELD_TYPE_INT
-          unit: "bytes/min"
+          example_value: "1"
         }
       }];
       // A screen or view is displayed.
       SCREEN_VIEW = 20 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Screen View"
+        description: "A screen or view is displayed."
         well_known_fields: {
           key: "_screen_name"
           description: "Name of the screen or view."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "Home"
+          title: "Screen Name"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
         }
       }];
       // SDK configuration is applied during SDK startup.
-      SDK_CONFIGURATION = 21;
+      SDK_CONFIGURATION = 21 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "SDK Started"
+        description: "SDK configuration is applied during SDK startup."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_DURATION_MS}
+        well_known_fields: {
+          key: "_sdk_version"
+          description: "The Capture SDK version that emitted the event."
+          type: OOTB_FIELD_TYPE_SEMVER
+          example_value: "0.24.0"
+          title: "SDK Version"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+      }];
       // A Session Replay frame is captured.
-      SESSION_REPLAY = 22;
+      SESSION_REPLAY = 22 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Session Replay"
+        description: "A Session Replay frame is captured."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_DURATION_MS}
+      }];
       // A custom span ends.
       SPAN_END = 23 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
-        well_known_fields: {
-          key: "_span_id"
-          description: "Span identifier."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_span_name"
-          description: "Span name."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_span_parent_id"
-          description: "Parent span identifier."
-          type: OOTB_FIELD_TYPE_STRING
-        }
+        title: "Span End"
+        description: "A custom span ends."
         well_known_fields: {
           key: "_duration_ms"
           description: "Span duration."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "250"
           unit: "ms"
+          title: "Duration"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
         well_known_fields: {
           key: "_result"
           description: "Span result."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "success"
+          title: "Result"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "success"
+            title: "Success"
+          }
+          choices: {
+            value: "failure"
+            title: "Failure"
+          }
+          choices: {
+            value: "canceled"
+            title: "Canceled"
+          }
         }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_NAME}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_ID}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_PARENT_ID}
       }];
       // A custom span starts.
       SPAN_START = 24 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
-        well_known_fields: {
-          key: "_span_id"
-          description: "Span identifier."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_span_name"
-          description: "Span name."
-          type: OOTB_FIELD_TYPE_STRING
-        }
-        well_known_fields: {
-          key: "_span_parent_id"
-          description: "Parent span identifier."
-          type: OOTB_FIELD_TYPE_STRING
-        }
+        title: "Span Start"
+        description: "A custom span starts."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_NAME}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_ID}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_PARENT_ID}
       }];
       // Device thermal state changes.
       THERMAL_STATE_CHANGE = 25 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Thermal State Change"
+        description: "Device thermal state changes."
         well_known_fields: {
           key: "_thermal_state"
           description: "Thermal state of the device."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "nominal"
+          platform: OOTB_FIELD_PLATFORM_IOS
+          title: "Thermal State"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "nominal"
+            title: "Nominal"
+          }
+          choices: {
+            value: "fair"
+            title: "Fair"
+          }
+          choices: {
+            value: "serious"
+            title: "Serious"
+          }
+          choices: {
+            value: "critical"
+            title: "Critical"
+          }
+        }
+        well_known_fields: {
+          key: "_thermal_state"
+          description: "Thermal state of the device."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "NONE"
+          platform: OOTB_FIELD_PLATFORM_ANDROID
+          title: "Thermal State"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "NONE"
+            title: "None"
+          }
+          choices: {
+            value: "LIGHT"
+            title: "Light"
+          }
+          choices: {
+            value: "MODERATE"
+            title: "Moderate"
+          }
+          choices: {
+            value: "SEVERE"
+            title: "Severe"
+          }
+          choices: {
+            value: "CRITICAL"
+            title: "Critical"
+          }
+          choices: {
+            value: "EMERGENCY"
+            title: "Emergency"
+          }
+          choices: {
+            value: "SHUTDOWN"
+            title: "Shutdown"
+          }
+          choices: {
+            value: "UNKNOWN"
+            title: "Unknown"
+          }
         }
       }];
       // Device timezone changes.
       TIMEZONE_CHANGE = 26 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Timezone Change"
+        description: "Device timezone changes."
+        well_known_fields: {
+          key: "_timezone"
+          description: "The timezone reported with the event."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "America/New_York"
+          title: "Timezone"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+        }
         well_known_fields: {
           key: "_time_zone"
           description: "New timezone identifier."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "America/New_York"
         }
       }];
     }
@@ -1113,96 +2580,390 @@ message OotbMatch {
     enum AndroidOotbConditionType {
       UNKNOWN = 0;
       // The SDK's built-in fatal issue handler captures an Android app hang.
-      APP_ANDROID_BUILT_IN_ANR = 1;
+      APP_ANDROID_BUILT_IN_ANR = 1 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Fatal Issue - ANR"
+        description: "The SDK's built-in fatal issue handler captures an Android app hang."
+        well_known_fields: {
+          key: "_app_exit_details"
+          description: "Additional details describing the application exit."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "Process exited unexpectedly"
+          title: "Description"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_ANDROID_DEVICE_MODEL}
+        well_known_fields: {
+          key: "_app_exit_info"
+          description: "The reported name or type of the application exit."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "User Perceived ANR"
+          title: "Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "User Perceived ANR"
+            title: "User Perceived"
+          }
+          choices: {
+            value: "Background ANR"
+            title: "Background"
+          }
+          choices: {
+            value: "Broadcast Receiver ANR"
+            title: "Broadcast Receiver"
+          }
+          choices: {
+            value: "Service ANR"
+            title: "Service"
+          }
+          choices: {
+            value: "Content Provider ANR"
+            title: "Content Provider"
+          }
+          choices: {
+            value: "App Registered ANR"
+            title: "App Registered"
+          }
+          choices: {
+            value: "App Start ANR"
+            title: "App Start"
+          }
+          choices: {
+            value: "Undetermined ANR"
+            title: "Undetermined"
+          }
+        }
+      }];
       // The SDK's built-in fatal issue handler captures an Android native crash.
-      APP_ANDROID_BUILT_IN_NATIVE_CRASH = 2;
-      APP_BACKGROUND = 3;
+      APP_ANDROID_BUILT_IN_NATIVE_CRASH = 2 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Fatal Issue - Native"
+        description: "The SDK's built-in fatal issue handler captures an Android native crash."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_ANDROID_DEVICE_MODEL}
+        well_known_fields: {
+          key: "_app_exit_details"
+          description: "The description of the signal associated with the exit."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "Abort signal"
+          title: "Signal Description"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+        }
+        well_known_fields: {
+          key: "_app_exit_info"
+          description: "The signal type associated with the exit."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "SIGABRT"
+          title: "Signal Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "SIGABRT"
+            title: "SIGABRT - Abort program"
+          }
+          choices: {
+            value: "SIGBUS"
+            title: "SIGBUS - Bus error (bad memory access)"
+          }
+          choices: {
+            value: "SIGFPE"
+            title: "SIGFPE - Floating‑point exception"
+          }
+          choices: {
+            value: "SIGILL"
+            title: "SIGILL - Illegal instruction"
+          }
+          choices: {
+            value: "SIGSEGV"
+            title: "SIGSEGV - Segmentation violation (invalid memory reference)"
+          }
+          choices: {
+            value: "SIGTRAP"
+            title: "SIGTRAP - Trace/breakpoint trap"
+          }
+        }
+      }];
+      APP_BACKGROUND = 3 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {title: "App Moved To Background"}];
       APP_BUILT_IN_JS_FATAL_ERROR = 4;
       APP_BUILT_IN_JS_NON_FATAL_ERROR = 5;
       APP_CLOSE = 6;
       // Android app crash. Carries crash details when available. Depending on the source, fields
       // may describe a JVM exception or an OS-reported fatal exit.
       APP_CRASH = 7 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Fatal Issue - JVM"
+        description: "Android app crash. Carries crash details when available. Depending on the source, fields may describe a JVM exception or an OS-reported fatal exit."
         well_known_fields: {
-          key: "_app_exit_source"
-          description: "\"UncaughtExceptionHandler\" or \"ApplicationExitInfo\"."
+          key: "_app_exit_details"
+          description: "Exception message (UncaughtExceptionHandler only)."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "Unhandled exception"
+          title: "Exception Message"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
         }
         well_known_fields: {
           key: "_app_exit_info"
           description: "Exception class name (UncaughtExceptionHandler only)."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "TypeError"
+          title: "Exception Name"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
         }
         well_known_fields: {
-          key: "_app_exit_details"
-          description: "Exception message (UncaughtExceptionHandler only)."
-          type: OOTB_FIELD_TYPE_STRING
+          key: "_is_memory_low"
+          description: "Whether the event reports low JVM memory."
+          type: OOTB_FIELD_TYPE_BOOL
+          example_value: "1"
+          title: "Is Low JVM Memory"
+          comparison_type: OOTB_FIELD_TYPE_INT
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "1"
+            title: "Yes"
+          }
+          choices: {
+            value: "0"
+            title: "No"
+          }
+        }
+        well_known_fields: {
+          key: "_threshold_mem_kb"
+          description: "The reported low-memory threshold, in kilobytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "32768"
+          unit: "kb"
+          title: "JVM Low Mem Threshold"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_jvm_max_kb"
+          description: "The maximum memory available to the JVM, in kilobytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "524288"
+          unit: "kb"
+          title: "JVM Max Memory"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_jvm_total_kb"
+          description: "The total memory reported by the JVM, in kilobytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "262144"
+          unit: "kb"
+          title: "JVM Memory Limit"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_jvm_used_kb"
+          description: "The memory used by the JVM, in kilobytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "131072"
+          unit: "kb"
+          title: "JVM Memory Usage"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_jvm_used_percent"
+          description: "The percentage of JVM memory in use."
+          type: OOTB_FIELD_TYPE_FLOAT
+          example_value: "50.0"
+          unit: "%"
+          title: "JVM Memory Used Percent"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_memory_class"
+          description: "The memory class reported for the application."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "256"
+          unit: "mb"
+          title: "Memory Class"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_native_total_kb"
+          description: "The total native memory reported with the event, in kilobytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "262144"
+          unit: "kb"
+          title: "Native Memory Limit"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_native_used_kb"
+          description: "The native memory in use, in kilobytes."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "131072"
+          unit: "kb"
+          title: "Native Memory Usage"
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
         }
         well_known_fields: {
           key: "_app_exit_thread"
           description: "Thread name (UncaughtExceptionHandler only)."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "main"
+          title: "Thread Name"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_app_exit_source"
+          description: "\"UncaughtExceptionHandler\" or \"ApplicationExitInfo\"."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "ApplicationExitInfo"
         }
         well_known_fields: {
           key: "_app_exit_description"
           description: "Exit description (ApplicationExitInfo only)."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "Process exited unexpectedly"
         }
         well_known_fields: {
           key: "_app_exit_process_name"
           description: "Process name (ApplicationExitInfo only)."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "com.example.app"
         }
         well_known_fields: {
           key: "_app_exit_importance"
           description: "Process importance (ApplicationExitInfo only)."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "FOREGROUND"
         }
         well_known_fields: {
           key: "_app_exit_status"
           description: "Exit status code (ApplicationExitInfo only)."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "1"
         }
         well_known_fields: {
           key: "_app_exit_pss"
           description: "Proportional set size at exit (ApplicationExitInfo only)."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "65536"
           unit: "KB"
         }
         well_known_fields: {
           key: "_app_exit_rss"
           description: "Resident set size at exit (ApplicationExitInfo only)."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "131072"
           unit: "KB"
         }
       }];
       // Deprecated Android-only alias of APP_TERMINATION. Retained for legacy compatibility;
       // prefer APP_TERMINATION for new workflows.
       APP_EXIT = 8;
-      APP_FOREGROUND = 9;
-      APP_LAUNCH = 10;
+      APP_FOREGROUND = 9 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {title: "App Moved To Foreground"}];
+      APP_LAUNCH = 10 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {title: "App Launch"}];
       APP_LAUNCH_TTI = 11;
       APP_OPEN = 12;
-      APP_TERMINATION = 13;
+      APP_TERMINATION = 13 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {title: "App Exit"}];
       APP_UPDATE = 14;
       BATTERY_STATE_CHANGE = 15;
       // A rendering issue is detected for a UI frame. `_frame_issue_type` distinguishes slow,
       // frozen, and ANR-classified frames.
       DROPPED_FRAME = 16 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Slow Rendering"
+        description: "A rendering issue is detected for a UI frame. `_frame_issue_type` distinguishes slow, frozen, and ANR-classified frames."
         well_known_fields: {
           key: "_frame_issue_type"
           description: "Slow, Frozen, or ANR."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "Frozen"
+          title: "Frame Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "ANR"
+            title: "ANR (5s)"
+          }
+          choices: {
+            value: "Frozen"
+            title: "Frozen (700ms)"
+          }
+          choices: {
+            value: "Slow"
+            title: "Slow (16ms)"
+          }
         }
         well_known_fields: {
           key: "_screen_name"
           description: "Active screen name, if set."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "Home"
         }
         well_known_fields: {
           key: "_duration_ms"
           description: "Frame duration."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "250"
           unit: "ms"
         }
       }];
@@ -1231,22 +2992,27 @@ message OotbMatch {
       UNKNOWN = 0;
       // iOS app hang detected when the app stops responding for longer than the configured threshold.
       ANR = 1 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Application Not Responding (ANR)"
+        description: "iOS app hang detected when the app stops responding for longer than the configured threshold."
         well_known_fields: {
           key: "_duration_ms"
           description: "ANR duration."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "250"
           unit: "ms"
         }
         well_known_fields: {
           key: "_threshold_duration_ms"
           description: "Configured ANR threshold."
           type: OOTB_FIELD_TYPE_INT
+          example_value: "2000"
           unit: "ms"
         }
         well_known_fields: {
           key: "_span_id"
           description: "Span identifier for the ANR."
           type: OOTB_FIELD_TYPE_STRING
+          example_value: "span-123"
         }
       }];
       APP_BACKGROUND = 2;
@@ -1255,9 +3021,21 @@ message OotbMatch {
       APP_CLOSE = 5;
       APP_FOREGROUND = 6;
       // The SDK's built-in fatal issue handler captures an iOS app hang.
-      APP_IOS_BUILT_IN_ANR = 7;
+      APP_IOS_BUILT_IN_ANR = 7 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Fatal App Hang"
+        description: "The SDK's built-in fatal issue handler captures an iOS app hang."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_DETAILS_APPLE}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_APPLE_DEVICE_MODEL}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_INFO_APPLE}
+      }];
       // The SDK's built-in fatal issue handler captures an iOS crash.
-      APP_IOS_BUILT_IN_CRASH = 8;
+      APP_IOS_BUILT_IN_CRASH = 8 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        title: "Fatal Issue - Crash"
+        description: "The SDK's built-in fatal issue handler captures an iOS crash."
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_DETAILS_APPLE}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_APPLE_DEVICE_MODEL}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_INFO_APPLE}
+      }];
       APP_LAUNCH = 9;
       APP_LAUNCH_TTI = 10;
       APP_OPEN = 11;
@@ -1852,10 +3630,55 @@ message Filter {
   }
 }
 
-// A list of potential queries used to fetch a list of workflows
-// Each query will be combined as a logical AND
-// For example: 'platform is android' AND 'workflow not owned by me' AND 'workflow is deployed'
+// Filters workflows by their attributes and current saved definition. Populated filters combine
+// with logical AND unless a field describes different grouping. Event and output filters combine
+// with each other using AND. They include draft and idle workflows and describe configured rules
+// and actions, not observed activity.
 message WorkflowListQuery {
+  // Identifies one out-of-the-box (OOTB) event by family and value. Select exactly one family;
+  // events with the same name in different families are distinct filter values. For example,
+  // {"generic":"APP_LAUNCH"} and {"android":"APP_LAUNCH"} select different matches.
+  message OotbEventType {
+    oneof type {
+      option (validate.required) = true;
+      // A cross-platform OOTB event.
+      .bitdrift.public.unary.workflows.v1.OotbMatch.GenericOotbConditionType.GenericOotbConditionType generic = 1 [(validate.rules).enum = {
+        defined_only: true
+        not_in: [0]
+      }];
+
+      // An Android OOTB event, including events also available cross-platform.
+      .bitdrift.public.unary.workflows.v1.OotbMatch.AndroidOotbConditionType.AndroidOotbConditionType android = 2 [(validate.rules).enum = {
+        defined_only: true
+        not_in: [0]
+      }];
+
+      // An Apple OOTB event, including events also available cross-platform.
+      .bitdrift.public.unary.workflows.v1.OotbMatch.AppleOotbConditionType.AppleOotbConditionType apple = 3 [(validate.rules).enum = {
+        defined_only: true
+        not_in: [0]
+      }];
+    }
+  }
+
+  // Kind of action declared in a workflow's saved definition.
+  enum OutputType {
+    // Placeholder value; cannot be used as a filter.
+    OUTPUT_TYPE_UNSPECIFIED = 0;
+    // Creates a metric chart from workflow matches.
+    METRIC_CHART = 1;
+    // Captures a session by flushing buffered logs.
+    FLUSH = 2;
+    // Creates a funnel chart from ordered matches.
+    FUNNEL = 3;
+    // Creates a Sankey diagram from workflow matches.
+    SANKEY_DIAGRAM = 4;
+    // Measures elapsed time between matches.
+    MEASURE_TIME = 5;
+    // Starts trace sampling for a session.
+    START_TRACING = 6;
+  }
+
   enum TagOperator {
     UNSPECIFIED_OPERATOR = 0;
     INCLUDES = 1;
@@ -1941,6 +3764,24 @@ message WorkflowListQuery {
   // An optional favorited filter to filter workflows by whether they are explicitly favorited by the current user, or explicitly NOT favorited by the current user.
   // If unset, workflows will not be filtered by favorited status.
   optional bool favorited = 7;
+
+  // Matches workflows whose saved definition contains any selected OOTB match rule, including
+  // early-exit matches. Selected values combine with logical OR. An empty list applies no event
+  // filter. The event family is part of each value's identity.
+  repeated .bitdrift.public.unary.workflows.v1.WorkflowListQuery.OotbEventType ootb_event_types = 8 [(validate.rules).repeated = {max_items: 100}];
+
+  // Matches workflows whose saved definition declares any selected action kind. Selected values
+  // combine with logical OR. An empty list applies no output filter. A declared action matches
+  // even if the workflow has not been deployed or the action has not run.
+  repeated .bitdrift.public.unary.workflows.v1.WorkflowListQuery.OutputType output_types = 9 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      enum: {
+        defined_only: true
+        not_in: [0]
+      }
+    }
+  }];
 }
 
 message ListWorkflowsRequest {
@@ -2017,7 +3858,7 @@ message ListWorkflowsResponse {
 
 message CreateWorkflowRequest {
   // The workflow configuration to create.
-  .bitdrift.public.unary.workflows.v1.Workflow workflow = 2;
+  .bitdrift.public.unary.workflows.v1.Workflow workflow = 2 [(validate.rules).message.required = true];
 
   // Optional metadata to attach to the workflow.
   .bitdrift.public.unary.workflows.v1.WorkflowMetadata metadata = 3;
@@ -2035,11 +3876,14 @@ message CreateWorkflowResponse {
 
 message UpdateWorkflowRequest {
   // The ID of the workflow to update.
-  string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
+  string workflow_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
 
   // The updated workflow. This should be the entire workflow with all changes applied, not just the
   // delta. The server will apply the changes and return the fully updated workflow in the response.
-  .bitdrift.public.unary.workflows.v1.Workflow workflow = 3;
+  .bitdrift.public.unary.workflows.v1.Workflow workflow = 3 [(validate.rules).message.required = true];
 
   // Optional updated metadata to attach to the workflow. Metadata can always be changed while
   // the workflow is deployed.
@@ -2135,7 +3979,10 @@ message ListTagsResponse {
 
 message DeleteWorkflowRequest {
   // The ID of the workflow to delete.
-  string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
+  string workflow_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
 }
 
 message DeleteWorkflowResponse {
@@ -2150,7 +3997,10 @@ message DeleteWorkflowResponse {
 
 message DeployWorkflowRequest {
   // The ID of the workflow to deploy.
-  string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
+  string workflow_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
 }
 
 message DeployWorkflowResponse {
@@ -2170,7 +4020,10 @@ message DeployWorkflowResponse {
 
 message StopWorkflowRequest {
   // The ID of the workflow to update.
-  string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
+  string workflow_id = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
 }
 
 message StopWorkflowResponse {
