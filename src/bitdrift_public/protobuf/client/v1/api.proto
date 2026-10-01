@@ -439,6 +439,9 @@ message UploadArtifactRequest {
 
   // The encoding of contents. Only workflow and direct command attachments may use zlib encoding.
   ArtifactPayloadEncoding payload_encoding = 11;
+
+  // The MIME type of a direct command attachment, when supplied by its handler.
+  optional string content_type = 12;
 }
 
 message UploadArtifactResponse {
