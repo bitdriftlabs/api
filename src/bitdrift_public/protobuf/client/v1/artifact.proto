@@ -60,6 +60,9 @@ message ArtifactUploadIndex {
 
     // The encoding of the retained artifact payload. This survives local uploader restarts.
     ArtifactPayloadEncoding payload_encoding = 12;
+
+    // The MIME type of a direct command attachment. This survives local uploader restarts.
+    optional string content_type = 13;
   }
 
   // List of files, in order of time, that are pending upload.
