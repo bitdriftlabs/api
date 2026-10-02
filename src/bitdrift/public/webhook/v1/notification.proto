@@ -92,6 +92,9 @@ message AlertNotification {
 
   // Additional labels attached to the alert.
   map<string, string> labels = 7;
+
+  // Identifies this firing episode and its resolution. Subsequent firings use a new key.
+  string dedup_key = 8;
 }
 
 // Describes a resolution for a workflow alert notification.
@@ -101,6 +104,9 @@ message AlertResolutionNotification {
 
   // Time when the alert resolved.
   .google.protobuf.Timestamp resolved_at = 2;
+
+  // Matches the original alert's deduplication key. Absent for alerts fired before keys were available.
+  string dedup_key = 3;
 }
 
 // Describes an issue referenced by an issue webhook notification.
@@ -148,6 +154,9 @@ message IssueAlertNotification {
 
   // Additional labels attached to the alert.
   map<string, string> labels = 7;
+
+  // Identifies this firing episode and its resolution. Subsequent firings use a new key.
+  string dedup_key = 9;
 }
 
 // Describes a resolution for an issue alert notification.
@@ -157,6 +166,9 @@ message IssueAlertResolutionNotification {
 
   // Time when the alert resolved.
   .google.protobuf.Timestamp resolved_at = 2;
+
+  // Matches the original alert's deduplication key. Absent for alerts fired before keys were available.
+  string dedup_key = 3;
 }
 
 // Describes a webhook notification for a newly created issue report.
