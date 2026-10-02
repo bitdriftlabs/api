@@ -1,0 +1,298 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.device_debug.v1;
+
+import "bitdrift/public/shared/platform/v1/platform.proto";
+import "bitdrift_public/protobuf/client/v1/api.proto";
+import "bitdrift_public/protobuf/workflow/v1/workflow_command.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+// Reports the progress of a device command.
+message DeviceCommandProgress {
+  // The number of result bytes persisted so far.
+  uint64 persisted_result_bytes = 1;
+
+  // The total number of result bytes expected by the device, when known.
+  optional uint64 total_result_bytes = 2;
+}
+
+// A command that can be executed on a device.
+message DeviceCommand {
+  // The opaque identifier of the command.
+  string command_id = 1 [(validate.rules).string.uuid = true];
+
+  // The ID of the device executing the command.
+  string device_id = 2 [(validate.rules).string = {
+    max_len: 36
+    uuid: true
+  }];
+
+  // The command being executed.
+  .bitdrift_public.protobuf.workflow.v1.WorkflowCommandSelector command = 3 [(validate.rules).message.required = true];
+
+  // The time when the command was created.
+  .google.protobuf.Timestamp created_at = 4 [(validate.rules).message.required = true];
+
+  // The time after which the command and its results are no longer available.
+  .google.protobuf.Timestamp expires_at = 5 [(validate.rules).message.required = true];
+}
+
+// Starts a command for a currently connected device.
+message StartDeviceCommandRequest {
+  oneof target_type {
+    option (validate.required) = true;
+    // The device code that has already been exchanged via the /device/code API.
+    string device_code = 1 [(validate.rules).string = {
+      min_len: 6
+      max_len: 6
+    }];
+
+    // The raw device ID.
+    string device_id = 2 [(validate.rules).string = {
+      max_len: 36
+      uuid: true
+    }];
+
+    // The raw entity ID. Targets the sole online device observed for the entity in the past
+    // 30 days. If multiple associated devices are online, the request fails with their IDs.
+    string entity_id = 4 [(validate.rules).string = {
+      min_len: 1
+      max_len: 256
+    }];
+
+    // The hash of an entity ID returned by another API.
+    string entity_hash = 5 [(validate.rules).string = {
+      min_len: 1
+      max_len: 256
+    }];
+  }
+
+  // The command to execute.
+  .bitdrift_public.protobuf.workflow.v1.WorkflowCommandSelector command = 3 [(validate.rules).message.required = true];
+}
+
+// Returns whether a device command was started.
+message StartDeviceCommandResponse {
+  message DeviceNotConnected {}
+
+  oneof result {
+    // The command that was started.
+    .bitdrift.public.unary.device_debug.v1.DeviceCommand device_command = 1;
+
+    // The target device is not connected.
+    .bitdrift.public.unary.device_debug.v1.StartDeviceCommandResponse.DeviceNotConnected device_not_connected = 2;
+  }
+}
+
+// Retrieves the latest status of a device command.
+message GetDeviceCommandRequest {
+  // The opaque identifier returned when the command was started.
+  string command_id = 1 [(validate.rules).string = {
+    max_len: 36
+    uuid: true
+  }];
+}
+
+// Returns the latest command status and any terminal context.
+message GetDeviceCommandResponse {
+  // Describes a command that is still executing.
+  message Pending {
+    // The time when the command most recently changed state or progress.
+    .google.protobuf.Timestamp updated_at = 1 [(validate.rules).message.required = true];
+  }
+
+  // Describes a command that completed successfully.
+  //
+  // A successful result may have a ready attachment. Fetch it using
+  // GET /v1/device-commands/{command_id}/attachment, substituting
+  // device_command.command_id. The response preserves the attachment's original Content-Type and
+  // uses Content-Encoding: zstd. GetDeviceCommand never returns attachment content.
+  message Succeeded {
+    // Describes an attachment that has been verified as ready for download.
+    message Attachment {
+      // The content type returned by the attachment endpoint.
+      string content_type = 1 [(validate.rules).string.min_len = 1];
+    }
+
+    // Whether output was limited before the command completed.
+    bool output_truncated = 1;
+
+    // The time when the command succeeded.
+    .google.protobuf.Timestamp succeeded_at = 2 [(validate.rules).message.required = true];
+
+    // Optional structured context supplied with the terminal command result.
+    .bitdrift_public.protobuf.client.v1.DeviceCommandResultContext context = 3;
+
+    // The verified attachment that is ready for download. Omitted when the command completed
+    // successfully without an attachment.
+    .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Succeeded.Attachment attachment = 4;
+  }
+
+  // Describes a command that could not be completed.
+  message Failed {
+    // The time when the command failed.
+    .google.protobuf.Timestamp failed_at = 1 [(validate.rules).message.required = true];
+
+    // Optional structured context supplied with the terminal command result.
+    .bitdrift_public.protobuf.client.v1.DeviceCommandResultContext context = 2;
+  }
+
+  // The immutable command metadata.
+  .bitdrift.public.unary.device_debug.v1.DeviceCommand device_command = 1;
+
+  // The command's latest execution progress.
+  .bitdrift.public.unary.device_debug.v1.DeviceCommandProgress progress = 2;
+
+  oneof state {
+    // The command is still executing.
+    .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Pending pending = 3;
+
+    // The command completed successfully.
+    .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Succeeded succeeded = 4;
+
+    // The command could not be completed.
+    .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Failed failed = 5;
+  }
+}
+
+// Shared catalog metadata for built-in and registered commands.
+message DeviceCommandMetadata {
+  // The command key used for catalog lookup and as the client selector ID.
+  string key = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 128
+  }];
+
+  // An optional description of the command.
+  optional string description = 2 [(validate.rules).string.max_len = 1000];
+
+  // Arguments accepted by this command. An empty list accepts no arguments.
+  repeated .bitdrift_public.protobuf.workflow.v1.DeviceCommandArgumentDefinition argument_definitions = 3 [(validate.rules).repeated.max_items = 50];
+}
+
+// A custom command registered for an account.
+message RegisteredDeviceCommand {
+  .bitdrift.public.unary.device_debug.v1.DeviceCommandMetadata metadata = 1 [(validate.rules).message.required = true];
+
+  // Any platform may match; an empty list allows all devices. App versions are not supported.
+  repeated .bitdrift.public.shared.platform.v1.Platform platform_targets = 2 [(validate.rules).repeated.max_items = 50];
+}
+
+message UpsertRegisteredDeviceCommandRequest {
+  .bitdrift.public.unary.device_debug.v1.RegisteredDeviceCommand command = 1 [(validate.rules).message.required = true];
+}
+
+message UpsertRegisteredDeviceCommandResponse {
+  .bitdrift.public.unary.device_debug.v1.RegisteredDeviceCommand command = 1;
+}
+
+// A built-in command supported by the server.
+message WellKnownDeviceCommand {
+  .bitdrift_public.protobuf.workflow.v1.WellKnownCommandType type = 1 [(validate.rules).enum.defined_only = true];
+
+  .bitdrift.public.unary.device_debug.v1.DeviceCommandMetadata metadata = 2 [(validate.rules).message.required = true];
+}
+
+// A command available in the account's catalog.
+message DeviceCommandDefinition {
+  oneof command_type {
+    option (validate.required) = true;
+    .bitdrift.public.unary.device_debug.v1.WellKnownDeviceCommand well_known = 1;
+
+    .bitdrift.public.unary.device_debug.v1.RegisteredDeviceCommand registered = 2;
+  }
+
+  // Whether the command is enabled for this account. Built-in commands start disabled;
+  // registered commands start enabled.
+  bool enabled = 3;
+}
+
+message ListDeviceCommandsRequest {
+  // Filters to apply when listing commands.
+  message Filters {
+    enum Category {
+      CATEGORY_UNSPECIFIED = 0;
+      REGISTERED = 1;
+      WELL_KNOWN = 2;
+    }
+
+    // Matches registered keys or built-in command names beginning with this prefix, case-insensitively.
+    optional string key_prefix = 1 [(validate.rules).string.max_len = 128];
+
+    // Selects registered or built-in commands; unspecified includes both.
+    .bitdrift.public.unary.device_debug.v1.ListDeviceCommandsRequest.Filters.Category category = 2 [(validate.rules).enum.defined_only = true];
+  }
+
+  // Omission uses the server's default page size.
+  optional uint32 page_size = 1 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
+
+  string page_token = 2 [(validate.rules).string.max_len = 512];
+
+  .bitdrift.public.unary.device_debug.v1.ListDeviceCommandsRequest.Filters filters = 3;
+}
+
+message ListDeviceCommandsResponse {
+  repeated .bitdrift.public.unary.device_debug.v1.DeviceCommandDefinition commands = 1;
+
+  string next_page_token = 2;
+}
+
+message SetDeviceCommandEnabledRequest {
+  oneof command_type {
+    option (validate.required) = true;
+    // The built-in command to enable or disable.
+    .bitdrift_public.protobuf.workflow.v1.WellKnownCommandType well_known_type = 1 [(validate.rules).enum.defined_only = true];
+
+    // The key of a registered command to enable or disable.
+    string registered_command_key = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 128
+    }];
+  }
+
+  bool enabled = 3;
+}
+
+message SetDeviceCommandEnabledResponse {
+  .bitdrift.public.unary.device_debug.v1.DeviceCommandDefinition command = 1;
+}
+
+message UnregisterDeviceCommandRequest {
+  string key = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 128
+  }];
+}
+
+message UnregisterDeviceCommandResponse {}
+
+// Manages device command execution and registered commands.
+service DebugService {
+  // Starts a command for a currently connected device.
+  rpc StartDeviceCommand(.bitdrift.public.unary.device_debug.v1.StartDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.StartDeviceCommandResponse);
+
+  // Retrieves the state and available results of a device command.
+  rpc GetDeviceCommand(.bitdrift.public.unary.device_debug.v1.GetDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse);
+
+  // Creates or updates a registered command by name.
+  rpc UpsertRegisteredDeviceCommand(.bitdrift.public.unary.device_debug.v1.UpsertRegisteredDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.UpsertRegisteredDeviceCommandResponse);
+
+  // Lists built-in and registered commands, including disabled commands.
+  rpc ListDeviceCommands(.bitdrift.public.unary.device_debug.v1.ListDeviceCommandsRequest) returns (.bitdrift.public.unary.device_debug.v1.ListDeviceCommandsResponse);
+
+  // Enables or disables a built-in or registered command for this account.
+  rpc SetDeviceCommandEnabled(.bitdrift.public.unary.device_debug.v1.SetDeviceCommandEnabledRequest) returns (.bitdrift.public.unary.device_debug.v1.SetDeviceCommandEnabledResponse);
+
+  // Removes a registered command that is not referenced by any saved workflow.
+  rpc UnregisterDeviceCommand(.bitdrift.public.unary.device_debug.v1.UnregisterDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.UnregisterDeviceCommandResponse);
+}
