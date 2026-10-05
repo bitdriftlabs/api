@@ -69,3 +69,12 @@ message ArtifactUploadIndex {
   // List of files, in order of time, that are pending upload.
   repeated Artifact artifact = 1;
 }
+
+// Durable local ownership and retirement state for a workflow attachment.
+message WorkflowAttachmentState {
+  uint64 admitted_at_micros = 1;
+  // Absent until the outcome log is recorded; restart uses admission time as a fallback.
+  optional uint64 occurred_at_micros = 2;
+  optional string content_type = 3;
+  bool uploaded = 4;
+}
