@@ -61,7 +61,8 @@ message ArtifactUploadIndex {
     // The encoding of the retained artifact payload. This survives local uploader restarts.
     ArtifactPayloadEncoding payload_encoding = 12;
 
-    // The MIME type of a direct command attachment. This survives local uploader restarts.
+    // The MIME type of a workflow or direct command attachment. This survives local uploader
+    // restarts; workflow attachments also retain it before ownership transfers to the uploader.
     optional string content_type = 13;
   }
 
