@@ -440,7 +440,10 @@ message UploadArtifactRequest {
   // The encoding of contents. Only workflow and direct command attachments may use zlib encoding.
   ArtifactPayloadEncoding payload_encoding = 11;
 
-  // The MIME type of a direct command attachment, when supplied by its handler.
+  // The MIME type of a workflow or direct command attachment, when supplied by its handler.
+  // Workflow screenshots use image/jpeg. Missing or empty values default to
+  // application/octet-stream; supplied values must be concrete MIME types of at most 255 bytes.
+  // Accepted MIME types are preserved by the corresponding attachment download endpoint.
   optional string content_type = 12;
 }
 
