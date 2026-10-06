@@ -565,12 +565,14 @@ message OotbMatch {
       UNKNOWN = 0;
       // App moves out of the foreground and begins backgrounding.
       APP_BACKGROUND = 1 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Scene Did Enter Background"
         description: "App moves out of the foreground and begins backgrounding."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_SCENE}
       }];
       // The SDK's built-in JS error handler captures a fatal JavaScript error.
       APP_BUILT_IN_JS_FATAL_ERROR = 2 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Fatal Issue - JavaScript"
         description: "The SDK's built-in JS error handler captures a fatal JavaScript error."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_DETAILS_JS}
@@ -578,6 +580,7 @@ message OotbMatch {
       }];
       // The SDK's built-in JS error handler captures a non-fatal JavaScript error.
       APP_BUILT_IN_JS_NON_FATAL_ERROR = 3 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Non Fatal Issue - JavaScript"
         description: "The SDK's built-in JS error handler captures a non-fatal JavaScript error."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_DETAILS_JS}
@@ -585,17 +588,20 @@ message OotbMatch {
       }];
       // App leaves the screen and its foreground UI closes.
       APP_CLOSE = 4 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "App Close"
         description: "App leaves the screen and its foreground UI closes."
       }];
       // App moves into the foreground and becomes active.
       APP_FOREGROUND = 5 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Scene Will Enter Foreground"
         description: "App moves into the foreground and becomes active."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_SCENE}
       }];
       // App launch completes for a new process.
       APP_LAUNCH = 6 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "App Did Finish Launching"
         description: "App launch completes for a new process."
         well_known_fields: {
@@ -665,6 +671,7 @@ message OotbMatch {
       }];
       // App reached time-to-interactive after launch. Carries the same fields as APP_LAUNCH.
       APP_LAUNCH_TTI = 7 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "App Launch TTI"
         description: "App reached time-to-interactive after launch. Carries the same fields as APP_LAUNCH."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_DURATION_MS}
@@ -672,12 +679,14 @@ message OotbMatch {
       // App opens into the foreground, either on a cold start or when reopened from the
       // background.
       APP_OPEN = 8 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "App Open"
         description: "App opens into the foreground, either on a cold start or when reopened from the background."
       }];
       // An app termination is recorded. On Android this includes OS-reported exit information; on
       // Apple this corresponds to the app termination notification.
       APP_TERMINATION = 9 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "App Will Terminate"
         description: "An app termination is recorded. On Android this includes OS-reported exit information; on Apple this corresponds to the app termination notification."
         well_known_fields: {
@@ -908,6 +917,7 @@ message OotbMatch {
       }];
       // App updates to a new version.
       APP_UPDATE = 10 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "App Update"
         description: "App updates to a new version."
         well_known_fields: {
@@ -971,6 +981,7 @@ message OotbMatch {
       }];
       // Device battery state changes.
       BATTERY_STATE_CHANGE = 11 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Battery State Change"
         description: "Device battery state changes."
         well_known_fields: {
@@ -1032,6 +1043,7 @@ message OotbMatch {
       // A GraphQL request starts. Requires supported network instrumentation so the SDK can emit
       // the underlying HTTP and GraphQL span data.
       GQL_REQUEST = 12 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "GraphQL Request"
         description: "A GraphQL request starts. Requires supported network instrumentation so the SDK can emit the underlying HTTP and GraphQL span data."
         well_known_fields: {
@@ -1064,6 +1076,7 @@ message OotbMatch {
       // A GraphQL response completes. Requires supported network instrumentation and carries all
       // GQL_REQUEST fields plus response-specific fields.
       GQL_RESPONSE = 13 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "GraphQL Response"
         description: "A GraphQL response completes. Requires supported network instrumentation and carries all GQL_REQUEST fields plus response-specific fields."
         well_known_fields: {
@@ -1275,6 +1288,7 @@ message OotbMatch {
       }];
       // Device low-power mode toggles.
       LOW_POWER_MODE = 14 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Low Power Mode"
         description: "Device low-power mode toggles."
         well_known_fields: {
@@ -1342,6 +1356,7 @@ message OotbMatch {
       // the configured low-memory threshold. On Apple this is emitted for system memory pressure
       // notifications.
       MEMORY_PRESSURE = 15 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Memory Pressure"
         description: "App memory pressure is recorded. On Android this is emitted when app memory usage meets the configured low-memory threshold. On Apple this is emitted for system memory pressure notifications."
         well_known_fields: {
@@ -1571,6 +1586,7 @@ message OotbMatch {
       }];
       // An HTTP network request starts. Requires supported network instrumentation integration.
       NETWORK_REQUEST = 16 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Network Request"
         description: "An HTTP network request starts. Requires supported network instrumentation integration."
         well_known_fields: {
@@ -1599,6 +1615,7 @@ message OotbMatch {
       }];
       // An HTTP network response completes. Requires supported network instrumentation integration.
       NETWORK_RESPONSE = 17 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Network Response"
         description: "An HTTP network response completes. Requires supported network instrumentation integration."
         well_known_fields: {
@@ -1845,6 +1862,7 @@ message OotbMatch {
       }];
       // Device orientation changes.
       ORIENTATION_CHANGE = 18 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Orientation Change"
         description: "Device orientation changes."
         well_known_fields: {
@@ -1911,6 +1929,7 @@ message OotbMatch {
       // low-power fields are emitted on every snapshot; disk-usage fields are sampled at most once
       // every 24 hours.
       RESOURCE = 19 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Resource Utilization"
         description: "A periodic resource snapshot. Carries device and process resource metrics such as memory, battery, power, disk, and network throughput fields. Memory, battery, and low-power fields are emitted on every snapshot; disk-usage fields are sampled at most once every 24 hours."
         well_known_fields: {
@@ -2376,6 +2395,7 @@ message OotbMatch {
       }];
       // A screen or view is displayed.
       SCREEN_VIEW = 20 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Screen View"
         description: "A screen or view is displayed."
         well_known_fields: {
@@ -2393,6 +2413,7 @@ message OotbMatch {
       }];
       // SDK configuration is applied during SDK startup.
       SDK_CONFIGURATION = 21 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "SDK Started"
         description: "SDK configuration is applied during SDK startup."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_DURATION_MS}
@@ -2413,12 +2434,14 @@ message OotbMatch {
       }];
       // A Session Replay frame is captured.
       SESSION_REPLAY = 22 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Session Replay"
         description: "A Session Replay frame is captured."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_DURATION_MS}
       }];
       // A custom span ends.
       SPAN_END = 23 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Span End"
         description: "A custom span ends."
         well_known_fields: {
@@ -2465,6 +2488,7 @@ message OotbMatch {
       }];
       // A custom span starts.
       SPAN_START = 24 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Span Start"
         description: "A custom span starts."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_SPAN_NAME}
@@ -2473,6 +2497,7 @@ message OotbMatch {
       }];
       // Device thermal state changes.
       THERMAL_STATE_CHANGE = 25 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Thermal State Change"
         description: "Device thermal state changes."
         well_known_fields: {
@@ -2552,6 +2577,7 @@ message OotbMatch {
       }];
       // Device timezone changes.
       TIMEZONE_CHANGE = 26 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Timezone Change"
         description: "Device timezone changes."
         well_known_fields: {
@@ -2581,6 +2607,7 @@ message OotbMatch {
       UNKNOWN = 0;
       // The SDK's built-in fatal issue handler captures an Android app hang.
       APP_ANDROID_BUILT_IN_ANR = 1 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Fatal Issue - ANR"
         description: "The SDK's built-in fatal issue handler captures an Android app hang."
         well_known_fields: {
@@ -2642,6 +2669,7 @@ message OotbMatch {
       }];
       // The SDK's built-in fatal issue handler captures an Android native crash.
       APP_ANDROID_BUILT_IN_NATIVE_CRASH = 2 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Fatal Issue - Native"
         description: "The SDK's built-in fatal issue handler captures an Android native crash."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_ANDROID_DEVICE_MODEL}
@@ -2693,13 +2721,17 @@ message OotbMatch {
           }
         }
       }];
-      APP_BACKGROUND = 3 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {title: "App Moved To Background"}];
+      APP_BACKGROUND = 3 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
+        title: "App Moved To Background"
+      }];
       APP_BUILT_IN_JS_FATAL_ERROR = 4;
       APP_BUILT_IN_JS_NON_FATAL_ERROR = 5;
       APP_CLOSE = 6;
       // Android app crash. Carries crash details when available. Depending on the source, fields
       // may describe a JVM exception or an OS-reported fatal exit.
       APP_CRASH = 7 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Fatal Issue - JVM"
         description: "Android app crash. Carries crash details when available. Depending on the source, fields may describe a JVM exception or an OS-reported fatal exit."
         well_known_fields: {
@@ -2917,16 +2949,26 @@ message OotbMatch {
       // Deprecated Android-only alias of APP_TERMINATION. Retained for legacy compatibility;
       // prefer APP_TERMINATION for new workflows.
       APP_EXIT = 8;
-      APP_FOREGROUND = 9 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {title: "App Moved To Foreground"}];
-      APP_LAUNCH = 10 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {title: "App Launch"}];
+      APP_FOREGROUND = 9 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
+        title: "App Moved To Foreground"
+      }];
+      APP_LAUNCH = 10 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
+        title: "App Launch"
+      }];
       APP_LAUNCH_TTI = 11;
       APP_OPEN = 12;
-      APP_TERMINATION = 13 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {title: "App Exit"}];
+      APP_TERMINATION = 13 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
+        title: "App Exit"
+      }];
       APP_UPDATE = 14;
       BATTERY_STATE_CHANGE = 15;
       // A rendering issue is detected for a UI frame. `_frame_issue_type` distinguishes slow,
       // frozen, and ANR-classified frames.
       DROPPED_FRAME = 16 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Slow Rendering"
         description: "A rendering issue is detected for a UI frame. `_frame_issue_type` distinguishes slow, frozen, and ANR-classified frames."
         well_known_fields: {
@@ -2992,6 +3034,7 @@ message OotbMatch {
       UNKNOWN = 0;
       // iOS app hang detected when the app stops responding for longer than the configured threshold.
       ANR = 1 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Application Not Responding (ANR)"
         description: "iOS app hang detected when the app stops responding for longer than the configured threshold."
         well_known_fields: {
@@ -3022,6 +3065,7 @@ message OotbMatch {
       APP_FOREGROUND = 6;
       // The SDK's built-in fatal issue handler captures an iOS app hang.
       APP_IOS_BUILT_IN_ANR = 7 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Fatal App Hang"
         description: "The SDK's built-in fatal issue handler captures an iOS app hang."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_DETAILS_APPLE}
@@ -3030,6 +3074,7 @@ message OotbMatch {
       }];
       // The SDK's built-in fatal issue handler captures an iOS crash.
       APP_IOS_BUILT_IN_CRASH = 8 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Fatal Issue - Crash"
         description: "The SDK's built-in fatal issue handler captures an iOS crash."
         well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_DETAILS_APPLE}
