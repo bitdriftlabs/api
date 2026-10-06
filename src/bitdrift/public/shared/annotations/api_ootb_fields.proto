@@ -9,6 +9,7 @@ syntax = "proto3";
 package bitdrift.public.shared.annotations;
 
 import "google/protobuf/descriptor.proto";
+import "validate/validate.proto";
 
 // Describes a well-known log field attached to an OOTB event. These fields are available for
 // matching via `generic_match` in workflow definitions.
@@ -491,6 +492,16 @@ enum OotbCommonField {
   }];
 }
 
+// Category of an OOTB event.
+enum OotbEventCategory {
+  // Invalid for an OOTB event.
+  OOTB_EVENT_CATEGORY_UNSPECIFIED = 0;
+  // General SDK events.
+  OOTB_EVENT_CATEGORY_GENERAL = 1;
+  // Events originating from a WebView.
+  OOTB_EVENT_CATEGORY_WEBVIEW = 2;
+}
+
 // Structured metadata for an OOTB condition type enum value, describing the event and its
 // well-known log fields.
 message OotbEventMetadata {
@@ -502,6 +513,12 @@ message OotbEventMetadata {
 
   // Describes when the event is emitted.
   string description = 3;
+
+  // Category used to group the event in catalogs.
+  .bitdrift.public.shared.annotations.OotbEventCategory category = 4 [(validate.rules).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
 }
 
 extend .google.protobuf.EnumValueOptions {
