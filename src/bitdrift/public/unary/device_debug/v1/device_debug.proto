@@ -44,8 +44,8 @@ message DeviceCommand {
   .google.protobuf.Timestamp expires_at = 5 [(validate.rules).message.required = true];
 }
 
-// Starts a command for a currently connected device.
-message StartDeviceCommandRequest {
+// Sends a command to a currently connected device.
+message SendDeviceCommandRequest {
   oneof target_type {
     option (validate.required) = true;
     // The device code that has already been exchanged via the /device/code API.
@@ -79,7 +79,7 @@ message StartDeviceCommandRequest {
 }
 
 // Returns whether a device command was started.
-message StartDeviceCommandResponse {
+message SendDeviceCommandResponse {
   message DeviceNotConnected {}
 
   oneof result {
@@ -87,13 +87,13 @@ message StartDeviceCommandResponse {
     .bitdrift.public.unary.device_debug.v1.DeviceCommand device_command = 1;
 
     // The target device is not connected.
-    .bitdrift.public.unary.device_debug.v1.StartDeviceCommandResponse.DeviceNotConnected device_not_connected = 2;
+    .bitdrift.public.unary.device_debug.v1.SendDeviceCommandResponse.DeviceNotConnected device_not_connected = 2;
   }
 }
 
 // Retrieves the latest status of a device command.
 message GetDeviceCommandRequest {
-  // The opaque identifier returned when the command was started.
+  // The opaque identifier returned by SendDeviceCommand.
   string command_id = 1 [(validate.rules).string = {
     max_len: 36
     uuid: true
@@ -185,11 +185,12 @@ message RegisteredDeviceCommand {
   repeated .bitdrift.public.shared.platform.v1.Platform platform_targets = 2 [(validate.rules).repeated.max_items = 50];
 }
 
-message UpsertRegisteredDeviceCommandRequest {
+// Creates or updates a registered command by key.
+message RegisterDeviceCommandRequest {
   .bitdrift.public.unary.device_debug.v1.RegisteredDeviceCommand command = 1 [(validate.rules).message.required = true];
 }
 
-message UpsertRegisteredDeviceCommandResponse {
+message RegisterDeviceCommandResponse {
   .bitdrift.public.unary.device_debug.v1.RegisteredDeviceCommand command = 1;
 }
 
@@ -274,18 +275,49 @@ message UnregisterDeviceCommandRequest {
   }];
 }
 
-message UnregisterDeviceCommandResponse {}
+// Returns whether a registered command was removed. Failures leave the command unchanged.
+message UnregisterDeviceCommandResponse {
+  // The registered command was removed.
+  message Success {}
+
+  // The registered command could not be removed.
+  message Failure {
+    // No registered command exists with the requested key.
+    message NotFound {}
+
+    // Saved workflows still reference the registered command.
+    message WorkflowConflict {
+      // The IDs of all referencing saved workflows, sorted by ID.
+      repeated string workflow_ids = 1;
+    }
+
+    oneof reason {
+      .bitdrift.public.unary.device_debug.v1.UnregisterDeviceCommandResponse.Failure.NotFound not_found = 1;
+
+      .bitdrift.public.unary.device_debug.v1.UnregisterDeviceCommandResponse.Failure.WorkflowConflict workflow_conflict = 2;
+    }
+  }
+
+  oneof result {
+    .bitdrift.public.unary.device_debug.v1.UnregisterDeviceCommandResponse.Success success = 1;
+
+    .bitdrift.public.unary.device_debug.v1.UnregisterDeviceCommandResponse.Failure failure = 2;
+  }
+}
 
 // Manages device command execution and registered commands.
 service DebugService {
-  // Starts a command for a currently connected device.
-  rpc StartDeviceCommand(.bitdrift.public.unary.device_debug.v1.StartDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.StartDeviceCommandResponse);
+  // Sends a command to a currently connected device.
+  rpc SendDeviceCommand(.bitdrift.public.unary.device_debug.v1.SendDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.SendDeviceCommandResponse);
 
   // Retrieves the state and available results of a device command.
   rpc GetDeviceCommand(.bitdrift.public.unary.device_debug.v1.GetDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse);
 
-  // Creates or updates a registered command by name.
-  rpc UpsertRegisteredDeviceCommand(.bitdrift.public.unary.device_debug.v1.UpsertRegisteredDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.UpsertRegisteredDeviceCommandResponse);
+  // Creates or updates a registered command by key.
+  //
+  // This operation is an upsert. New commands start enabled; updating an existing command preserves
+  // its enabled state.
+  rpc RegisterDeviceCommand(.bitdrift.public.unary.device_debug.v1.RegisterDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.RegisterDeviceCommandResponse);
 
   // Lists built-in and registered commands, including disabled commands.
   rpc ListDeviceCommands(.bitdrift.public.unary.device_debug.v1.ListDeviceCommandsRequest) returns (.bitdrift.public.unary.device_debug.v1.ListDeviceCommandsResponse);
@@ -294,5 +326,8 @@ service DebugService {
   rpc SetDeviceCommandEnabled(.bitdrift.public.unary.device_debug.v1.SetDeviceCommandEnabledRequest) returns (.bitdrift.public.unary.device_debug.v1.SetDeviceCommandEnabledResponse);
 
   // Removes a registered command that is not referenced by any saved workflow.
+  //
+  // Returns a structured failure when the command does not exist or saved workflows reference it.
+  // Workflow conflicts include all referencing workflow IDs. Failures leave the command unchanged.
   rpc UnregisterDeviceCommand(.bitdrift.public.unary.device_debug.v1.UnregisterDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.UnregisterDeviceCommandResponse);
 }
