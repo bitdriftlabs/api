@@ -81,6 +81,7 @@ message GetHydrationStatusRequest {
 }
 
 message GetHydrationStatusResponse {
-  // The hydration state of the session.
+  // The hydration state of the session. May be absent when capture metadata is requested
+  // but no hydration record exists. Check presence before reading the state.
   .bitdrift.public.unary.timeline.v1.HydrationState status = 1;
 }
