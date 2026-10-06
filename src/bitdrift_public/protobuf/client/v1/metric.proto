@@ -56,7 +56,9 @@ message PendingAggregationIndex {
     // size aggregation windows by averaging the data over the period or some other heuristic. Also
     // indicates that the file is ready for upload.
     google.protobuf.Timestamp period_end = 3;
-    // Number of prior attempts to upload this file's snapshot. The original upload is zero.
+    // Number of prior reserved upload attempts for this snapshot. The original upload is zero.
+    // Counted at preparation, before API channel handoff. Channel closure, or SDK shutdown/process
+    // death while waiting for capacity, can leave a counted attempt that was never sent.
     uint32 retry_count = 4;
     // Stable monotonic identifier assigned when this source snapshot is created.
     uint64 client_stats_sequence = 5;
@@ -79,6 +81,17 @@ message PendingAggregationIndex {
 
   // The next nonzero client stats sequence allocated to a pending source file.
   uint64 next_client_stats_sequence = 4;
+
+  // Conservative reference for global upload spacing, retained even when no files remain. This
+  // records ACK/response-channel-close completion or recovery of an unresolved attempt. While an
+  // attempt is in progress it records reservation time instead.
+  google.protobuf.Timestamp last_stats_upload_attempt_at = 5;
+
+  // Persisted before exposing a stats payload and cleared after every reserved upload receives
+  // an ACK or its response channel closes. Queued and sent uploads both hold the reservation;
+  // returning from the transport send alone does not clear it.
+  // An unresolved attempt starts a full cooldown when recovered after process restart.
+  bool stats_upload_attempt_in_progress = 6;
 }
 
 message Counter {
