@@ -2597,6 +2597,711 @@ message OotbMatch {
           example_value: "America/New_York"
         }
       }];
+      WEBVIEW_LIFECYCLE = 32 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Lifecycle"
+        description: "A WebView document lifecycle event occurs."
+        well_known_fields: {
+          key: "_event"
+          description: "Document lifecycle event."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "visibilitychange"
+          title: "Lifecycle Event"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_visibility_state"
+          description: "Document visibility state."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "visible"
+          title: "Visibility State"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+      }];
+      WEBVIEW_NAVIGATION = 33 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Navigation"
+        description: "A WebView document navigates."
+        well_known_fields: {
+          key: "_fromUrl"
+          description: "URL before a WebView navigation."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "https://example.com/products"
+          title: "From URL"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {
+          key: "_toUrl"
+          description: "URL after a WebView navigation."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "https://example.com/products/123"
+          title: "To URL"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {
+          key: "_method"
+          description: "History API navigation method."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "pushState"
+          title: "Navigation Method"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_from_host"
+          description: "Host before the WebView navigation."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "example.com"
+          title: "From Host"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_from_path_template"
+          description: "Normalized path before the WebView navigation."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "/products/:id"
+          title: "From Path Template"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_to_host"
+          description: "Host after the WebView navigation."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "example.com"
+          title: "To Host"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_to_path_template"
+          description: "Normalized path after the WebView navigation."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "/products/:id"
+          title: "To Path Template"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+      }];
+      WEBVIEW_LONG_TASK = 34 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Long Task"
+        description: "A long task blocks the WebView main thread."
+        well_known_fields: {
+          key: "_duration_ms"
+          description: "Long task duration."
+          type: OOTB_FIELD_TYPE_FLOAT
+          unit: "ms"
+          example_value: "250.5"
+          title: "Duration"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_attribution_name"
+          description: "Long task attribution name."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "script"
+          title: "Attribution Name"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {
+          key: "_container_type"
+          description: "Long task attribution container type."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "iframe"
+          title: "Container Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {
+          key: "_container_src"
+          description: "Long task attribution container source."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "https://example.com/embed"
+          title: "Container Source"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {
+          key: "_container_id"
+          description: "Long task attribution container identifier."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "payment-frame"
+          title: "Container ID"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {
+          key: "_container_name"
+          description: "Long task attribution container name."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "checkout"
+          title: "Container Name"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+      }];
+      WEBVIEW_ERROR = 35 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView JavaScript Error"
+        description: "A JavaScript error occurs in a WebView."
+        well_known_fields: {
+          key: "_name"
+          description: "JavaScript error name."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "TypeError"
+          title: "Error Name"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_message"
+          description: "JavaScript error message."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "Cannot read properties of undefined"
+          title: "Error Message"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+      }];
+      WEBVIEW_PROMISE_REJECTION = 36 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Promise Rejection"
+        description: "An unhandled Promise rejection occurs in a WebView."
+        well_known_fields: {
+          key: "_reason"
+          description: "Unhandled Promise rejection reason."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "Request failed"
+          title: "Reason"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+      }];
+      WEBVIEW_RESOURCE_ERROR = 37 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Resource Error"
+        description: "A WebView resource fails to load."
+        well_known_fields: {
+          key: "_url"
+          description: "Failed WebView resource URL."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "https://example.com/assets/app.js"
+          title: "URL"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
+      }];
+      WEBVIEW_CONSOLE = 38 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Console Log"
+        description: "A console log is emitted by a WebView."
+        well_known_fields: {
+          key: "_level"
+          description: "WebView console level."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "error"
+          title: "Console Level"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_message"
+          description: "WebView console message."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "Unable to load checkout"
+          title: "Message"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {
+          key: "_args"
+          description: "Additional WebView console arguments."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "requestId=abc123"
+          title: "Parameters"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+      }];
+      WEBVIEW_USER_INTERACTION = 39 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView User Interaction"
+        description: "A user interacts with a WebView element."
+        well_known_fields: {
+          key: "_interaction_type"
+          description: "WebView interaction type."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "rageClick"
+          title: "Interaction Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_tag_name"
+          description: "Interacted HTML tag."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "button"
+          title: "Tag Name"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_is_clickable"
+          description: "Whether the interacted element was clickable."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "true"
+          title: "Is Clickable"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+          choices: {
+            value: "true"
+            title: "True"
+          }
+          choices: {
+            value: "false"
+            title: "False"
+          }
+        }
+        well_known_fields: {
+          key: "_click_count"
+          description: "Number of clicks in a rage click interaction."
+          type: OOTB_FIELD_TYPE_INT
+          example_value: "3"
+          title: "Click Count"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {
+          key: "_time_window_ms"
+          description: "Rage click time window."
+          type: OOTB_FIELD_TYPE_FLOAT
+          unit: "ms"
+          example_value: "1000"
+          title: "Time Window"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+      }];
+      WEBVIEW_VITAL_LCP = 40 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Vital - LCP"
+        description: "A WebView Largest Contentful Paint measurement is reported."
+        well_known_fields: {
+          key: "_value"
+          description: "Largest Contentful Paint value."
+          type: OOTB_FIELD_TYPE_FLOAT
+          unit: "ms"
+          example_value: "1200.5"
+          title: "Value"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_rating"
+          description: "Web Vital rating."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "good"
+          title: "Rating"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_navigation_type"
+          description: "Navigation type associated with the Web Vital."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "navigate"
+          title: "Navigation Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
+      }];
+      WEBVIEW_VITAL_FCP = 41 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Vital - FCP"
+        description: "A WebView First Contentful Paint measurement is reported."
+        well_known_fields: {
+          key: "_value"
+          description: "First Contentful Paint value."
+          type: OOTB_FIELD_TYPE_FLOAT
+          unit: "ms"
+          example_value: "800.3"
+          title: "Value"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_rating"
+          description: "Web Vital rating."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "good"
+          title: "Rating"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_navigation_type"
+          description: "Navigation type associated with the Web Vital."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "navigate"
+          title: "Navigation Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
+      }];
+      WEBVIEW_VITAL_TTFB = 42 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Vital - TTFB"
+        description: "A WebView Time to First Byte measurement is reported."
+        well_known_fields: {
+          key: "_value"
+          description: "Time to First Byte value."
+          type: OOTB_FIELD_TYPE_FLOAT
+          unit: "ms"
+          example_value: "300.1"
+          title: "Value"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_rating"
+          description: "Web Vital rating."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "good"
+          title: "Rating"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_navigation_type"
+          description: "Navigation type associated with the Web Vital."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "navigate"
+          title: "Navigation Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
+      }];
+      WEBVIEW_VITAL_INP = 43 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Vital - INP"
+        description: "A WebView Interaction to Next Paint measurement is reported."
+        well_known_fields: {
+          key: "_value"
+          description: "Interaction to Next Paint value."
+          type: OOTB_FIELD_TYPE_FLOAT
+          unit: "ms"
+          example_value: "180.2"
+          title: "Value"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_rating"
+          description: "Web Vital rating."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "good"
+          title: "Rating"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_navigation_type"
+          description: "Navigation type associated with the Web Vital."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "navigate"
+          title: "Navigation Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
+      }];
+      WEBVIEW_VITAL_CLS = 44 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Vital - CLS"
+        description: "A WebView Cumulative Layout Shift measurement is reported."
+        well_known_fields: {
+          key: "_value"
+          description: "Cumulative Layout Shift value."
+          type: OOTB_FIELD_TYPE_FLOAT
+          example_value: "0.12"
+          title: "Value"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_GREATER_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN
+          supported_operators: OOTB_FIELD_OPERATOR_LESS_THAN_OR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_HISTOGRAM
+          suitable_for: OOTB_FIELD_AGGREGATION_AVERAGE_COUNT
+        }
+        well_known_fields: {
+          key: "_rating"
+          description: "Web Vital rating."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "good"
+          title: "Rating"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {
+          key: "_navigation_type"
+          description: "Navigation type associated with the Web Vital."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "navigate"
+          title: "Navigation Type"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_IN
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_IN
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+          suitable_for: OOTB_FIELD_AGGREGATION_GROUP
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
+      }];
+      WEBVIEW_PAGE_VIEW = 45 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
+        category: OOTB_EVENT_CATEGORY_WEBVIEW
+        title: "WebView Page View"
+        description: "A WebView page view starts or ends."
+        well_known_fields: {
+          key: "_url"
+          description: "WebView page URL."
+          type: OOTB_FIELD_TYPE_STRING
+          example_value: "https://example.com/products/123"
+          title: "URL"
+          supported_operators: OOTB_FIELD_OPERATOR_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_EQUAL
+          supported_operators: OOTB_FIELD_OPERATOR_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_REGEX
+          supported_operators: OOTB_FIELD_OPERATOR_SET
+          supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
+        }
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
+        well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
+      }];
     }
   }
 
@@ -3024,6 +3729,20 @@ message OotbMatch {
       SPAN_START = 29;
       THERMAL_STATE_CHANGE = 30;
       TIMEZONE_CHANGE = 31;
+      WEBVIEW_LIFECYCLE = 32;
+      WEBVIEW_NAVIGATION = 33;
+      WEBVIEW_LONG_TASK = 34;
+      WEBVIEW_ERROR = 35;
+      WEBVIEW_PROMISE_REJECTION = 36;
+      WEBVIEW_RESOURCE_ERROR = 37;
+      WEBVIEW_CONSOLE = 38;
+      WEBVIEW_USER_INTERACTION = 39;
+      WEBVIEW_VITAL_LCP = 40;
+      WEBVIEW_VITAL_FCP = 41;
+      WEBVIEW_VITAL_TTFB = 42;
+      WEBVIEW_VITAL_INP = 43;
+      WEBVIEW_VITAL_CLS = 44;
+      WEBVIEW_PAGE_VIEW = 45;
     }
   }
 
@@ -3102,6 +3821,20 @@ message OotbMatch {
       SPAN_START = 27;
       THERMAL_STATE_CHANGE = 28;
       TIMEZONE_CHANGE = 29;
+      WEBVIEW_LIFECYCLE = 30;
+      WEBVIEW_NAVIGATION = 31;
+      WEBVIEW_LONG_TASK = 32;
+      WEBVIEW_ERROR = 33;
+      WEBVIEW_PROMISE_REJECTION = 34;
+      WEBVIEW_RESOURCE_ERROR = 35;
+      WEBVIEW_CONSOLE = 36;
+      WEBVIEW_USER_INTERACTION = 37;
+      WEBVIEW_VITAL_LCP = 38;
+      WEBVIEW_VITAL_FCP = 39;
+      WEBVIEW_VITAL_TTFB = 40;
+      WEBVIEW_VITAL_INP = 41;
+      WEBVIEW_VITAL_CLS = 42;
+      WEBVIEW_PAGE_VIEW = 43;
     }
   }
 
