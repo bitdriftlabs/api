@@ -9,6 +9,7 @@ syntax = "proto3";
 package bitdrift.public.unary.admin.v1;
 
 import "bitdrift/public/unary/admin/v1/access.proto";
+import "bitdrift/public/unary/admin/v1/admin.proto";
 import "bitdrift/public/unary/admin/v1/connector.proto";
 import "bitdrift/public/unary/admin/v1/keys.proto";
 import "bitdrift/public/unary/admin/v1/notifications.proto";
@@ -17,6 +18,26 @@ import "bitdrift/public/unary/admin/v1/view.proto";
 
 // Manages administrative settings including Slack integrations, notification groups, views, API/SDK keys, users, teams, and connectors.
 service AdminService {
+  // Starts authorization of a Slack workspace or organization installation.
+  rpc StartSlackAppInstallation(.bitdrift.public.unary.admin.v1.StartSlackAppInstallationRequest) returns (.bitdrift.public.unary.admin.v1.StartSlackAppInstallationResponse);
+
+  // Retrieves Slack connection readiness without starting authorization or modifying the connection.
+  rpc GetSlackAppConnectionStatus(.bitdrift.public.unary.admin.v1.GetSlackAppConnectionStatusRequest) returns (.bitdrift.public.unary.admin.v1.GetSlackAppConnectionStatusResponse);
+
+  // Lists workspaces where the Slack app is authorized to operate.
+  rpc ListSlackAppWorkspaces(.bitdrift.public.unary.admin.v1.ListSlackAppWorkspacesRequest) returns (.bitdrift.public.unary.admin.v1.ListSlackAppWorkspacesResponse);
+
+  // Selects an authorized workspace for a Slack organization installation.
+  //
+  // Reauthorization is required before changing an existing selection.
+  rpc SelectSlackAppWorkspace(.bitdrift.public.unary.admin.v1.SelectSlackAppWorkspaceRequest) returns (.bitdrift.public.unary.admin.v1.SelectSlackAppWorkspaceResponse);
+
+  // Disconnects the organization's Slack connection.
+  //
+  // Organization installations are unlinked locally without revoking other organizations' access.
+  // Workspace installations revoke the workspace token.
+  rpc DisconnectSlackApp(.bitdrift.public.unary.admin.v1.DisconnectSlackAppRequest) returns (.bitdrift.public.unary.admin.v1.DisconnectSlackAppResponse);
+
   // Lists all notification groups for the organization.
   rpc GetNotificationGroups(.bitdrift.public.unary.admin.v1.GetNotificationGroupsRequest) returns (.bitdrift.public.unary.admin.v1.GetNotificationGroupsResponse);
 
