@@ -1,0 +1,128 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.admin.v1;
+
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message StartSlackAppInstallationRequest {}
+
+message StartSlackAppInstallationResponse {
+  // The Slack authorization URL for this installation attempt.
+  string authorization_url = 1;
+
+  // The identifier of this installation attempt.
+  string attempt_id = 2;
+
+  // The time after which authorization must be restarted.
+  .google.protobuf.Timestamp expires_at = 3;
+}
+
+enum SlackAppConnectionState {
+  SLACK_APP_CONNECTION_STATE_UNSPECIFIED = 0;
+  NOT_INSTALLED = 1;
+  NEEDS_WORKSPACE_ACCESS = 2;
+  NEEDS_WORKSPACE_SELECTION = 3;
+  READY = 4;
+  WORKSPACE_ACCESS_LOST = 5;
+  REAUTHORIZATION_REQUIRED = 6;
+}
+
+message SlackAppWorkspace {
+  // The Slack workspace ID.
+  string id = 1;
+
+  // The Slack workspace name.
+  string name = 2;
+}
+
+message SlackAppConnection {
+  // The connection's current readiness state.
+  .bitdrift.public.unary.admin.v1.SlackAppConnectionState state = 1;
+
+  // Whether the app is installed for a Slack organization rather than one workspace.
+  bool is_enterprise_install = 2;
+
+  // The Slack organization ID, when available.
+  string enterprise_id = 3;
+
+  // The Slack organization name, when available.
+  string enterprise_name = 4;
+
+  // The explicitly selected workspace for an organization installation.
+  .bitdrift.public.unary.admin.v1.SlackAppWorkspace selected_workspace = 5;
+
+  // The time of the most recent successful authorization.
+  .google.protobuf.Timestamp authorized_at = 6;
+
+  // The opaque version to supply when selecting a workspace or disconnecting.
+  string registration_version = 7;
+
+  // The joined channel names in the selected workspace, available only when ready.
+  repeated string channels = 8;
+
+  // The Slack workspace-management URL for granting the app workspace access, when available.
+  string workspace_management_url = 9;
+}
+
+message GetSlackAppConnectionStatusRequest {}
+
+message GetSlackAppConnectionStatusResponse {
+  .bitdrift.public.unary.admin.v1.SlackAppConnection connection = 1;
+}
+
+message ListSlackAppWorkspacesRequest {
+  // The continuation cursor from the preceding response, or empty for the first page.
+  string cursor = 1 [(validate.rules).string.max_len = 4096];
+
+  // The version from the first page, required when continuing pagination.
+  string expected_version = 2 [(validate.rules).string.max_len = 128];
+}
+
+message ListSlackAppWorkspacesResponse {
+  // The workspaces where the app is authorized to operate.
+  repeated .bitdrift.public.unary.admin.v1.SlackAppWorkspace workspaces = 1;
+
+  // The continuation cursor, or empty when no more pages remain.
+  string next_cursor = 2;
+
+  // The connection version shared by every page of this result.
+  string registration_version = 3;
+
+  // The selected workspace ID, or empty while workspace selection is pending.
+  string selected_workspace_id = 4;
+}
+
+message SelectSlackAppWorkspaceRequest {
+  // The ID of an authorized Slack workspace.
+  string team_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 128
+  }];
+
+  // The connection version returned by status or workspace listing.
+  string expected_version = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 128
+  }];
+}
+
+message SelectSlackAppWorkspaceResponse {
+  .bitdrift.public.unary.admin.v1.SlackAppConnection connection = 1;
+}
+
+message DisconnectSlackAppRequest {
+  // The connection version returned by status or workspace listing.
+  string expected_version = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 128
+  }];
+}
+
+message DisconnectSlackAppResponse {}
