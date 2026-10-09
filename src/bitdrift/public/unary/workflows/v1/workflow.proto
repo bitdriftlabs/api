@@ -88,6 +88,13 @@ message GroupBy {
       // one for the matched state value. The key/value dimension names are configured on the
       // MultiTag. See the documentation on MultiTag for more details.
       .bitdrift.public.unary.workflows.v1.GroupBy.MultiTag multi_tag = 4;
+
+      // A JSON path into a log field. The path also names the emitted dimension. Supports keys,
+      // quoted keys, and nonnegative array indices; missing or non-scalar values omit the dimension.
+      string log_field_json_path = 5 [(validate.rules).string = {
+        min_len: 1
+        max_len: 100
+      }];
     }
   }
 
@@ -3993,6 +4000,13 @@ message Rule {
       oneof extraction_type {
         // The name of the field to extract the value from.
         string name = 2 [(validate.rules).string = {max_len: 100}];
+
+        // A JSON path into a log field whose scalar value supplies the metric value. Supports keys,
+        // quoted keys, and nonnegative array indices. Missing or non-numeric values skip the metric.
+        string log_field_json_path = 5 [(validate.rules).string = {
+          min_len: 1
+          max_len: 100
+        }];
 
         // Extract the measured time from a completed Measure Time rule. This can only be set if
         // the match_id points to a Measure Time rule.
