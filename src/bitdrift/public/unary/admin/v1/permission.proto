@@ -22,6 +22,8 @@ enum Permission {
   WORKFLOW_WRITE = 4;
   // Allows deploying owned workflows.
   WORKFLOW_DEPLOY = 5;
+  // Allows managing users.
+  USER_ADMIN = 6;
   // Allows reading session/timeline data.
   SESSION_READ = 7;
   // Allows reading metrics data.

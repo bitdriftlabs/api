@@ -1,0 +1,147 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.unary.admin.v1;
+
+import "bitdrift/public/unary/common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message ListRolesRequest {}
+
+message Role {
+  // The unique ID of the role.
+  uint32 id = 1;
+
+  // The name of the role.
+  string name = 2;
+
+  // The description of the role.
+  string description = 3;
+}
+
+message ListRolesResponse {
+  // The roles available to the organization that the authenticated user can assign.
+  repeated .bitdrift.public.unary.admin.v1.Role roles = 1;
+}
+
+message ListUsersRequest {
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      DISPLAY_NAME = 1;
+      EMAIL_ADDRESS = 2;
+      CREATION_TIME = 3;
+      ACCOUNT_STATUS = 4;
+    }
+
+    // Selects which caller-visible user attribute to order by.
+    .bitdrift.public.unary.admin.v1.ListUsersRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // Selects whether results are returned in ascending or descending order.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // An optional filter string to filter users by email or name. This is a simple case-insensitive
+  // substring match across both fields.
+  optional string filter = 4 [(validate.rules).string = {max_len: 255}];
+
+  // An optional team ID to filter users by membership.
+  optional string team_id = 5 [(validate.rules).string = {max_len: 100}];
+
+  // Pagination parameters. Defaults to an offset of 0 and a limit of 100.
+  .bitdrift.public.unary.common.v1.Pagination pagination = 6;
+
+  // Orders users by caller-visible attributes. Apply criteria in the order provided.
+  repeated .bitdrift.public.unary.admin.v1.ListUsersRequest.Sort sort_by = 7 [(validate.rules).repeated = {max_items: 100}];
+
+  // An optional list of user IDs to filter by. If provided, only users with matching IDs will be returned.
+  repeated string user_ids = 8 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      string: {
+        min_len: 1
+        max_len: 100
+      }
+    }
+  }];
+}
+
+message ListUsersResponse {
+  message User {
+    // The unique ID of the user.
+    string id = 1;
+
+    // The email address of the user.
+    string email = 2;
+
+    // The display name of the user.
+    string name = 3;
+
+    // The roles assigned to this user.
+    repeated .bitdrift.public.unary.admin.v1.Role roles = 4;
+
+    // The time the user was created.
+    .google.protobuf.Timestamp created_at = 5;
+
+    // The account status, such as "invited", "enabled", or "disabled".
+    string status = 6;
+  }
+
+  // The list of users.
+  repeated .bitdrift.public.unary.admin.v1.ListUsersResponse.User users = 1;
+
+  // The total number of matching users before pagination.
+  uint32 total_count = 2;
+}
+
+message UpdateUserRolesRequest {
+  // The user ID returned by ListUsers.
+  string user_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The complete set of role IDs to assign. An empty list removes all assigned roles.
+  // Use ListRoles to discover roles the authenticated user can assign.
+  repeated uint32 role_ids = 2 [(validate.rules).repeated = {max_items: 100}];
+}
+
+message UpdateUserRolesResponse {}
+
+message CreateUserRequest {
+  // The email address of the new user.
+  string email = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The display name of the new user.
+  string name = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The initial role IDs to assign. Use ListRoles to discover assignable roles.
+  repeated uint32 role_ids = 3 [(validate.rules).repeated = {max_items: 100}];
+}
+
+message CreateUserResponse {}
+
+message DeleteUserRequest {
+  // The user ID returned by ListUsers.
+  string user_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message DeleteUserResponse {}
