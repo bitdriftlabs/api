@@ -58,6 +58,23 @@ enum LogType {
   SPAN = 8;
 }
 
+message CommandAttachment {
+  enum Source {
+    UNSPECIFIED = 0;
+    WORKFLOW = 1;
+    DIRECT_COMMAND = 2;
+  }
+
+  // The UUID identifying the artifact produced by the command.
+  string artifact_id = 1;
+  // The MIME type of the artifact.
+  string content_type = 2;
+  // The byte size reported when the artifact was persisted.
+  uint64 size_bytes = 3;
+  // The command lifecycle responsible for uploading the artifact.
+  Source source = 4;
+}
+
 message Log {
   message Field {
     string key = 1;
@@ -92,4 +109,6 @@ message Log {
   // message and fields. In this case the message and fields above will be empty and should be
   // synthetically reconstructed by decompressing this field.
   bytes compressed_contents = 9;
+  // An attachment produced by a command, independent of the compressed log contents.
+  CommandAttachment command_attachment = 10;
 }
