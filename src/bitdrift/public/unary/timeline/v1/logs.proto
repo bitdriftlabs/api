@@ -44,6 +44,9 @@ message Log {
 
   // The recorded timestamp of the log.
   .google.protobuf.Timestamp timestamp = 11;
+
+  // The artifact produced by a command associated with this log.
+  .bitdrift_public.protobuf.logging.v1.CommandAttachment command_attachment = 13;
 }
 
 message LogType {
