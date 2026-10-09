@@ -14,6 +14,7 @@ import "bitdrift/public/unary/admin/v1/connector.proto";
 import "bitdrift/public/unary/admin/v1/keys.proto";
 import "bitdrift/public/unary/admin/v1/notifications.proto";
 import "bitdrift/public/unary/admin/v1/teams.proto";
+import "bitdrift/public/unary/admin/v1/users.proto";
 import "bitdrift/public/unary/admin/v1/view.proto";
 
 // Manages administrative settings including Slack integrations, notification groups, views, API/SDK keys, users, teams, and connectors.
@@ -75,6 +76,33 @@ service AdminService {
 
   // Revokes an API key or SDK key by ID.
   rpc RevokeKey(.bitdrift.public.unary.admin.v1.RevokeKeyRequest) returns (.bitdrift.public.unary.admin.v1.RevokeKeyResponse);
+
+  // Lists roles the authenticated user can assign.
+  //
+  // Returns roles available to the organization whose permissions the caller can grant.
+  rpc ListRoles(.bitdrift.public.unary.admin.v1.ListRolesRequest) returns (.bitdrift.public.unary.admin.v1.ListRolesResponse);
+
+  // Lists users in the organization.
+  //
+  // Supports filtering, ordering, and pagination. The total count reflects matching users before pagination.
+  rpc ListUsers(.bitdrift.public.unary.admin.v1.ListUsersRequest) returns (.bitdrift.public.unary.admin.v1.ListUsersResponse);
+
+  // Replaces the roles assigned to a user in the organization.
+  //
+  // Requires USER_ADMIN and permission to grant every requested role. An empty role list removes all assigned roles.
+  rpc UpdateUserRoles(.bitdrift.public.unary.admin.v1.UpdateUserRolesRequest) returns (.bitdrift.public.unary.admin.v1.UpdateUserRolesResponse);
+
+  // Creates a new user in the organization.
+  //
+  // Requires USER_ADMIN and permission to grant every requested role. Sends an invitation and returns an empty response.
+  // Use ListUsers to find the created user's ID.
+  rpc CreateUser(.bitdrift.public.unary.admin.v1.CreateUserRequest) returns (.bitdrift.public.unary.admin.v1.CreateUserResponse);
+
+  // Removes a user from the organization.
+  //
+  // Requires USER_ADMIN. This is not a reversible account disable operation.
+  // Depending on the organization's identity provider, the identity may also be deleted when no organization memberships remain.
+  rpc DeleteUser(.bitdrift.public.unary.admin.v1.DeleteUserRequest) returns (.bitdrift.public.unary.admin.v1.DeleteUserResponse);
 
   // Creates or updates a team in the organization.
   rpc UpsertTeam(.bitdrift.public.unary.admin.v1.UpsertTeamRequest) returns (.bitdrift.public.unary.admin.v1.UpsertTeamResponse);
