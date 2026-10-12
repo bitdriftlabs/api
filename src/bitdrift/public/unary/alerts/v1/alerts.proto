@@ -413,7 +413,7 @@ message GetAllAlertsResponse {
 // Requests alert history for a single workflow alert.
 message GetAlertHistoryRequest {
   // The alert ID to get the history for.
-  uint64 alert_id = 1;
+  uint64 alert_id = 1 [(validate.rules).uint64 = {gt: 0}];
 
   // Used to paginate through results. To get the next page result, set this to
   // the desired starting offset. For example, setting to 10 will start with the

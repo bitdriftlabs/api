@@ -36,6 +36,8 @@ enum Permission {
   ISSUE_READ = 8;
   // Allows managing connectors.
   CONNECTOR_ADMIN = 14;
+  // Allows configuring metric exports to connectors.
+  CONNECTOR_EXPORT_ADMIN = 39;
   // Allows reading connectors.
   CONNECTOR_READ = 17;
   // Allows reading debug file metadata.

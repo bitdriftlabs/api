@@ -17,6 +17,9 @@ message GetFeatureFlagsRequest {
     min_len: 1
     max_len: 100
   }];
+
+  // Returns the effective flag state at this time. Must be within the session time range.
+  .google.protobuf.Timestamp as_of_time = 2;
 }
 
 message FeatureFlagExposure {
@@ -48,4 +51,8 @@ message GetFeatureFlagsResponse {
   // State can be inherited only from earlier sessions in the same process; a process start clears
   // feature flags.
   repeated .bitdrift.public.unary.timeline.v1.FeatureFlagExposure exposures = 1;
+
+  // Effective values at the requested as-of time, including values inherited from this process.
+  // Empty unless as_of_time was requested. Removed flags are absent.
+  repeated .bitdrift.public.unary.timeline.v1.FeatureFlagExposure as_of_state = 2;
 }

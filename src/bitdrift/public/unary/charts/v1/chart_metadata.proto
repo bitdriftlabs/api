@@ -108,7 +108,8 @@ message ChartMetadata {
       // The top K algorithm to use for this time series to determine which K time series are selected for group by time series.
       optional .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.TopKAlgorithm top_k_algorithm = 5 [(validate.rules).enum = {defined_only: true}];
 
-      // Configuration for exporting data to a connector.
+      // Configuration for exporting data to a connector. Adding, changing, or clearing this
+      // configuration requires CONNECTOR_EXPORT_ADMIN when that authorization policy is enabled.
       repeated .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig connector_export_config = 6 [(validate.rules).repeated.max_items = 10];
 
       // The ID that identifies this configured metric time series in resolved chart responses.
