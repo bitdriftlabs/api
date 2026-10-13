@@ -301,6 +301,16 @@ message GetIssueAlertHistoryRequest {
 
   // End of the time range to return issues alert history for.
   optional .google.protobuf.Timestamp end_time = 5 [(validate.rules).message = {required: true}];
+
+  // Used to paginate through history items, which are ordered by trigger time. To get the next
+  // page, set this to the desired starting offset. The default value is 0.
+  optional uint32 offset = 6;
+
+  // The maximum number of history items to return. When omitted, all matching items are returned.
+  optional uint32 limit = 7 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
 }
 
 // Describes one issues alert firing interval together with its contributing issue groups.
@@ -347,8 +357,12 @@ message GetIssueAlertHistoryResponse {
   // series like chart.
   repeated .bitdrift.public.unary.alerts.v1.GetIssueAlertHistoryResponse.AlertHistoryItem history = 1;
 
-  // A summary of the issue groups that contributed to alerting during the time range.
+  // A summary of the issue groups that contributed to alerting during the time range. Covers every
+  // matching history item, regardless of offset and limit.
   repeated .bitdrift.public.unary.alerts.v1.GetIssueAlertHistoryResponse.IssueGroupSummary issue_groups = 2;
+
+  // Total number of history items that match the request, regardless of offset and limit.
+  uint32 total_alert_history = 3;
 }
 
 // Provides issues alert configuration, listing, and history operations.

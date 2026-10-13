@@ -9,6 +9,7 @@ syntax = "proto3";
 package bitdrift.public.unary.device_debug.v1;
 
 import "bitdrift/public/shared/platform/v1/platform.proto";
+import "bitdrift/public/unary/common/v1/common.proto";
 import "bitdrift_public/protobuf/client/v1/api.proto";
 import "bitdrift_public/protobuf/workflow/v1/workflow_command.proto";
 import "google/protobuf/timestamp.proto";
@@ -40,8 +41,16 @@ message DeviceCommand {
   // The time when the command was created.
   .google.protobuf.Timestamp created_at = 4 [(validate.rules).message.required = true];
 
-  // The time after which the command and its results are no longer available.
+  // The execution and result-upload deadline. Completed results remain readable until retained_until.
   .google.protobuf.Timestamp expires_at = 5 [(validate.rules).message.required = true];
+
+  // Identity captured at submission; omitted for commands submitted before auditing was enabled.
+  // API keys use the authenticated tenant API-key identity, not the key creator's identity.
+  .bitdrift.public.unary.common.v1.Owner invoked_by = 6;
+
+  // History visibility deadline under the account's current cold-storage retention policy.
+  // Attachment deletion is asynchronous and may occur separately under the storage lifecycle.
+  .google.protobuf.Timestamp retained_until = 7 [(validate.rules).message.required = true];
 }
 
 // Sends a command to a currently connected device.
@@ -115,7 +124,7 @@ message GetDeviceCommandResponse {
   // device_command.command_id. The response preserves the attachment's original Content-Type and
   // uses Content-Encoding: zstd. GetDeviceCommand never returns attachment content.
   message Succeeded {
-    // Describes an attachment that has been verified as ready for download.
+    // Describes a persisted attachment. Historical bytes may have expired from storage independently.
     message Attachment {
       // The content type returned by the attachment endpoint.
       string content_type = 1 [(validate.rules).string.min_len = 1];
@@ -130,8 +139,8 @@ message GetDeviceCommandResponse {
     // Optional structured context supplied with the terminal command result.
     .bitdrift_public.protobuf.client.v1.DeviceCommandResultContext context = 3;
 
-    // The verified attachment that is ready for download. Omitted when the command completed
-    // successfully without an attachment.
+    // The persisted attachment metadata. Omitted when the command completed without an attachment.
+    // Fetching an attachment no longer present in cold storage returns NotFound.
     .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Succeeded.Attachment attachment = 4;
   }
 
@@ -142,6 +151,11 @@ message GetDeviceCommandResponse {
 
     // Optional structured context supplied with the terminal command result.
     .bitdrift_public.protobuf.client.v1.DeviceCommandResultContext context = 2;
+  }
+
+  // The execution deadline passed without a persisted terminal outcome.
+  message Expired {
+    .google.protobuf.Timestamp expired_at = 1 [(validate.rules).message.required = true];
   }
 
   // The immutable command metadata.
@@ -159,7 +173,51 @@ message GetDeviceCommandResponse {
 
     // The command could not be completed.
     .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Failed failed = 5;
+
+    // Execution expired; partial progress remains available throughout history retention.
+    .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Expired expired = 6;
   }
+}
+
+// Lists persisted direct submissions, not rejected attempts or SDK workflow executions.
+// Results are newest first, ordered by creation time and command ID, within current cold retention.
+message ListDeviceCommandInvocationsRequest {
+  message Filters {
+    optional string device_id = 1 [(validate.rules).string = {
+      uuid: true
+      max_len: 36
+    }];
+
+    // Exact match against the submission-time caller snapshot. Supply ID, email, or both (AND).
+    // At least one must be nonempty; name and avatar_uri are not supported.
+    .bitdrift.public.unary.common.v1.Owner invoked_by = 2;
+
+    // Matches a selector only. Arguments are not permitted in a history filter.
+    .bitdrift_public.protobuf.workflow.v1.WorkflowCommandSelector command = 3;
+
+    // Inclusive creation-time bounds. Omission of the upper bound uses the first page's current time.
+    .google.protobuf.Timestamp created_from = 4;
+
+    .google.protobuf.Timestamp created_before = 5;
+  }
+
+  // Omission uses 50. Page size may change between pages; filters must remain unchanged.
+  optional uint32 page_size = 1 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
+
+  // Opaque continuation token bound to this account and the original filters.
+  string page_token = 2 [(validate.rules).string.max_len = 4096];
+
+  .bitdrift.public.unary.device_debug.v1.ListDeviceCommandInvocationsRequest.Filters filters = 3;
+}
+
+message ListDeviceCommandInvocationsResponse {
+  // Status and audit metadata only; attachment bytes are never included in a history page.
+  repeated .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse invocations = 1;
+
+  string next_page_token = 2;
 }
 
 // Shared catalog metadata for built-in and registered commands.
@@ -307,6 +365,9 @@ message UnregisterDeviceCommandResponse {
 
 // Manages device command execution and registered commands.
 service DebugService {
+  // Lists the account's retained direct command submissions, including expired execution attempts.
+  rpc ListDeviceCommandInvocations(.bitdrift.public.unary.device_debug.v1.ListDeviceCommandInvocationsRequest) returns (.bitdrift.public.unary.device_debug.v1.ListDeviceCommandInvocationsResponse);
+
   // Sends a command to a currently connected device.
   rpc SendDeviceCommand(.bitdrift.public.unary.device_debug.v1.SendDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.SendDeviceCommandResponse);
 

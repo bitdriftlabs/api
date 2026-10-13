@@ -81,27 +81,17 @@ message ResolvedChart {
 
   message SessionCapture {}
 
-  message BackingWorkflowDeploymentHistory {
-    message Deployment {
-      // The version number of the workflow deployment.
-      uint64 version = 1;
+  message BackingWorkflowDeploymentStatus {
+    // The version number of the latest workflow deployment.
+    uint64 version = 1;
 
-      // The time when this workflow version was deployed.
-      .google.protobuf.Timestamp deployed_at = 2;
+    // The time when the latest workflow version was deployed.
+    .google.protobuf.Timestamp deployed_at = 2;
 
-      // The time when this deployment stopped being active.
-      //
-      // If this is not set, the deployment is still active.
-      .google.protobuf.Timestamp stopped_at = 3;
-
-      // The user who deployed this workflow version.
-      .bitdrift.public.unary.common.v1.Owner deployed_by_user = 4;
-    }
-
-    // The deployment history of the workflow backing this chart.
+    // The time when the latest deployment stopped being active.
     //
-    // Entries are ordered from newest to oldest.
-    repeated .bitdrift.public.unary.dashboards.v1.ResolvedChart.BackingWorkflowDeploymentHistory.Deployment deployments = 1;
+    // If this is not set, the workflow is still deployed.
+    .google.protobuf.Timestamp stopped_at = 3;
   }
 
   // The type of chart.
@@ -126,11 +116,15 @@ message ResolvedChart {
     .bitdrift.public.unary.dashboards.v1.ResolvedChart.SessionCapture session_capture = 19;
   }
 
+  // The chart's size and position. On custom dashboards, pass it back as
+  // chart_component_layout.layout_settings when updating the dashboard.
+  .bitdrift.public.unary.dashboards.v1.DashboardLayoutSettings dashboard_layout_settings = 17;
+
   // The display metadata for the chart.
   .bitdrift.public.unary.charts.v1.ChartMetadata metadata = 21;
 
-  // The deployment history of the workflow backing this chart, if applicable.
-  .bitdrift.public.unary.dashboards.v1.ResolvedChart.BackingWorkflowDeploymentHistory backing_workflow_deployment_history = 22;
+  // The status of the latest deployment of the workflow backing this chart, if applicable.
+  .bitdrift.public.unary.dashboards.v1.ResolvedChart.BackingWorkflowDeploymentStatus backing_workflow_deployment_status = 27;
 }
 
 message DashboardLayoutSettings {
