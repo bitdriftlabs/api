@@ -3027,7 +3027,7 @@ message OotbMatch {
       }];
       WEBVIEW_VITAL_LCP = 40 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
-        title: "WebView Vital - LCP"
+        title: "WebView Core Web Vital - LCP"
         description: "A WebView Largest Contentful Paint measurement is reported."
         well_known_fields: {
           key: "_value"
@@ -3080,7 +3080,7 @@ message OotbMatch {
       }];
       WEBVIEW_VITAL_FCP = 41 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
-        title: "WebView Vital - FCP"
+        title: "WebView Core Web Vital - FCP"
         description: "A WebView First Contentful Paint measurement is reported."
         well_known_fields: {
           key: "_value"
@@ -3133,7 +3133,7 @@ message OotbMatch {
       }];
       WEBVIEW_VITAL_TTFB = 42 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
-        title: "WebView Vital - TTFB"
+        title: "WebView Core Web Vital - TTFB"
         description: "A WebView Time to First Byte measurement is reported."
         well_known_fields: {
           key: "_value"
@@ -3186,7 +3186,7 @@ message OotbMatch {
       }];
       WEBVIEW_VITAL_INP = 43 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
-        title: "WebView Vital - INP"
+        title: "WebView Core Web Vital - INP"
         description: "A WebView Interaction to Next Paint measurement is reported."
         well_known_fields: {
           key: "_value"
@@ -3239,7 +3239,7 @@ message OotbMatch {
       }];
       WEBVIEW_VITAL_CLS = 44 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
-        title: "WebView Vital - CLS"
+        title: "WebView Core Web Vital - CLS"
         description: "A WebView Cumulative Layout Shift measurement is reported."
         well_known_fields: {
           key: "_value"
