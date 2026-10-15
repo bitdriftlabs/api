@@ -11,6 +11,7 @@ package bitdrift_public.protobuf.bdtail.v1;
 
 import "bitdrift_public/protobuf/matcher/v1/log_matcher.proto";
 import "bitdrift_public/protobuf/workflow/v1/workflow_command.proto";
+import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 // Requests that a device execute a command through a BDTail configuration.
@@ -20,6 +21,12 @@ message DeviceCommandRequest {
 
   // Selects a built-in or registered command to execute.
   bitdrift_public.protobuf.workflow.v1.WorkflowCommandSelector command_selector = 2 [(validate.rules).message.required = true];
+
+  // Immutable owner, generated once per live SDK instance and never persisted by the SDK.
+  string sdk_instance_id = 3 [(validate.rules).string.uuid = true];
+
+  // Original absolute invocation deadline; reconnect must not extend it.
+  google.protobuf.Timestamp expires_at = 4 [(validate.rules).message.required = true];
 }
 
 message BdTailStream {

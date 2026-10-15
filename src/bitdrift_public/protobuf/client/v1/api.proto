@@ -153,6 +153,9 @@ message HandshakeRequest {
   // StatsUploadResponse after the handshake, allowing the client to avoid an additional
   // request/response round trip before deleting the persisted source files.
   StatsUploadRequest startup_stats_upload = 11;
+
+  // Nonpersisted identity shared by all streams belonging to this live SDK instance.
+  string sdk_instance_id = 12;
 }
 
 // Notifies the server about the intent to upload one or more batches of logs. The client is expected (but
@@ -784,14 +787,24 @@ message DeviceCommandUpdate {
 
 // Acknowledges that the server persisted a command update.
 message DeviceCommandUpdateAck {
+  enum Disposition {
+    DISPOSITION_UNSPECIFIED = 0;
+    DISPOSITION_APPLIED = 1;
+    DISPOSITION_RETRYABLE = 2;
+    DISPOSITION_RETIRED = 3;
+  }
+
   // The command ID from the corresponding DeviceCommandRequest.
   string command_id = 1 [(validate.rules).string.uuid = true];
 
   // The command update sequence number that was persisted.
   uint64 update_sequence_number = 2;
 
-  // A non-empty error means the server did not persist the update and the client should retry it.
+  // Diagnostic reason; this is not an acknowledgement disposition.
   string error = 3;
+
+  // Only APPLIED releases an acceptance waiter successfully, after durable duplicate validation.
+  Disposition disposition = 4;
 }
 
 // The response to Sankey diagram path upload request.
