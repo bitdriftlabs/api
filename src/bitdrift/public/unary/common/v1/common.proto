@@ -89,8 +89,10 @@ enum Operator {
   IN = 9;
   // A negation of the IN operator.
   NOT_IN = 10;
-  // Tokenized substring search operator. Only supported on specific fields and documented per-field.
-  // Search strings shorter than 3 characters are rejected.
+  // Tokenized substring search operator. Only supported on specific fields and documented per-field;
+  // for issue advanced filters, these are the stack-trace function, file, and module, and the
+  // issue details. Pass a plain substring, not a WILDCARD pattern. Search strings shorter
+  // than 3 characters are rejected.
   SEARCH = 11;
   // A negation of the SEARCH operator.
   NOT_SEARCH = 12;

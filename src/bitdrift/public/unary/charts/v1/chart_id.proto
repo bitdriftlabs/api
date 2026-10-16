@@ -169,6 +169,17 @@ enum SortOrder {
 }
 
 message LimitStrategy {
+  // Selects every retained matching group without top-K ranking or a synthetic "other" group.
+  // Supported for counter, rate, average-count, and histogram workflow line-chart queries and
+  // basic alerts; other chart
+  // query shapes reject this strategy. Query-resource and ingestion-cardinality limits still
+  // apply: this does not recover data already discarded at ingestion. A query exceeding its
+  // group-resource limit fails rather than returning collapsed or truncated data.
+  //
+  // Use limit_strategy: {all_groups: {}} explicitly; an omitted or empty strategy still uses
+  // the caller's default top-K. Alert and chart-display selection are independent.
+  message AllGroups {}
+
   message TopKLimit {
     // The number of time series to return per chart dimension.
     uint64 top_k = 1 [(validate.rules).uint64 = {gt: 0}];
@@ -223,13 +234,20 @@ message LimitStrategy {
 
     // Select specific groups based on their dimension values. This is used to target particular groups that we want to display in the chart regardless of their aggregated value.
     .bitdrift.public.unary.charts.v1.LimitStrategy.IdentifierMatch identifier_match = 2;
+
+    // Selects all retained matching groups, subject to resource limits. No ranking or "other"
+    // group is produced. See AllGroups for supported query shapes and failure behavior.
+    .bitdrift.public.unary.charts.v1.LimitStrategy.AllGroups all_groups = 5;
   }
 
   // The sort order to use when applying the limit strategy. By default the output returns the top K
   // of maximum values, but can be switched to return the top K of minimum values (bottom K).
+  // Does not rank or limit all_groups results; their output order is not a ranking guarantee.
   .bitdrift.public.unary.charts.v1.SortOrder sort_order = 3 [(validate.rules).enum = {defined_only: true}];
 
-  // Optional exclusions to apply when limiting. This is used to exclude specific dimensions from the top K results
+  // Optional exclusions to apply when limiting. This is used to exclude specific dimensions from
+  // the top-K results. For all_groups, matching groups are excluded after defining any alert
+  // denominator-share population, so exclusions do not inflate other groups' contribution.
   .bitdrift.public.unary.charts.v1.LimitStrategy.IdentifierMatch exclusions = 4;
 }
 

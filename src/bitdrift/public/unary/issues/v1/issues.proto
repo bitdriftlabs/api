@@ -77,12 +77,15 @@ message AdvancedFilter {
       LHS_TYPED_MANUFACTURER = 15;
       // The error details associated with a report.
       // For exceptions, this is the exception message; for other crashes (for example, ANRs), this may be a larger diagnostic report.
+      // The only supported operators are SEARCH and NOT_SEARCH.
       LHS_TYPED_DETAILS = 16;
     }
 
     // The filter key to match against.
     .bitdrift.public.unary.issues.v1.AdvancedFilter.Condition.LhsTyped lhs_typed = 4 [(validate.rules).enum = {defined_only: true}];
 
+    // LHS_TYPED_FUNCTION, LHS_TYPED_FILE, LHS_TYPED_MODULE, and LHS_TYPED_DETAILS support only
+    // SEARCH and NOT_SEARCH. All other keys support every operator except SEARCH and NOT_SEARCH.
     .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
 
     string rhs = 3 [(validate.rules).string = {max_len: 255}];
@@ -250,58 +253,6 @@ message GetIssueGroupResponse {
   .bitdrift.public.unary.issues.v1.IssueGroup issue_group = 1 [(validate.rules).message = {required: true}];
 }
 
-message ListIssueGroupsFilters {
-  message Assignee {
-    // The assignee(s) of an issue group to filter by.
-    repeated .bitdrift.public.unary.common.v1.Owner value = 1 [(validate.rules).repeated = {max_items: 100}];
-  }
-
-  message Status {
-    // The status of an issue group to filter by.
-    .bitdrift.public.unary.issues.v1.IssueGroupStatus value = 1 [(validate.rules).enum = {defined_only: true}];
-  }
-
-  message Platform {
-    // The platform of an issue group to filter by.
-    repeated .bitdrift.public.shared.platform.v1.Platform value = 1 [(validate.rules).repeated = {max_items: 100}];
-  }
-
-  message TimeRange {
-    .bitdrift.public.unary.common.v1.TimeRange time_range = 3;
-  }
-
-  message IdsFilters {
-    // The issue group IDs to filter the list by.
-    repeated string value = 1 [(validate.rules).repeated = {
-      max_items: 100
-      items: {
-        string: {max_len: 100}
-      }
-    }];
-  }
-
-  oneof type {
-    option (validate.required) = true;
-    // Filters on the assignee of an issue group.
-    .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters.Assignee assignees = 1;
-
-    // Filters on the status of an issue group.
-    .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters.Status status = 2;
-
-    // Filters on the platform of an issue group.
-    .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters.Platform platform = 3;
-
-    // Filters on the time range of an issue group.
-    .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters.TimeRange time_range = 4;
-
-    // Filters on the advanced filters of an issue group.
-    .bitdrift.public.unary.issues.v1.AdvancedFilter advanced_filters = 6;
-
-    // Filters on specific issue group IDs.
-    .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters.IdsFilters ids_filter = 7;
-  }
-}
-
 message ListIssueGroupsRequest {
   message Sort {
     enum SortKey {
@@ -332,12 +283,23 @@ message ListIssueGroupsRequest {
     lte: 100
   }];
 
+  // Selects the issues whose groups are listed. When omitted, the last 7 days of issues are used
+  // with no other criteria.
   .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 5;
 
   .bitdrift.public.unary.issues.v1.IssueGroupQuery issue_group_query = 6;
 
   // Orders issue groups by caller-visible attributes. Apply criteria in the order provided.
   repeated .bitdrift.public.unary.issues.v1.ListIssueGroupsRequest.Sort sort = 7 [(validate.rules).repeated = {max_items: 100}];
+
+  // An optional issue-group view whose saved query is the base for this request. Each field set in
+  // issue_query or issue_group_query replaces the matching saved field; unset fields keep the saved
+  // value. When neither sets a time range, the last 7 days is used. Returns NOT_FOUND when the
+  // view does not exist or is not visible to the caller.
+  optional string view_id = 10 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
 }
 
 message ListIssueGroupsResponse {
@@ -607,9 +569,61 @@ message ListIssuesV2Response {
   optional string next_page_token = 3;
 }
 
+message GetAggregateIssueSummaryRequest {
+  // Specifies the issues to summarize. If the query selects multiple issue groups, the result
+  // combines their matching issues and counts each affected user and session once.
+  .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 1 [(validate.rules).message = {required: true}];
+
+  // If true, summary metrics (e.g. total_affected_users) will not be calculated or returned. This can be used to optimize performance when the caller only needs the list of events.
+  bool skip_summary_metrics = 2;
+
+  // If true, the actual event details will not be returned. This can be used to optimize performance when the caller only needs the summary metrics.
+  bool skip_events = 4;
+
+  // Optional time interval used to aggregate returned events.
+  optional .google.protobuf.Duration aggregation_window = 5;
+
+  // Only summarize issues whose groups match these filters. Status and assignee filters use the
+  // current group state, including when the issue time range is in the past.
+  .bitdrift.public.unary.issues.v1.IssueGroupQuery issue_group_query = 6;
+}
+
+message GetAggregateIssueSummaryResponse {
+  message Summary {
+    // The total number of unique users affected by the issues matching the query.
+    //
+    // Unset if the caller set skip_summary_metrics to true.
+    optional uint64 total_affected_users = 1;
+
+    // The total number of events matching the query.
+    //
+    // Unset if the caller set skip_summary_metrics to true.
+    optional uint64 total_events = 4;
+
+    // The total number of unique sessions affected by the issues matching the query.
+    //
+    // Unset if the caller set skip_summary_metrics to true.
+    optional uint64 total_sessions = 5;
+
+    // The events for the issues.
+    //
+    // Empty if the caller set skip_events to true, or if events are unavailable for the issues matching the query.
+    repeated .bitdrift.public.unary.issues.v1.Event events = 3;
+  }
+
+  // The combined summary metrics and events for all issues matching the query.
+  //
+  // Contains exactly one summary.
+  repeated .bitdrift.public.unary.issues.v1.GetAggregateIssueSummaryResponse.Summary summaries = 1;
+
+  // The time interval used to aggregate returned events.
+  .google.protobuf.Duration aggregation_window = 2;
+}
+
 // Requests occurrence time-series data for issues matching a query.
 message GetAggregateIssueEventsRequest {
-  // Selects the issues included in the occurrence time series.
+  // Selects the issues included in the occurrence time series. When omitted, the last 7 days of
+  // issues are used with no other criteria.
   .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 4;
 
   // Optionally sets the duration of each aggregation interval. The value must be a positive whole
@@ -618,7 +632,7 @@ message GetAggregateIssueEventsRequest {
   optional .google.protobuf.Duration aggregation_window = 5;
 
   // Limits events to groups matching the current status and assignee filters, including for past
-  // time ranges. When supplied, overrides status and assignee filters in the legacy filters field.
+  // time ranges.
   .bitdrift.public.unary.issues.v1.IssueGroupQuery issue_group_query = 6;
 }
 

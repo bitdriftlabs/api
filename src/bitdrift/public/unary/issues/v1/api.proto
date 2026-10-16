@@ -30,6 +30,9 @@ service IssueService {
   // Retrieves the occurrence time series for issues matching a query.
   rpc GetAggregateIssueEvents(.bitdrift.public.unary.issues.v1.GetAggregateIssueEventsRequest) returns (.bitdrift.public.unary.issues.v1.GetAggregateIssueEventsResponse);
 
+  // Retrieves aggregate summary metrics and events for issues matching the specified query.
+  rpc GetAggregateIssueSummary(.bitdrift.public.unary.issues.v1.GetAggregateIssueSummaryRequest) returns (.bitdrift.public.unary.issues.v1.GetAggregateIssueSummaryResponse);
+
   // Retrieves the feature flags associated with an issue.
   rpc GetIssueFeatureFlags(.bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsRequest) returns (.bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsResponse);
 

@@ -46,6 +46,8 @@ message DataPoint {
   optional .bitdrift.public.shared.workflows.v1.RateDetails rate_details = 3;
 
   // The unique devices count for this data point based on the TrackUnique configuration.
+  // Rates normally count denominator devices; basic alerts can explicitly select numerator
+  // devices through BasicAlertConfig.rate_options.unique_device_source.
   optional uint64 unique_devices = 4;
 }
 
@@ -56,7 +58,8 @@ message Legend {
 
 message CardinalityOverflows {
   // The number of records that exceeded the total cardinality limit for the
-  // action ID, including platform and app ID.
+  // metric's backing action IDs, including platform and app ID. Rate queries include both the
+  // numerator and denominator actions, counting a shared action only once.
   uint64 total_overflows = 1;
 
   // The number of records that exceeded only the group-by limit for the action
@@ -104,18 +107,30 @@ message TimeSeries {
   optional string title = 6;
 
   // The unique devices count for the entire series based on the TrackUnique configuration.
+  // Deduplicates devices across the queried interval rather than summing bucket counts.
+  // Rates normally count denominator devices; basic alerts can select numerator devices.
   optional uint64 unique_devices = 7;
 
   // The aggregated rollup for the entire series. Its meaning depends on the
   // type of series.
   // - counter: The sum of all data points.
-  // - rate: The sum of all numerator data points / the sum of all denominator data points.
+  // - rate: Interval numerator events / interval denominator events, not a mean of bucket rates.
+  //   Real groups include numerator-only buckets that are absent from the returned rate points.
+  //   Synthetic top-K "other" series instead reduce their returned bucket counts.
   // - histogram: The quantile over the entire range.
   double aggregated_rollup = 8;
 
   // The total count of cardinality overflows for this time series that occurred during the
   // query time period.
   .bitdrift.public.shared.workflows.v1.CardinalityOverflows cardinality_overflows = 9;
+
+  // Numerator and denominator event counts over the entire queried interval for a rate or
+  // average-count series. Present independently of per-bucket rate_details; the interval rate
+  // is numerator_count / denominator_count, not an average of bucket rates. Counts include
+  // numerator events in buckets without denominator events when the group has an interval
+  // denominator. Absent for other metric shapes and synthetic top-K "other" series; absence is
+  // not a pair of measured zero counts.
+  optional .bitdrift.public.shared.workflows.v1.RateDetails rate_details = 10;
 }
 
 message Counter {

@@ -78,12 +78,18 @@ message GetEntityInfoRequest {
     // The unique ID of the entity to retrieve information for.
     .bitdrift.public.unary.entity.v1.EntityId entity_id = 1;
 
-    // The bitdrift device ID to search for. If the device ID has been used by multiple entities,
-    // the server will return information for the most recently active entity associated with that
-    // device ID.
+    // The bitdrift device ID to search for. Resolves its current entity when connected, otherwise
+    // the most recently active entity in the requested time range. Conflicting current entity
+    // associations require an explicit entity ID.
     string device_id = 7 [(validate.rules).string = {
       min_len: 1
       max_len: 256
+    }];
+
+    // A device code exchanged through the device-code API. Resolves like device_id.
+    string device_code = 8 [(validate.rules).string = {
+      min_len: 6
+      max_len: 6
     }];
   }
 
