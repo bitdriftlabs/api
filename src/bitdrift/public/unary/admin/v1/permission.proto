@@ -84,4 +84,6 @@ enum Permission {
   DEVICE_COMMAND_WRITE = 37;
   // Allows listing registered device commands.
   DEVICE_COMMAND_READ = 38;
+  // Allows creating and updating workflows that contain Start Tracing actions.
+  WORKFLOW_TRACE_WRITE = 40;
 }

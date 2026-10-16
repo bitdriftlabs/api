@@ -42,6 +42,8 @@ message ResolvedChart {
     bool supports_multiple_percentiles = 3;
   }
 
+  message Pie {}
+
   // The legacy histogram bar visualization.
   message Bar {
     // If the line chart corresponding to this bar chart contains histograms with a
@@ -58,6 +60,12 @@ message ResolvedChart {
     // charts which contain grouped histograms or multiple histograms, and true for charts with a single histogram.
     bool supports_multiple_percentiles = 2;
   }
+
+  // Basic categorical bars are distinct from the legacy histogram bar chart.
+  message BasicBar {}
+
+  // A generic metric heat map renders aggregate values as stat tiles.
+  message MetricHeatMap {}
 
   message Funnel {}
 
@@ -100,6 +108,9 @@ message ResolvedChart {
     // The chart is a line chart, rendering one or more time series.
     .bitdrift.public.unary.dashboards.v1.ResolvedChart.Line line = 2;
 
+    // The chart is a pie chart, rendering the data as a set of slices.
+    .bitdrift.public.unary.dashboards.v1.ResolvedChart.Pie pie = 8;
+
     // The chart displays histogram bucket data as bars.
     .bitdrift.public.unary.dashboards.v1.ResolvedChart.Bar bar = 9;
 
@@ -114,6 +125,12 @@ message ResolvedChart {
 
     // The chart is a list of sessions that were captured by the workflow.
     .bitdrift.public.unary.dashboards.v1.ResolvedChart.SessionCapture session_capture = 19;
+
+    // The chart displays basic categorical bars.
+    .bitdrift.public.unary.dashboards.v1.ResolvedChart.BasicBar basic_bar = 23;
+
+    // The chart renders metric values as aggregate stat tiles.
+    .bitdrift.public.unary.dashboards.v1.ResolvedChart.MetricHeatMap metric_heat_map = 26;
   }
 
   // The chart's size and position. On custom dashboards, pass it back as
@@ -429,6 +446,18 @@ message ChartRequest {
 
     // This is only valid if all time series in the chart are histograms.
     .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HistogramBarChartDisplayMode histogram_bar_chart_display_mode = 12;
+
+    .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HeatMapDisplayMode heat_map_display_mode = 14;
+
+    .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.PieChartDisplayMode pie_chart_display_mode = 16;
+
+    .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.BasicBarChartDisplayMode basic_bar_chart_display_mode = 17;
+
+    // This is only valid if all time series in the chart are histograms.
+    .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HistogramDistributionDisplayMode histogram_distribution_display_mode = 18;
+
+    // This is only valid for a chart with exactly one grouped counter time series.
+    .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.StackedTimeSeriesBarChartDisplayMode stacked_time_series_bar_chart_display_mode = 19;
   }
 }
 
@@ -506,6 +535,17 @@ message LineChartResponse {
   repeated .bitdrift.public.shared.workflows.v1.TimeSeries time_series = 1;
 }
 
+message PieChartResponse {
+  // The complete table payload preserves rate details and deferred unique-device hydration.
+  .bitdrift.public.unary.dashboards.v1.TableChartResponse table_data = 2;
+}
+
+// The complete table payload for basic categorical bars preserves rate details
+// and deferred unique-device hydration.
+message BasicBarChartResponse {
+  .bitdrift.public.unary.dashboards.v1.TableChartResponse table_data = 1;
+}
+
 message SankeyChartResponse {
   // A single state in the diagram.
   message Node {
@@ -575,6 +615,27 @@ message TableValue {
 
   // For rate tables, returns the numerator and denominator values that yielded this value.
   .bitdrift.public.shared.workflows.v1.RateDetails rate_details = 2;
+}
+
+// Used for generic metric tree maps. Each tile contains a reduced metric value
+// and, when available, the corresponding time series for its sparkline.
+message MetricHeatMapChartResponse {
+  message Tile {
+    // The ordered group-by labels identifying this tile.
+    repeated .bitdrift.public.shared.workflows.v1.LabelPair labels = 1 [(validate.rules).repeated.max_items = 100];
+
+    // The aggregate primary metric value for this tile.
+    .bitdrift.public.unary.dashboards.v1.TableValue value = 2 [(validate.rules).message = {required: true}];
+
+    // The positive finite value that determines this tile's relative area.
+    double size = 3;
+
+    // The optional primary metric time series for this tile's sparkline.
+    .bitdrift.public.shared.workflows.v1.TimeSeries sparkline = 4;
+  }
+
+  // Tiles sorted by descending area.
+  repeated .bitdrift.public.unary.dashboards.v1.MetricHeatMapChartResponse.Tile tiles = 1;
 }
 
 message TableRow {
@@ -680,6 +741,9 @@ message ChartData {
     // Line-chart data for the chart.
     .bitdrift.public.unary.dashboards.v1.LineChartResponse line_data = 3;
 
+    // Pie-chart data for the chart.
+    .bitdrift.public.unary.dashboards.v1.PieChartResponse pie_data = 4;
+
     // Sankey-chart data for the chart.
     .bitdrift.public.unary.dashboards.v1.SankeyChartResponse sankey_data = 7;
 
@@ -700,6 +764,12 @@ message ChartData {
 
     // Set to true if the chart is not found.
     bool chart_not_found = 12 [(validate.rules).bool = {const: true}];
+
+    // Aggregate metric tree map data.
+    .bitdrift.public.unary.dashboards.v1.MetricHeatMapChartResponse metric_heatmap_data = 15;
+
+    // Basic categorical bar-chart data for the chart.
+    .bitdrift.public.unary.dashboards.v1.BasicBarChartResponse basic_bar_data = 16;
   }
 }
 
@@ -772,12 +842,32 @@ message GetUniqueAppIdsRequest {
   // Optional platform selection criteria used to limit which platforms and apps
   // are included in the response.
   repeated .bitdrift.public.shared.platform.v1.Platform platform_filter = 4 [(validate.rules).repeated.max_items = 10];
+
+  // Maximum number of apps across all platforms, in activity order. Omit for
+  // the complete inventory.
+  optional uint32 top_apps = 5 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 1000
+  }];
+
+  // Maximum number of versions per app, most unique devices first.
+  // Omit for all known versions.
+  optional uint32 versions_per_app = 6 [(validate.rules).uint32 = {
+    gte: 1
+    lte: 100
+  }];
 }
 
 message GetUniqueAppIdsResponse {
   // The distinct platform, app ID, and app version combinations observed in the
   // requested time range. This is sorted by platform/app activity volume.
   repeated .bitdrift.public.shared.platform.v1.Platform platforms = 6;
+
+  // Whether additional apps were omitted by top_apps.
+  bool apps_limited = 7;
+
+  // Whether any app had versions omitted by versions_per_app.
+  bool versions_limited = 8;
 }
 
 message DashboardStylisticComponent {

@@ -8,6 +8,7 @@ syntax = "proto3";
 
 package bitdrift.public.unary.charts.v1;
 
+import "bitdrift/public/shared/workflows/v1/time_series.proto";
 import "bitdrift/public/unary/charts/v1/chart_id.proto";
 import "validate/validate.proto";
 
@@ -125,6 +126,53 @@ message ChartMetadata {
 
     message HistogramBarChartDisplayMode {}
 
+    // Compares multiple histogram distributions on shared axes.
+    message HistogramDistributionDisplayMode {}
+
+    // Displays grouped time-series values as stacked bars.
+    message StackedTimeSeriesBarChartDisplayMode {}
+
+    // Displays aggregate metric values as a set of stat tiles. Grouped values
+    // become individual tiles, while an ungrouped value occupies the full chart.
+    message HeatMapDisplayMode {
+      message CounterCalculation {
+        .bitdrift.public.shared.workflows.v1.Counter.CounterAggregationType aggregation_type = 1 [(validate.rules).enum = {defined_only: true}];
+      }
+
+      // Counter metrics may either use equal tile sizes or use the unique-device
+      // count that is already collected for the metric. Rate and average-count
+      // metrics always use their denominator for sizing.
+      enum CounterSizing {
+        COUNTER_SIZING_EQUAL = 0;
+        COUNTER_SIZING_UNIQUE_DEVICES = 1;
+      }
+
+      message ColorThresholds {
+        // Four strictly monotonic values in the primary metric's native unit.
+        repeated double values = 1 [(validate.rules).repeated = {
+          min_items: 4
+          max_items: 4
+        }];
+      }
+
+      // Selects the aggregate displayed by a counter metric. Rate and
+      // average-count metrics always display their full-range ratio instead.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HeatMapDisplayMode.CounterCalculation counter_calculation = 1;
+
+      // Counter-backed tiles are equal-sized by default. Rate and average-count
+      // tiles always use their denominator, regardless of this value.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HeatMapDisplayMode.CounterSizing counter_sizing = 2 [(validate.rules).enum = {defined_only: true}];
+
+      // When absent, tiles use a neutral color.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HeatMapDisplayMode.ColorThresholds color_thresholds = 3;
+    }
+
+    // Displays a grouped metric as categorical slices.
+    message PieChartDisplayMode {}
+
+    // Displays a grouped metric as basic categorical bars.
+    message BasicBarChartDisplayMode {}
+
     oneof display_mode {
       // Displays the chart as a time series visualization.
       .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesDisplayMode time_series_display_mode = 1;
@@ -134,6 +182,21 @@ message ChartMetadata {
 
       // Displays histogram data as a bar chart.
       .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HistogramBarChartDisplayMode histogram_bar_chart_display_mode = 3;
+
+      // Displays metric values as aggregate stat tiles.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HeatMapDisplayMode heat_map_display_mode = 6;
+
+      // Displays a grouped metric as a pie chart.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.PieChartDisplayMode pie_chart_display_mode = 8;
+
+      // Displays a grouped metric as basic categorical bars.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.BasicBarChartDisplayMode basic_bar_chart_display_mode = 9;
+
+      // Displays histogram distributions as overlapping lines on shared axes.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HistogramDistributionDisplayMode histogram_distribution_display_mode = 10;
+
+      // Displays grouped time-series values as stacked bars.
+      .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.StackedTimeSeriesBarChartDisplayMode stacked_time_series_bar_chart_display_mode = 11;
     }
 
     // Metadata for each time series in the chart. The length of this list should match the number

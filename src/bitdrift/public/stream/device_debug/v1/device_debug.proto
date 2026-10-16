@@ -30,6 +30,21 @@ message DebugDeviceRequest {
       max_len: 36
       uuid: true
     }];
+
+    // The raw entity ID. Selects its sole currently connected device, falling back to devices
+    // observed in the past 30 days. Multiple matching devices require an explicit device ID.
+    // A unique offline historical device waits for reconnect. Historical resolution does not
+    // guarantee current entity ownership, and attachment stays scoped to the selected device.
+    string entity_id = 5 [(validate.rules).string = {
+      min_len: 1
+      max_len: 256
+    }];
+
+    // An entity hash returned by another API. Uses the same selection rules as entity_id.
+    string entity_hash = 6 [(validate.rules).string = {
+      min_len: 1
+      max_len: 256
+    }];
   }
 }
 

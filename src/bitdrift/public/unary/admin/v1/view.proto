@@ -16,11 +16,6 @@ import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 message ViewFilters {
-  message IssueGroupList {
-    // The issue group filters saved in the view.
-    repeated .bitdrift.public.unary.issues.v1.ListIssueGroupsFilters filters = 1 [(validate.rules).repeated = {max_items: 100}];
-  }
-
   message IssueGroupListQuery {
     // The issue-level query saved in the view.
     .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 1;
@@ -37,9 +32,6 @@ message ViewFilters {
   // Selects the saved criteria for one supported view type.
   oneof type {
     option (validate.required) = true;
-    // The saved criteria for an issue group view.
-    .bitdrift.public.unary.admin.v1.ViewFilters.IssueGroupList issue_group_list = 1;
-
     // The saved issue group query for an issue group view.
     .bitdrift.public.unary.admin.v1.ViewFilters.IssueGroupListQuery issue_group_list_new = 2;
 

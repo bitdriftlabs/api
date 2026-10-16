@@ -69,8 +69,11 @@ message SendDeviceCommandRequest {
       uuid: true
     }];
 
-    // The raw entity ID. Targets the sole online device observed for the entity in the past
-    // 30 days. If multiple associated devices are online, the request fails with their IDs.
+    // The raw entity ID. Targets its sole currently connected device, falling back to devices
+    // observed in the past 30 days. If multiple associated devices are online, the request fails
+    // with their IDs.
+    // Historical resolution does not guarantee current entity ownership. Commands stay scoped
+    // to the selected device after resolution.
     string entity_id = 4 [(validate.rules).string = {
       min_len: 1
       max_len: 256

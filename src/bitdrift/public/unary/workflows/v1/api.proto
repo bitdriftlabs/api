@@ -37,9 +37,14 @@ service WorkflowService {
   rpc ListWorkflows(.bitdrift.public.unary.workflows.v1.ListWorkflowsRequest) returns (.bitdrift.public.unary.workflows.v1.ListWorkflowsResponse);
 
   // Creates a new workflow.
+  //
+  // Definitions containing Start Tracing actions also require workflows:trace:write permission.
   rpc CreateWorkflow(.bitdrift.public.unary.workflows.v1.CreateWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.CreateWorkflowResponse);
 
   // Updates a workflow, replacing the existing configuration with the provided definition.
+  //
+  // Definitions containing Start Tracing actions also require workflows:trace:write permission,
+  // even when those actions are unchanged.
   rpc UpdateWorkflow(.bitdrift.public.unary.workflows.v1.UpdateWorkflowRequest) returns (.bitdrift.public.unary.workflows.v1.UpdateWorkflowResponse);
 
   // Renames a workflow without modifying any other fields.
