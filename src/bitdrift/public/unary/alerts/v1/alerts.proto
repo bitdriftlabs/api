@@ -171,11 +171,12 @@ message BasicAlertConfig {
   .bitdrift.public.unary.alerts.v1.BasicAlertConfig.EvaluationMode evaluation_mode = 10 [(validate.rules).enum = {defined_only: true}];
 }
 
-// SLO alerts can only be defined on rate time series. The config will be failed otherwise. The
-// rate must represent either successful or failed results divided by total results, as selected by
-// rate_type. Ultimately the windows and burn rates are what drives alerting, but the SLO duration
-// is still required so that error budget consumption can be calculated. Additionally, we can use
-// the SLO duration to show SLO adherence over the trailing window if we like.
+// SLO alerts can only be defined on rate time series that do not use a group-by. The config will
+// be failed otherwise. The rate must represent either successful or failed results divided by
+// total results, as selected by rate_type. Ultimately the windows and burn rates are what drives
+// alerting, but the SLO duration is still required so that error budget consumption can be
+// calculated. Additionally, we can use the SLO duration to show SLO adherence over the trailing
+// window if we like.
 message SloAlertConfig {
   // Identifies whether the rate time series represents successful or failed results.
   enum RateType {
@@ -199,7 +200,7 @@ message SloAlertConfig {
       optional string custom_notification_text = 2 [(validate.rules).string = {max_len: 2048}];
     }
 
-    // Short evaluation window for this burn-rate policy.
+    // Short evaluation window for this burn-rate policy. Must be shorter than long_window.
     .google.protobuf.Duration short_window = 1 [(validate.rules).duration.gt = {}];
 
     // Long evaluation window for this burn-rate policy.
