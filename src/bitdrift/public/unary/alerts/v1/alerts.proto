@@ -8,6 +8,7 @@ syntax = "proto3";
 
 package bitdrift.public.unary.alerts.v1;
 
+import "bitdrift/public/shared/alerts/v1/alert_group.proto";
 import "bitdrift/public/shared/workflows/v1/time_series.proto";
 import "bitdrift/public/unary/alerts/v1/notifications.proto";
 import "bitdrift/public/unary/charts/v1/chart_id.proto";
@@ -25,26 +26,60 @@ enum ThresholdCondition {
 // An alert definition global for an individual metric aggregated ID. This is shared across N
 // workflows/charts if all of those workflows/charts refer to the same aggregated ID.
 //
-// By default, searches for a qualifying run of data points anywhere within window. Select
-// WINDOW_ROLLUP to compare one statistic over the trailing window instead. All configured
+// By default, searches for a qualifying run of data points anywhere within `window`. Select
+// `WINDOW_ROLLUP` to compare one statistic over the trailing window instead. All configured
 // threshold, device, and denominator-share conditions must hold for the same group and interval.
 //
 // Example: to alert on a version's failure rate above 0.05% over the trailing hour, with at least
-// 10 affected devices and more than 1% of app-open events, use threshold: 0.0005, condition: ABOVE,
-// window: "3600s", evaluation_mode: WINDOW_ROLLUP, unique_device_threshold: 10,
-// rate_options: {unique_device_source: NUMERATOR, denominator_share_threshold: 0.01},
-// limit_strategy: {all_groups: {}}. Omit aggregation_window and consecutive_data_points.
+// 10 affected devices and more than 1% of app-open events, use:
+//
+// ```json
+// {
+//   "threshold": 0.0005,
+//   "condition": "ABOVE",
+//   "window": "3600s",
+//   "evaluationMode": "WINDOW_ROLLUP",
+//   "uniqueDeviceThreshold": 10,
+//   "rateOptions": {
+//     "uniqueDeviceSource": "NUMERATOR",
+//     "denominatorShareThreshold": 0.01
+//   },
+//   "limitStrategy": {"allGroups": {}}
+// }
+// ```
+//
+// Omit `aggregation_window` and `consecutive_data_points`.
 //
 // With 11 failures, 20,000 opens, 10 affected devices, and 1,000,000 total matching opens, the
 // rate is 0.055% and the share is 2%, so this example fires. Exactly 0.05% does not exceed the
 // rate threshold; exactly 1% does not exceed the share threshold. Repeated failures from the
 // same device count once toward the device threshold.
 message BasicAlertConfig {
+  // Controls whether qualifying metric groups share a firing episode.
+  enum GroupingMode {
+    // All selected groups share one episode. Any qualifying group triggers it; no selected
+    // qualifying groups resolves it. New failing groups do not notify while it is already firing.
+    // This is the default, including for existing alerts.
+    COMBINED = 0;
+    // Each complete group-label tuple independently triggers and resolves. Requires a grouped
+    // metric and explicit `limit_strategy.all_groups`; top-K and identifier selection are rejected.
+    // Existing exclusions still apply. A successful evaluation resolves instances that recover,
+    // fail an eligibility gate, or disappear, including groups with no current data. Query errors
+    // and query-level group collapse leave all instances unchanged. Ingestion-dropped data cannot
+    // be recovered: evaluation uses retained data.
+    //
+    // For example, `app_version=1.2.3` may resolve while `app_version=1.2.4` stays firing. A second
+    // version triggers its own notification even if the first is already firing. With multiple
+    // grouping fields, each full tuple owns one lifecycle. Notifications and thresholds remain
+    // configured on this definition, not independently editable per group.
+    PER_GROUP = 1;
+  }
+
   // Selects how values within the evaluation window are compared.
   enum EvaluationMode {
-    // Searches for any qualifying run of consecutive data points within window. Each point
+    // Searches for any qualifying run of consecutive data points within `window`. Each point
     // must independently satisfy all gates. This is the default and preserves existing behavior:
-    // with consecutive_data_points omitted, a single bad minute can trigger a one-hour alert.
+    // with `consecutive_data_points` omitted, a single bad minute can trigger a one-hour alert.
     DATA_POINTS = 0;
     // Compares one statistic for the entire trailing window: counter sum, rate or average-count
     // ratio of sums, or the configured histogram percentile across all samples in the interval.
@@ -52,11 +87,11 @@ message BasicAlertConfig {
     //
     // Evaluations end at the latest completed source-data bucket after the configured ingestion
     // delay, so the data cutoff can lag wall-clock time. For a one-hour window with minute source
-    // data and an effective evaluation time of 12:35, uses [11:35, 12:35), not [11:00, 12:00).
-    // aggregation_window must be omitted; consecutive_data_points must be omitted or 1.
+    // data and an effective evaluation time of 12:35, uses `[11:35, 12:35)`, not `[11:00, 12:00)`.
+    // `aggregation_window` must be omitted; `consecutive_data_points` must be omitted or 1.
     //
     // For example, 2 failures in 1,000 opens followed by 0 failures in 19,000 opens produce
-    // 2 / 20,000 = 0.01%, not the mean of the two bucket rates (0.1%).
+    // `2 / 20,000 = 0.01%`, not the mean of the two bucket rates (0.1%).
     WINDOW_ROLLUP = 1;
   }
 
@@ -64,7 +99,7 @@ message BasicAlertConfig {
   // Rejected for counters, histograms, and average-count series. An omitted or empty message
   // preserves denominator-device counting and adds no denominator-share condition.
   message RateOptions {
-    // The rate side whose devices are compared with unique_device_threshold.
+    // The rate side whose devices are compared with `unique_device_threshold`.
     enum UniqueDeviceSource {
       // Devices contributing denominator events, such as devices opening the app. The default.
       DENOMINATOR = 0;
@@ -74,9 +109,9 @@ message BasicAlertConfig {
       NUMERATOR = 1;
     }
 
-    // Selects the population for unique_device_threshold without changing the event-count rate.
-    // Defaults to DENOMINATOR. In DATA_POINTS mode, devices are counted separately per point;
-    // in WINDOW_ROLLUP, they are deduplicated across the whole interval for each group.
+    // Selects the population for `unique_device_threshold` without changing the event-count rate.
+    // Defaults to `DENOMINATOR`. In `DATA_POINTS` mode, devices are counted separately per point;
+    // in `WINDOW_ROLLUP`, they are deduplicated across the whole interval for each group.
     // Device tracking must be enabled to use a numerator device threshold.
     .bitdrift.public.unary.alerts.v1.BasicAlertConfig.RateOptions.UniqueDeviceSource unique_device_source = 1 [(validate.rules).enum = {defined_only: true}];
 
@@ -84,13 +119,13 @@ message BasicAlertConfig {
     // to be strictly greater than this fraction. Must be finite and between 0 and 1 inclusive.
     // Omission disables this gate. 0.01 means more than 1%, not at least 1%.
     //
-    // Uses the same bucket as each DATA_POINTS comparison, or the entire WINDOW_ROLLUP interval.
+    // Uses the same bucket as each `DATA_POINTS` comparison, or the entire `WINDOW_ROLLUP` interval.
     // The population respects workflow, app, platform, and data filters, but is calculated before
     // top-K, identifier selection, exclusions, or this eligibility gate. It includes groups without
     // numerator events and denominator events lacking group labels. For multiple group keys,
     // each complete label tuple is compared with the full matching population, not a parent group.
-    // A zero group or population denominator is ineligible. This gate always uses >, independently
-    // of condition. This is event contribution, not distinct-device adoption.
+    // A zero group or population denominator is ineligible. This gate always uses `>`, independently
+    // of `condition`. This is event contribution, not distinct-device adoption.
     //
     // For example, 20,000 of 1,000,000 opens gives 2% and passes a 0.01 threshold; 10,000 opens
     // gives exactly 1% and fails even if the failure rate and affected-device gates pass.
@@ -100,53 +135,53 @@ message BasicAlertConfig {
     }];
   }
 
-  // The value compared using condition, in the metric's units. Rates use fractions:
-  // 0.0005 means 0.05%, not 0.05. Counts use event totals and histograms use the metric's unit.
-  // The comparison uses individual data points or the entire window according to evaluation_mode.
+  // The value compared using `condition`, in the metric's units. Rates use fractions:
+  // `0.0005` means 0.05%, not `0.05`. Counts use event totals and histograms use the metric's unit.
+  // The comparison uses individual data points or the entire window according to `evaluation_mode`.
   // Device and denominator-share gates, when configured, must also pass.
   double threshold = 1;
 
-  // The strict comparison applied to threshold: ABOVE uses > and BELOW uses <.
-  // Equality never breaches. This does not change the >= device gate or > denominator-share gate.
+  // The strict comparison applied to `threshold`: `ABOVE` uses `>` and `BELOW` uses `<`.
+  // Equality never breaches. This does not change the `>=` device gate or `>` denominator-share gate.
   .bitdrift.public.unary.alerts.v1.ThresholdCondition condition = 2 [(validate.rules).enum = {defined_only: true}];
 
   // The interval considered at each evaluation. Supported durations are 5 minutes, 10 minutes,
   // 1 hour, and 24 hours. Alerts are evaluated every 5 minutes, allowing the configured ingestion
   // delay before choosing the data cutoff.
-  // DATA_POINTS searches this lookback for a qualifying run, rather than aggregating the whole
-  // interval. WINDOW_ROLLUP computes one statistic over the trailing interval ending at the latest
-  // completed source bucket. A one-hour aggregation_window instead uses completed clock hours;
+  // `DATA_POINTS` searches this lookback for a qualifying run, rather than aggregating the whole
+  // interval. `WINDOW_ROLLUP` computes one statistic over the trailing interval ending at the latest
+  // completed source bucket. A one-hour `aggregation_window` instead uses completed clock hours;
   // it is not a way to request a rolling-hour statistic.
   .google.protobuf.Duration window = 3 [(validate.rules).duration.gt = {}];
 
   // The number of consecutive data points that must meet the threshold condition for the alert to
-  // trigger. Data points use aggregation_window when set, or the default aggregation window for
-  // window otherwise. This cannot exceed the number of complete aggregation windows within
-  // window. If unset, defaults to 1. In DATA_POINTS, the qualifying run may occur anywhere in
-  // the lookback and every point must pass the device and share gates. In WINDOW_ROLLUP this
+  // trigger. Data points use `aggregation_window` when set, or the default aggregation window for
+  // `window` otherwise. This cannot exceed the number of complete aggregation windows within
+  // `window`. If unset, defaults to 1. In `DATA_POINTS`, the qualifying run may occur anywhere in
+  // the lookback and every point must pass the device and share gates. In `WINDOW_ROLLUP` this
   // must be omitted or 1; larger values are rejected rather than ignored.
   optional uint32 consecutive_data_points = 4;
 
   // Configuration for any histogram values within the aggregate ID. This is required if the
   // aggregate ID refers to a histogram so that one or more percentiles can be used as part of the
-  // alert condition. In WINDOW_ROLLUP, the percentile is computed across the entire interval's
+  // alert condition. In `WINDOW_ROLLUP`, the percentile is computed across the entire interval's
   // samples, not by averaging bucket percentiles.
   .bitdrift.public.unary.charts.v1.HistogramConfiguration histogram_configuration = 5;
 
   // Optional limit strategy to use for this alert. If this is omitted, a default value of limiting
-  // by a top-K of 5 entries is used. Set all_groups: {} to evaluate every retained matching group,
-  // subject to query-resource limits, or identifier_match to select specific groups.
+  // by a top-K of 5 entries is used. Set `all_groups: {}` to evaluate every retained matching group,
+  // subject to query-resource limits, or `identifier_match` to select specific groups.
   // Alert selection does not change chart display selection. Incomplete all-groups evaluations
   // fail explicitly and do not trigger or resolve an alert.
-  // With WINDOW_ROLLUP or rate_options, synthetic top-K "other" series are not eligible to
+  // With `WINDOW_ROLLUP` or `rate_options`, synthetic top-K `"other"` series are not eligible to
   // trigger: they are not a real group and do not provide merged distinct-device statistics.
-  // Actual user label values such as "other" are not synthetic and remain eligible.
+  // Actual user label values such as `"other"` are not synthetic and remain eligible.
   .bitdrift.public.unary.charts.v1.LimitStrategy limit_strategy = 6;
 
   // If specified, the alert will only trigger if at least this many unique devices are present in
-  // each consecutive data point that breaches the threshold condition in DATA_POINTS mode,
-  // or across the entire interval in WINDOW_ROLLUP mode. Equality passes (>=).
-  // Counts are per group. Rates use denominator devices by default; rate_options can select
+  // each consecutive data point that breaches the threshold condition in `DATA_POINTS` mode,
+  // or across the entire interval in `WINDOW_ROLLUP` mode. Equality passes (`>=`).
+  // Counts are per group. Rates use denominator devices by default; `rate_options` can select
   // numerator devices instead. Whole-window devices are deduplicated across buckets: ten devices
   // reporting repeatedly still count as ten, not the sum of each bucket's distinct counts.
   // Counts use the platform's distinct-count aggregation and may be approximate.
@@ -155,27 +190,37 @@ message BasicAlertConfig {
   // The duration of each aggregated data point used to evaluate the alert. If unset, 5 minute,
   // 10 minute, and 1 hour evaluation windows use 1 minute data points, and 24 hour evaluation
   // windows use 15 minute data points. When set, this must be a positive, whole-number multiple
-  // of the default aggregation window and no longer than window. Alerts evaluate only complete
+  // of the default aggregation window and no longer than `window`. Alerts evaluate only complete
   // aggregation windows ending at the most recent aggregation boundary.
-  // Applies only to DATA_POINTS; rejected in WINDOW_ROLLUP. For example, window: "3600s" and
-  // aggregation_window: "3600s" at 12:35 compare the completed [11:00, 12:00) clock-hour bucket.
+  // Applies only to `DATA_POINTS`; rejected in `WINDOW_ROLLUP`. For example, `window: "3600s"` and
+  // `aggregation_window: "3600s"` at 12:35 compare the completed `[11:00, 12:00)` clock-hour bucket.
   optional .google.protobuf.Duration aggregation_window = 8 [(validate.rules).duration.gt = {}];
 
   // Optional rate-specific device-source and denominator-contribution gates.
-  // See RateOptions for population definitions, defaults, supported metric types, and examples.
+  // See `RateOptions` for population definitions, defaults, supported metric types, and examples.
   .bitdrift.public.unary.alerts.v1.BasicAlertConfig.RateOptions rate_options = 9;
 
-  // Selects point-run or whole-window evaluation. Defaults to DATA_POINTS.
-  // WINDOW_ROLLUP is an explicit opt-in and does not reinterpret existing alert configurations.
-  // See EvaluationMode for reductions, timing, and incompatible point settings.
+  // Selects point-run or whole-window evaluation. Defaults to `DATA_POINTS`.
+  // `WINDOW_ROLLUP` is an explicit opt-in and does not reinterpret existing alert configurations.
+  // See `EvaluationMode` for reductions, timing, and incompatible point settings.
   .bitdrift.public.unary.alerts.v1.BasicAlertConfig.EvaluationMode evaluation_mode = 10 [(validate.rules).enum = {defined_only: true}];
+
+  // Lifecycle partitioning, independent of `evaluation_mode`. Defaults to `COMBINED`.
+  // `PER_GROUP` works with both `DATA_POINTS` and `WINDOW_ROLLUP` and requires explicit `all_groups`.
+  // Set `grouping_mode: PER_GROUP` alongside `limit_strategy: {all_groups: {}}` to give each
+  // metric group its own incident without changing the metric, thresholds, or reduction window.
+  // Changing this mode is rejected while any episode remains unresolved, even when disabled.
+  // Disabling pauses evaluation; it does not resolve incidents. Ordinary edits retain existing
+  // lifecycle state. Each re-fire creates a new episode under the same stable group key.
+  .bitdrift.public.unary.alerts.v1.BasicAlertConfig.GroupingMode grouping_mode = 11 [(validate.rules).enum = {defined_only: true}];
 }
 
-// SLO alerts can only be defined on rate time series. The config will be failed otherwise. The
-// rate must represent either successful or failed results divided by total results, as selected by
-// rate_type. Ultimately the windows and burn rates are what drives alerting, but the SLO duration
-// is still required so that error budget consumption can be calculated. Additionally, we can use
-// the SLO duration to show SLO adherence over the trailing window if we like.
+// SLO alerts can only be defined on rate time series that do not use a group-by. The config will
+// be failed otherwise. The rate must represent either successful or failed results divided by
+// total results, as selected by `rate_type`. Ultimately the windows and burn rates are what drives
+// alerting, but the SLO duration is still required so that error budget consumption can be
+// calculated. Additionally, we can use the SLO duration to show SLO adherence over the trailing
+// window if we like.
 message SloAlertConfig {
   // Identifies whether the rate time series represents successful or failed results.
   enum RateType {
@@ -186,20 +231,20 @@ message SloAlertConfig {
   }
 
   // SLO alerts use MWMBR (Multi-Window/Multi-Burn Rate). Each alert evaluation looks at every
-  // WindowAndBurnRate and alerts if any of them alert. For an individual WindowAndBurnRate to alert
+  // `WindowAndBurnRate` and alerts if any of them alert. For an individual `WindowAndBurnRate` to alert
   // both the short window AND long window must breach based on the SLO target and burn rate.
   message WindowAndBurnRate {
     // Overrides the default notification settings for this burn-rate window.
     message OverrideNotifications {
-      // Notification targets for the alert when this OverrideNotifications is used.
+      // Notification targets for the alert when this `OverrideNotifications` is used.
       repeated .bitdrift.public.unary.alerts.v1.RateLimitedNotificationConfig notifications = 1 [(validate.rules).repeated = {max_items: 100}];
 
-      // Custom notification text to use when this OverrideNotifications is used. If not set,
-      // the CommonAlertConfig.custom_notification_text will be used.
+      // Custom notification text to use when this `OverrideNotifications` is used. If not set,
+      // the `CommonAlertConfig.custom_notification_text` will be used.
       optional string custom_notification_text = 2 [(validate.rules).string = {max_len: 2048}];
     }
 
-    // Short evaluation window for this burn-rate policy.
+    // Short evaluation window for this burn-rate policy. Must be shorter than `long_window`.
     .google.protobuf.Duration short_window = 1 [(validate.rules).duration.gt = {}];
 
     // Long evaluation window for this burn-rate policy.
@@ -208,16 +253,16 @@ message SloAlertConfig {
     // Burn rate threshold that causes this policy to trigger.
     double burn_rate = 3;
 
-    // Notification targets for the alert when this WindowAndBurnRate triggers. If unset, the
-    // CommonAlertConfig.notifications will be used.
+    // Notification targets for the alert when this `WindowAndBurnRate` triggers. If unset, the
+    // `CommonAlertConfig.notifications` will be used.
     .bitdrift.public.unary.alerts.v1.SloAlertConfig.WindowAndBurnRate.OverrideNotifications notifications = 4;
   }
 
   // Currently only supports 7 days and 30 days.
   .google.protobuf.Duration slo_duration = 1 [(validate.rules).duration.gt = {}];
 
-  // A percentage expressed as a number between 0 and 1. For SUCCESS_RATE, this is the desired
-  // success rate, such as 0.99 for 99%. For FAILURE_RATE, this is the maximum failure rate, such
+  // A percentage expressed as a number between 0 and 1. For `SUCCESS_RATE`, this is the desired
+  // success rate, such as 0.99 for 99%. For `FAILURE_RATE`, this is the maximum failure rate, such
   // as 0.01 for 1%.
   double slo_target = 2;
 
@@ -226,15 +271,15 @@ message SloAlertConfig {
   // for a group by aggregate ID if desired.
   .bitdrift.public.unary.charts.v1.LimitStrategy limit_strategy = 3;
 
-  // The list of window and burn rates to use for the SLO alert. Each WindowAndBurnRate defines a
+  // The list of window and burn rates to use for the SLO alert. Each `WindowAndBurnRate` defines a
   // short and long window, as well as a burn rate. The alert will trigger if any of the
-  // WindowAndBurnRates breach the SLO target based on the burn rate.
+  // `WindowAndBurnRate`s breach the SLO target based on the burn rate.
   repeated .bitdrift.public.unary.alerts.v1.SloAlertConfig.WindowAndBurnRate window_and_burn_rates = 4 [(validate.rules).repeated = {
     min_items: 1
     max_items: 10
   }];
 
-  // Identifies how to interpret the rate time series and slo_target. Defaults to SUCCESS_RATE.
+  // Identifies how to interpret the rate time series and `slo_target`. Defaults to `SUCCESS_RATE`.
   .bitdrift.public.unary.alerts.v1.SloAlertConfig.RateType rate_type = 5 [(validate.rules).enum = {defined_only: true}];
 }
 
@@ -455,7 +500,7 @@ message GetAllAlertsRequest {
 
   // This defines the upper bound of the number of items returned. The maximum
   // value supported is 100, meaning that we’ll never return more than
-  // max(items.count, limit, 100).
+  // `max(items.count, limit, 100)`.
   optional uint32 limit = 2 [(validate.rules).uint32 = {
     gte: 1
     lte: 100
@@ -498,10 +543,12 @@ message GetAllAlertsResponse {
     // Whether the alert is currently disabled.
     bool disabled = 7;
 
-    // Time when the alert most recently triggered.
+    // Trigger time of the representative episode. For per-group alerts, uses the newest open
+    // episode while any group is firing, otherwise the latest episode. Consult group history
+    // for individual transitions; a newer resolved group cannot hide another open group.
     .google.protobuf.Timestamp last_triggered_at = 8;
 
-    // Time when the alert most recently resolved.
+    // Resolution time of the representative episode; absent while any instance is unresolved.
     .google.protobuf.Timestamp last_resolved_at = 9;
 
     // Owner information for the alert.
@@ -509,6 +556,11 @@ message GetAllAlertsResponse {
 
     // Alert type used by this alert.
     .bitdrift.public.unary.alerts.v1.WorkflowAlertType alert_type = 11;
+
+    // Number of currently unresolved episodes, independent of disabled state. Combined alerts
+    // have at most one. A non-disabled definition is firing if this count is greater than zero.
+    // Disabling pauses evaluation and does not itself resolve these episodes.
+    uint32 firing_instance_count = 12;
   }
 
   // Workflow alerts returned for the requested page.
@@ -530,7 +582,7 @@ message GetAlertHistoryRequest {
 
   // This defines the upper bound of the number of items returned. The maximum
   // value supported is 100, meaning that we’ll never return more than
-  // max(items.count, limit, 100).
+  // `max(items.count, limit, 100)`.
   optional uint32 limit = 3 [(validate.rules).uint32 = {
     gte: 1
     lte: 100
@@ -543,6 +595,15 @@ message GetAlertHistoryRequest {
 
   // End of the time range to return alert history for.
   optional .google.protobuf.Timestamp end_time = 5 [(validate.rules).message = {required: true}];
+
+  // Restricts history to the exact opaque key returned in `details.group.key`. Omission includes
+  // every group and legacy combined episodes. Applied before pagination and total counting.
+  optional string group_key = 6 [(validate.rules).string = {max_len: 128}];
+
+  // Returns only currently unresolved episodes, including those triggered before `start_time`.
+  // Supplied time bounds select overlapping firing intervals, not only trigger timestamps.
+  // Omission/false includes resolved episodes too. Use this to enumerate firing instances.
+  bool unresolved_only = 7;
 }
 
 // Describes why an alert triggered and what data contributed to it.
@@ -550,7 +611,7 @@ message AlertHistoryDetails {
   // In the case of group by this might return multiple items.
   // Describes the data points that contributed to a basic alert trigger.
   message BasicContributingData {
-    // The evidence used for one grouped WINDOW_ROLLUP comparison. Stored with the event so
+    // The evidence used for one grouped `WINDOW_ROLLUP` comparison. Stored with the event so
     // later alert edits do not change the meaning of the recorded value or device population.
     message WindowRollup {
       // Inclusive beginning of the evaluated interval.
@@ -573,8 +634,8 @@ message AlertHistoryDetails {
       // Repeated devices across source buckets count once. Absence is not a measured zero.
       optional uint64 unique_devices = 6;
 
-      // The selected device population when unique_devices is present for a rate or average
-      // count. Average counts use DENOMINATOR. Absent for counters and histograms, or when no
+      // The selected device population when `unique_devices` is present for a rate or average
+      // count. Average counts use `DENOMINATOR`. Absent for counters and histograms, or when no
       // device count was requested.
       optional .bitdrift.public.unary.alerts.v1.BasicAlertConfig.RateOptions.UniqueDeviceSource unique_device_source = 7 [(validate.rules).enum = {defined_only: true}];
 
@@ -582,17 +643,17 @@ message AlertHistoryDetails {
       // evaluated. Includes groups with no failures; this is not the group's denominator count.
       optional uint64 denominator_population_count = 8;
 
-      // Group denominator / denominator_population_count, as a fraction (0.02 means 2%).
+      // Group denominator / `denominator_population_count`, as a fraction (`0.02` means 2%).
       // Present when the share gate was evaluated. Zero denominators never contribute a trigger.
       optional double denominator_share = 9;
     }
 
     // The data points that contributed to the alert. For grouped alerts, the response may include
-    // multiple time series. Used for DATA_POINTS; WINDOW_ROLLUP uses window_rollup instead.
+    // multiple time series. Used for `DATA_POINTS`; `WINDOW_ROLLUP` uses `window_rollup` instead.
     repeated .bitdrift.public.shared.workflows.v1.DataPoint data_points = 1;
 
-    // One whole-window comparison that contributed to a trigger. Present for WINDOW_ROLLUP
-    // instead of data_points; includes evaluated bounds, group, value, and configured gate evidence.
+    // One whole-window comparison that contributed to a trigger. Present for `WINDOW_ROLLUP`
+    // instead of `data_points`; includes evaluated bounds, group, value, and configured gate evidence.
     .bitdrift.public.unary.alerts.v1.AlertHistoryDetails.BasicContributingData.WindowRollup window_rollup = 2;
   }
 
@@ -632,6 +693,10 @@ message AlertHistoryDetails {
 
   // The data points that contributed to the alert being triggered.
   repeated .bitdrift.public.unary.alerts.v1.AlertHistoryDetails.ContributingData contributing_data = 5;
+
+  // Stable identity of this independently firing group. Absent for combined and legacy events.
+  // Preserved even when large configuration and contributing-data details are omitted.
+  .bitdrift.public.shared.alerts.v1.AlertGroup group = 6;
 }
 
 // Returns the alert history for a single workflow alert.
@@ -646,6 +711,9 @@ message GetAlertHistoryResponse {
 
     // Additional details related to the firing of the alert.
     .bitdrift.public.unary.alerts.v1.AlertHistoryDetails details = 3;
+
+    // Unique ID of this firing episode. A group that resolves and re-fires receives a new ID.
+    uint64 event_id = 4;
   }
 
   // Alert history items that match the request.

@@ -1,0 +1,24 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+syntax = "proto3";
+
+package bitdrift.public.shared.alerts.v1;
+
+import "bitdrift/public/shared/workflows/v1/time_series.proto";
+
+// Identifies one independently evaluated group within a basic alert definition.
+message AlertGroup {
+  // Opaque, stable key scoped to the alert definition. Use this value to filter that group's
+  // history. The same group retains its key across resolutions and subsequent firings.
+  // Different firing episodes have distinct event IDs and notification deduplication keys.
+  string key = 1;
+
+  // Complete group-label tuple in canonical name order, without display truncation. For example,
+  // `app_version=1.2.3` and `device_model=Pixel` identifies one instance, not two independent alerts.
+  // These metric labels are separate from user-configured notification labels.
+  repeated .bitdrift.public.shared.workflows.v1.LabelPair labels = 2;
+}

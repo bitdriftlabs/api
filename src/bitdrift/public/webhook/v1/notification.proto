@@ -8,6 +8,7 @@ syntax = "proto3";
 
 package bitdrift.public.webhook.v1;
 
+import "bitdrift/public/shared/alerts/v1/alert_group.proto";
 import "bitdrift/public/unary/issues/v1/issues.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -95,6 +96,11 @@ message AlertNotification {
 
   // Identifies this firing episode and its resolution. Subsequent firings use a new key.
   string dedup_key = 8;
+
+  // Independently firing metric group. Absent for combined alerts. Resolution notifications
+  // retain this trigger-time identity. It is separate from configured labels and from `dedup_key`,
+  // which identifies this particular firing episode rather than the persistent group.
+  .bitdrift.public.shared.alerts.v1.AlertGroup group = 9;
 }
 
 // Describes a resolution for a workflow alert notification.
