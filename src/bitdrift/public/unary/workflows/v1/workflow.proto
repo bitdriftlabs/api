@@ -2486,7 +2486,8 @@ message OotbMatch {
           suitable_for: OOTB_FIELD_AGGREGATION_GROUP
         }
       }];
-      // A Session Replay frame is captured.
+      // A Session Replay frame is captured. Only emitted when Session Replay is enabled for
+      // the app.
       SESSION_REPLAY = 22 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_GENERAL
         title: "Session Replay"
@@ -3778,6 +3779,8 @@ message OotbMatch {
       RESOURCE = 24;
       SCREEN_VIEW = 25;
       SDK_CONFIGURATION = 26;
+      // A Session Replay frame is captured. Only emitted when Session Replay is enabled for
+      // the app.
       SESSION_REPLAY = 27;
       SPAN_END = 28;
       SPAN_START = 29;
@@ -3870,6 +3873,8 @@ message OotbMatch {
       RESOURCE = 22;
       SCREEN_VIEW = 23;
       SDK_CONFIGURATION = 24;
+      // A Session Replay frame is captured. Only emitted when Session Replay is enabled for
+      // the app.
       SESSION_REPLAY = 25;
       SPAN_END = 26;
       SPAN_START = 27;
