@@ -11,6 +11,32 @@ package bitdrift.public.unary.admin.v1;
 import "validate/validate.proto";
 
 message ConnectorConfig {
+  message OtlpConnectorConfig {
+    // The full HTTPS metrics endpoint, including its path, typically /v1/metrics.
+    string endpoint = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 2048
+    }];
+
+    // Static HTTP headers for authentication. Header values are redacted in connector responses.
+    // A redacted value preserves the existing header only when the endpoint is unchanged.
+    map<string, string> headers = 2 [(validate.rules).map = {
+      max_pairs: 20
+      keys: {
+        string: {
+          min_len: 1
+          max_len: 128
+        }
+      }
+      values: {
+        string: {
+          min_len: 1
+          max_len: 4096
+        }
+      }
+    }];
+  }
+
   message CloudwatchConnectorConfig {
     // The AWS region for the CloudWatch connector.
     string region = 1 [(validate.rules).string = {
@@ -77,6 +103,9 @@ message ConnectorConfig {
     option (validate.required) = true;
     // Configuration for an AWS CloudWatch connector.
     .bitdrift.public.unary.admin.v1.ConnectorConfig.CloudwatchConnectorConfig cloudwatch_connector_config = 2;
+
+    // Configuration for an OTLP metrics connector using HTTP binary protobuf.
+    .bitdrift.public.unary.admin.v1.ConnectorConfig.OtlpConnectorConfig otlp_connector_config = 3;
   }
 }
 
