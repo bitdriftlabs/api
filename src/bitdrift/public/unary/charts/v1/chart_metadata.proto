@@ -52,6 +52,46 @@ message ChartMetadata {
 
       // Configuration for exporting data to a connector.
       message ConnectorExportConfig {
+        message OtlpConnectorExportConfig {
+          // The metric name emitted to the configured OTLP endpoint.
+          string metric_name = 1 [(validate.rules).string = {
+            min_len: 1
+            max_len: 255
+          }];
+
+          // Fixed attributes included with each point. These override matching dynamic attributes.
+          map<string, string> fixed_attributes = 2 [(validate.rules).map = {
+            max_pairs: 10
+            keys: {
+              string: {
+                min_len: 1
+                max_len: 128
+              }
+            }
+            values: {
+              string: {max_len: 255}
+            }
+          }];
+
+          // Delay before exporting a completed minute, in whole-minute increments. Defaults to 180.
+          optional uint32 export_delay_seconds = 3 [(validate.rules).uint32 = {
+            gte: 60
+            lte: 86400
+          }];
+
+          // Unique quantiles emitted in histogram summaries, independently of chart display percentiles.
+          // Histograms require at least one quantile; counters must leave this list empty.
+          repeated double percentiles = 4 [(validate.rules).repeated = {
+            max_items: 20
+            items: {
+              double: {
+                gte: 0
+                lte: 1
+              }
+            }
+          }];
+        }
+
         message CloudwatchConnectorExportConfig {
           // The CloudWatch namespace to which data will be exported. This will be appended to
           // 'bitdrift/'.
@@ -89,6 +129,10 @@ message ChartMetadata {
           // metric name is appended with "/numerator" and "/denominator" for the respective
           // metrics.
           .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.CloudwatchConnectorExportConfig cloudwatch_connector_export_config = 2;
+
+          // OTLP export for counters and histogram summaries. Rate and average metrics export
+          // separate counters with /numerator and /denominator appended to the supplied name.
+          .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.OtlpConnectorExportConfig otlp_connector_export_config = 3;
         }
       }
 

@@ -312,9 +312,11 @@ message MatchRule {
   optional uint32 sample_rate = 5;
 
   // Starts a locally registered or built-in command when this match rule is reached.
-  // The synthetic "Command completed" log contains _command_status (success or failure), optional
-  // _command_message, and typed command_attachment metadata when an attachment was produced. Fetch
-  // command_attachment.artifact_id from the uploaded outcome log. Attachment metadata is not
+  // The synthetic `Command completed` end span contains `_result` (`success`, `failure`, or
+  // `canceled`), optional `_command_message`, and typed `command_attachment` metadata when an
+  // attachment was produced. SDK cancellation invalidates the pending command step rather than
+  // advancing it. Fetch `command_attachment.artifact_id` from the uploaded outcome log. Attachment
+  // metadata is not
   // available for device-side matching or field extraction. Download the artifact with
   // GET /v1/workflow-commands/{artifact_id}, using SESSION_READ (sessions:read).
   // Responses use Content-Encoding: zstd. Perfetto artifacts return a processed TAR by default:
@@ -339,8 +341,8 @@ message MatchRule {
     }];
 
     // Optional matcher for the synthetic outcome log from this command execution. If omitted,
-    // every terminal outcome advances the workflow.
-    // Match _command_status == "success" to require successful completion. A successful command
+    // every accepted non-canceled completion advances the workflow.
+    // Match `_result == "success"` to require successful completion. A successful command
     // can have no attachment. Typed attachment metadata cannot be matched or extracted on device.
     .bitdrift.public.unary.workflows.v1.GenericMatch outcome_log_matcher = 3;
   }
