@@ -570,9 +570,9 @@ message ListIssuesV2Response {
 }
 
 message GetAggregateIssueSummaryRequest {
-  // Specifies the issues to summarize. If the query selects multiple issue groups, the result
-  // combines their matching issues and counts each affected user and session once.
-  .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 1 [(validate.rules).message = {required: true}];
+  // Specifies the issues to summarize. Required. If the query selects multiple issue groups, the
+  // result combines their matching issues and counts each affected user and session once.
+  .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 1;
 
   // If true, summary metrics (e.g. total_affected_users) will not be calculated or returned. This can be used to optimize performance when the caller only needs the list of events.
   bool skip_summary_metrics = 2;
