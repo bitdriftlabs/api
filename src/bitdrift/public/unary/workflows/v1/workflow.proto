@@ -320,9 +320,13 @@ message MatchRule {
   // available for device-side matching or field extraction. Download the artifact with
   // GET /v1/workflow-commands/{artifact_id}, using SESSION_READ (sessions:read).
   // Responses use Content-Encoding: zstd. Perfetto artifacts return a processed TAR by default:
-  // pending processing returns 409 with Retry-After, and failed processing returns 422. Use
-  // ?variant=raw for the original trace, ?variant=processed for the bundle, and append /status for
-  // processing state and diagnostics. Other attachments preserve their original Content-Type.
+  // pending processing returns 409 with Retry-After. If processing fails, the default download
+  // returns the original trace with 200; processing failure diagnostics are recorded in the download
+  // trace. Successful artifact downloads include `X-Bitdrift-Attachment-Disposition: raw` or
+  // `X-Bitdrift-Attachment-Disposition: processed` to identify the returned representation. Use
+  // ?variant=raw for the original trace, ?variant=processed for the bundle (422 if processing
+  // failed), and append /status for processing state and diagnostics. Other attachments preserve
+  // their original Content-Type.
   // This UUID is not a device command ID, workflow ID, registration key, or completion token.
   //
   // Completion means local attachment admission, not remote upload completion. Capture or flush
