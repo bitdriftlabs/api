@@ -11,7 +11,7 @@ package bitdrift_public.protobuf.memory.v1;
 
 // Attachment of the iOS `ios_memory_dump` command. A snapshot of one process's memory, taken from
 // inside the process in up to three stages: kernel counters, the VM map and a census of the malloc
-// heap. Each stage message is present only if that stage ran 
+// heap. Each stage message is present only if that stage ran
 //
 // Conventions:
 // - Sizes are bytes. Counts (`blocks`, `regions`, ...) are plain counts. Durations are
@@ -26,7 +26,7 @@ message MemoryDump {
   Regions regions = 2;
   // Census of all the live allocations in the heap, checked by iterating through each malloc zone.
   Heap heap = 3;
-  // The loaded images that some row in this dump refers to, in order of first reference. 
+  // The loaded images that some row in this dump refers to, in order of first reference.
   // This doesnt include every loaded image, only the ones that appear in the report.
   repeated Image images = 4;
 }
@@ -43,7 +43,7 @@ message Image {
 message ImageAddress {
   // Index into MemoryDump.images.
   uint32 image = 1;
-  // Address minus the image's mach header address, both in the running process. 
+  // Address minus the image's mach header address, both in the running process.
   uint64 offset = 2;
 }
 
@@ -75,7 +75,7 @@ message Counters {
   // Usually equal to limit_bytes_remaining. Absent when the call returns 0, which it does when the
   // process has no limit (simulator) or is already at it.
   optional uint64 available_before_kill = 9;
-  // The kernel's attribution of the footprint to a few categories. 
+  // The kernel's attribution of the footprint to a few categories.
   Ledgers ledgers = 10;
 }
 
@@ -277,7 +277,7 @@ message TypeRow {
 }
 
 // One malloc zone. Apps typically have DefaultMallocZone plus zones of their own or of system
-// frameworks (QuartzCore, AttributeGraph, etc). 
+// frameworks (QuartzCore, AttributeGraph, etc).
 message ZoneRow {
   // The zone's name as malloc reports it.
   string name = 1;
