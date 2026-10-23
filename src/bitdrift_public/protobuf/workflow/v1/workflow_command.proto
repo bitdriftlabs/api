@@ -71,6 +71,32 @@ enum WellKnownCommandType {
     key: "take_screenshot"
     description: "Captures the device's current screen as a JPEG image."
   }];
+  // Android 15+ only. Records a Perfetto stack sampling trace of the application's process and
+  // uploads it as the command attachment. Other platforms fail the command as unsupported.
+  STACK_SAMPLING_TRACE = 3 [(well_known_command_options) = {
+    key: "stack_sampling_trace"
+    description: "Captures a Perfetto stack sampling trace of the application's process (Android 15+)."
+    argument_definitions: [
+      {
+        name: "duration_ms"
+        type: INT64
+        description: "How long to sample, in milliseconds. Defaults to 3000. The client clamps it to its configured maximum and to the command execution timeout."
+        optional: true
+      },
+      {
+        name: "frequency_hz"
+        type: INT64
+        description: "Sampling frequency in Hz. Defaults to 100; the client clamps it to 10-250."
+        optional: true
+      },
+      {
+        name: "buffer_size_kb"
+        type: INT64
+        description: "Trace buffer size in KB. Defaults to 2048; the client clamps it to 256-16384."
+        optional: true
+      }
+    ]
+  }];
 }
 
 // Selects one locally registered or built-in workflow command.
