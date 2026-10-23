@@ -94,6 +94,12 @@ enum WellKnownCommandType {
         type: INT64
         description: "Trace buffer size in KB. Defaults to 2048; the client clamps it to 256-16384."
         optional: true
+      },
+      {
+        name: "tag"
+        type: STRING
+        description: "Tag recorded with the capture. The system puts it in the output file name and reports it through ProfilingResult.getTag(), so an app that observes profiling results can tell these captures apart. Defaults to \"bitdrift\"; letters, digits, '.', '_' and '-' only, at most 64 characters."
+        optional: true
       }
     ]
   }];
