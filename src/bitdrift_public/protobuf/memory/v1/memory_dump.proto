@@ -1,0 +1,187 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.memory.v1;
+
+// Attachment of the iOS `ios_memory_dump` command
+message MemoryDump {
+  Counters counters = 1;
+  Regions regions = 2;
+  Heap heap = 3;
+  // Loaded images, referenced by index from the rows that attribute memory to an image.
+  repeated Image images = 4;
+}
+
+message Image {
+  // Binary name only, never a path.
+  string name = 1;
+  // LC_UUID: matches the image's dSYM.
+  bytes uuid = 2;
+}
+
+// An address inside a loaded image, relative to its mach header so no ASLR slide is sent.
+message ImageAddress {
+  // Index into MemoryDump.images.
+  uint32 image = 1;
+  uint64 offset = 2;
+}
+
+// Kernel counters from task_info(TASK_VM_INFO).
+message Counters {
+  uint64 phys_footprint = 1;
+  optional uint64 phys_footprint_peak = 2;
+  uint64 internal = 3;
+  uint64 compressed = 4;
+  uint64 external = 5;
+  uint64 resident_size = 6;
+  optional uint64 decompressions = 7;
+  optional uint64 limit_bytes_remaining = 8;
+  optional uint64 available_before_kill = 9;
+  // The kernel's attribution of the footprint by category. Absent on iOS versions that don't
+  // report it.
+  Ledgers ledgers = 10;
+}
+
+// Each value includes its compressed bytes.
+message Ledgers {
+  uint64 graphics = 1;
+  uint64 media = 2;
+  uint64 network = 3;
+  uint64 neural = 4;
+  uint64 purgeable_volatile = 5;
+  uint64 purgeable_nonvolatile = 6;
+}
+
+// Process VM map, by Mach tag and by owning image.
+message Regions {
+  uint32 regions = 1;
+  bool truncated = 2;
+  uint64 private_dirty = 3;
+  uint64 shared_dirty = 4;
+  uint64 compressed = 5;
+  // What weighs on the footprint: private dirty + compressed.
+  uint64 charged = 6;
+  uint64 virtual_size = 7;
+  repeated TagRow by_tag = 8;
+  repeated ImageChargeRow by_image = 9;
+}
+
+message TagRow {
+  string name = 1;
+  uint32 tag = 2;
+  uint32 regions = 3;
+  uint64 private_dirty = 4;
+  uint64 shared_dirty = 5;
+  uint64 compressed = 6;
+  uint64 virtual_size = 7;
+  uint64 charged = 8;
+}
+
+message ImageChargeRow {
+  // Index into MemoryDump.images.
+  uint32 image = 1;
+  uint64 charged = 2;
+}
+
+// Census of the malloc heap
+message Heap {
+  // The lock budget ran out
+  bool truncated = 1;
+  BlockCount total = 2;
+  uint64 largest_block_bytes = 3;
+  BlockCount named = 4;
+  BlockCount swift_boxes = 5;
+  // Blocks whose first word points into an image but could not be named on device.
+  BlockCount images = 6;
+  // The dump's own tables: counted in the total but in no other category.
+  BlockCount reporter = 7;
+  Unclassified unclassified = 8;
+  // Absent when owner attribution was disabled.
+  Owners owners = 9;
+  Dropped dropped = 10;
+  HeapTimings timings = 11;
+  // Rows with a name sum to `named`; rows with an address sum to `images`, unless the candidate
+  // table overflowed.
+  repeated TypeRow by_type = 12;
+  repeated ZoneRow zones = 13;
+}
+
+message BlockCount {
+  uint64 blocks = 1;
+  uint64 bytes = 2;
+}
+
+message Unclassified {
+  uint64 blocks = 1;
+  uint64 bytes = 2;
+  repeated uint64 histogram = 3;
+}
+
+// A subset of unclassified blocks credited to the named object pointing at them
+message Owners {
+  uint64 blocks = 1;
+  uint64 bytes = 2;
+  uint64 shared_blocks = 3;
+  uint64 table_overflow = 4;
+  // Types by the unclassified bytes they own.
+  repeated TypeRow by_type = 5;
+}
+
+// Blocks the census could not account for. Not in any total.
+message Dropped {
+  uint64 skipped_blocks = 1;
+  uint64 candidate_overflow = 2;
+  uint64 unreadable_candidates = 3;
+}
+
+message HeapTimings {
+  double lock_held_ms = 1;
+  double lock_wait_ms = 2;
+  double resolve_ms = 3;
+  double owners_ms = 4;
+}
+
+// Blocks grouped by what their first word points to.
+message TypeRow {
+  enum Kind {
+    // The type was not named on device
+    UNSPECIFIED = 0;
+    // ObjC (as is) / Swift (mangled)
+    CLASS = 1;
+    // C++ (mangled)
+    CXX = 2;
+  }
+
+  oneof identity {
+    // Named on device. Mangled.
+    string name = 1;
+    // Not named on device: where the first word points. Symbolicating it against the image's
+    // dSYM may name it (a C++ class without RTTI shows as "vtable for Foo + 16"). If it can't be
+    // symbolicated, the type stays unnamed.
+    ImageAddress address = 5;
+  }
+  Kind kind = 2;
+  uint64 blocks = 3;
+  uint64 bytes = 4;
+}
+
+message ZoneRow {
+  string name = 1;
+  uint64 blocks = 2;
+  uint64 bytes = 3;
+  double lock_held_ms = 4;
+  // The zone was locked and enumerated.
+  bool enumerated = 5;
+  // The enumerator reported at least one batch. Enumerated but not seen: its blocks are missing.
+  bool seen = 6;
+  // The zone is never locked (e.g. WebKit Malloc zone).
+  bool skipped = 7;
+  // The zone spent its budget share before its enumeration finished.
+  bool truncated = 8;
+}
