@@ -9,179 +9,291 @@ syntax = "proto3";
 
 package bitdrift_public.protobuf.memory.v1;
 
-// Attachment of the iOS `ios_memory_dump` command
+// Attachment of the iOS `ios_memory_dump` command. A snapshot of one process's memory, taken from
+// inside the process in up to three stages: kernel counters, the VM map and a census of the malloc
+// heap. Each stage message is present only if that stage ran 
+//
+// Conventions:
+// - Sizes are bytes. Counts (`blocks`, `regions`, ...) are plain counts. Durations are
+//   milliseconds. Exceptions are called out on the field.
+// - Pages are already converted to bytes with the kernel page size.
+// - TagRow, ImageChargeRow and TypeRow lists are sorted by size, largest first. Zones keep the
+//   order malloc lists them in.
 message MemoryDump {
+  // Kernel virtual memory counters from task_info(TASK_VM_INFO) and os_proc_available_memory().
   Counters counters = 1;
+  // The process's virtual memory map, aggregated by Mach VM tag and by owning image.
   Regions regions = 2;
+  // Census of all the live allocations in the heap, checked by iterating through each malloc zone.
   Heap heap = 3;
-  // Loaded images, referenced by index from the rows that attribute memory to an image.
+  // The loaded images that some row in this dump refers to, in order of first reference. 
+  // This doesnt include every loaded image, only the ones that appear in the report.
   repeated Image images = 4;
 }
 
+// A loaded Mach-O image: the app executable, an embedded framework or a system library.
 message Image {
-  // Binary name only, never a path.
+  // Name of the binary, without its directory (e.g. "UIKitCore", "MyApp").
   string name = 1;
-  // LC_UUID: matches the image's dSYM.
+  // Mach-O LC_UUID. It matches the UUID of the image's dSYM
   bytes uuid = 2;
 }
 
-// An address inside a loaded image, relative to its mach header so no ASLR slide is sent.
+// An address inside a loaded image, sent as an offset so the ASLR slide is never revealed.
 message ImageAddress {
   // Index into MemoryDump.images.
   uint32 image = 1;
+  // Address minus the image's mach header address, both in the running process. 
   uint64 offset = 2;
 }
 
-// Kernel counters from task_info(TASK_VM_INFO).
+// The kernel's accounting of this process, from one task_info(TASK_VM_INFO) call plus
+// os_proc_available_memory(). Every field is a point-in-time value except where noted.
 message Counters {
+  // Physical footprint: the number jetsam compares against the app's memory limit to decide when
+  // to kill it. Roughly internal + compressed + IOKit and graphics memory charged to the process.
   uint64 phys_footprint = 1;
+  // Highest phys_footprint over the life of the process (kernel ledger lifetime maximum).
   optional uint64 phys_footprint_peak = 2;
+  // Resident anonymous memory (heap, stacks, dirty data): memory the process created that has no
+  // file behind it.
   uint64 internal = 3;
+  // Memory this process has in the kernel's compressor. iOS has no swap; under pressure dirty
+  // pages are compressed instead, and they still count toward phys_footprint.
   uint64 compressed = 4;
+  // Resident file-backed memory (mapped files, clean pages of binaries). Can be evicted and
+  // reloaded, and is not counted in phys_footprint.
   uint64 external = 5;
+  // Resident set size, shared pages included. Not what jetsam uses; kept for comparison.
   uint64 resident_size = 6;
+  // Number of pages decompressed from the compressor since the process started. A count of pages,
+  // not bytes: a high value means the process keeps touching memory it had to give up.
   optional uint64 decompressions = 7;
+  // Bytes left before the process reaches its jetsam limit, as computed by the kernel.
   optional uint64 limit_bytes_remaining = 8;
+  // Bytes the process can still allocate before jetsam kills it, from os_proc_available_memory().
+  // Usually equal to limit_bytes_remaining. Absent when the call returns 0, which it does when the
+  // process has no limit (simulator) or is already at it.
   optional uint64 available_before_kill = 9;
-  // The kernel's attribution of the footprint by category. Absent on iOS versions that don't
-  // report it.
+  // The kernel's attribution of the footprint to a few categories. 
   Ledgers ledgers = 10;
 }
 
-// Each value includes its compressed bytes.
+// Memory Footprint ledgers by category. Each value is the ledger's resident bytes plus its compressed
+// bytes, so each one is directly comparable to phys_footprint. Together they explain only the part
+// of the footprint that is not plain malloc or anonymous memory.
 message Ledgers {
+  // GPU memory: Metal, OpenGL resources, IOSurfaces, CoreAnimation backing stores.
   uint64 graphics = 1;
+  // Media buffers: decoded audio and video, camera.
   uint64 media = 2;
+  // Network buffers charged to the process.
   uint64 network = 3;
+  // Neural Engine and Core ML memory.
   uint64 neural = 4;
+  // Purgeable memory currently marked volatile: the kernel may discard it under pressure.
   uint64 purgeable_volatile = 5;
+  // Purgeable memory currently marked non-volatile: in use, cannot be discarded.
   uint64 purgeable_nonvolatile = 6;
 }
 
-// Process VM map, by Mach tag and by owning image.
+// The process's virtual memory map, aggregated by Mach VM tag and by owning image.
+//
+// Invariants: the by_tag rows sum exactly to the totals below, field by field. charged =
+// private_dirty + compressed, at the top level and in every TagRow.
 message Regions {
+  // Number of regions walked (this doesnt include submaps; they're entered, not counted themselves).
   uint32 regions = 1;
+  // The map changed while it was being read, a region could not be read, or the walk stopped at
+  // its cap. If true, the totals are then approximate.
   bool truncated = 2;
+  // Dirty pages only this process maps: weighs on phys_footprint.
   uint64 private_dirty = 3;
+  // Dirty pages other processes map too (shared memory, copy-on-write regions with several
+  // references such as the shared cache's data). Not charged to this process.
   uint64 shared_dirty = 4;
+  // Pages of these regions held in the compressor. Weighs on phys_footprint.
   uint64 compressed = 5;
-  // What weighs on the footprint: private dirty + compressed.
+  // What these regions weigh on phys_footprint: private_dirty + compressed.
   uint64 charged = 6;
+  // Address space reserved by all regions, writable or not, resident or not. Not memory use.
   uint64 virtual_size = 7;
+  // Regions grouped by VM tag. One row per tag present in the map.
   repeated TagRow by_tag = 8;
+  // Charged attributed to the images whose segments the regions overlap.
   repeated ImageChargeRow by_image = 9;
 }
 
+// One Mach VM tag: who allocated the regions, as declared by the allocator
 message TagRow {
+  // The tag's name from Apple's VM_MEMORY_* list (e.g. "MALLOC_LARGE", "CoreAnimation", "Stack",
+  // "Untagged" for tag 0). Default is "VM_TAG_<n>" for a tag that list does not name.
   string name = 1;
+  // The numeric VM_MEMORY_* tag, 0 to 255.
   uint32 tag = 2;
+  // Number of regions with this tag.
   uint32 regions = 3;
+  // As in Regions, for this tag's regions only.
   uint64 private_dirty = 4;
   uint64 shared_dirty = 5;
   uint64 compressed = 6;
   uint64 virtual_size = 7;
+  // private_dirty + compressed.
   uint64 charged = 8;
 }
 
+// The share of Regions.charged attributed to one image's segments (mostly its __DATA dirty pages).
 message ImageChargeRow {
   // Index into MemoryDump.images.
   uint32 image = 1;
   uint64 charged = 2;
 }
 
-// Census of the malloc heap
+// Census of the live blocks in the malloc zones. Each enumerable zone is locked in turn
+// and its blocks are recorded, within a time budget (the command's `heap.budget_ms` argument)
+// shared among the zones. Each block is classified by its first word, which for an object points
+// at its class or type metadata.
+//
+// Invariants, in blocks and in bytes:
+// - total = named + swift_boxes + images + reporter + unclassified, exactly.
+// - total = the sum of the zone rows.
+// - The by_type rows with a name sum to named; those with an address sum to images.
+// - unclassified.histogram sums to unclassified.blocks.
+// - owners is a subset of unclassified, never an addition to it.
+// Blocks the census never recorded (dropped.skipped_blocks, skipped zones, zones never seen) are
+// in no total.
 message Heap {
-  // The lock budget ran out
+  // Some zone ran out of its share of the time budget before its enumeration finished: the
+  // figures are a floor, not an inventory. See dropped.skipped_blocks and ZoneRow.truncated.
   bool truncated = 1;
+  // Every block recorded, in every zone.
   BlockCount total = 2;
+  // Size of the largest block recorded.
   uint64 largest_block_bytes = 3;
+  // Instances of a named type.
   BlockCount named = 4;
+  // Swift heap objects with no class: closure contexts, boxed captured variables, existential and
+  // error boxes. Counted, never named in the SDK.
   BlockCount swift_boxes = 5;
-  // Blocks whose first word points into an image but could not be named on device.
+  // Blocks whose first word points into a loaded image but that could not be named on device.
   BlockCount images = 6;
-  // The dump's own tables: counted in the total but in no other category.
+  // The tables the census itself allocated. Counted in total but in no other category.
   BlockCount reporter = 7;
+  // Blocks with no type: plain malloc buffers (byte arrays, strings' storage, image data) and
+  // anything whose first word is not a recognizable pointer.
   Unclassified unclassified = 8;
-  // Absent when owner attribution was disabled.
+  // Who holds the unclassified buffers. Provides some sort of precedence.
   Owners owners = 9;
+  // Blocks and candidates the census lost, with the reason.
   Dropped dropped = 10;
+  // Where the time went.
   HeapTimings timings = 11;
-  // Rows with a name sum to `named`; rows with an address sum to `images`, unless the candidate
-  // table overflowed.
+  // Blocks grouped by type: rows with a name (sum to `named`) and rows with an address (sum to
+  // `images`). Two classes with the same name and kind, e.g. from different images, share a row.
   repeated TypeRow by_type = 12;
+  // One row per malloc zone in the process, enumerated or not.
   repeated ZoneRow zones = 13;
 }
 
 message BlockCount {
+  // Number of blocks.
   uint64 blocks = 1;
+  // Their total size as malloc reports it .
   uint64 bytes = 2;
 }
 
 message Unclassified {
   uint64 blocks = 1;
   uint64 bytes = 2;
+  // Blocks by power-of-two size: always 32 entries, entry n counts blocks of size in [2^n,
+  // 2^(n+1)) (entry 0 also holds size 0, the last entry everything from 2^31 up). Blocks
+  // that share a first word are placed by their average size.
   repeated uint64 histogram = 3;
 }
 
-// A subset of unclassified blocks credited to the named object pointing at them
+// Unclassified blocks credited to the named object that points at them.
 message Owners {
+  // Unclassified blocks credited to some owner. At most unclassified.blocks.
   uint64 blocks = 1;
   uint64 bytes = 2;
+  // Credited blocks that two or more objects pointed at equally well: the owner is a guess.
   uint64 shared_blocks = 3;
+  // Blocks left out of attribution because its tables were full. Owners then undercounts.
   uint64 table_overflow = 4;
-  // Types by the unclassified bytes they own.
+  // Owners by the unclassified bytes they hold. Every row has a name and Kind CLASS; blocks and
+  // bytes are what the class's instances own, not the instances themselves. Sums to blocks and
+  // bytes above.
   repeated TypeRow by_type = 5;
 }
 
-// Blocks the census could not account for. Not in any total.
+// Blocks the census could not account for. None of these is in any total.
 message Dropped {
+  // Blocks reported by a zone after its share of the budget ran out. Their sizes are not known.
+  // Non-zero only if some ZoneRow is truncated.
   uint64 skipped_blocks = 1;
+  // Blocks that stayed unclassified because the SDK table of distinct first words was full. Counted
+  // in unclassified.
   uint64 candidate_overflow = 2;
+  // Distinct first-word targets (not blocks) that could not be read after the locks, usually
+  // because the memory was unmapped meanwhile. Their blocks stay in unclassified.
   uint64 unreadable_candidates = 3;
 }
 
 message HeapTimings {
+  // Total time zone locks were held. While a zone is locked, any thread allocating from it waits.
+  // Can exceed the budget: running out of budget stops recording, but a zone stays locked until
+  // its enumerator finishes.
   double lock_held_ms = 1;
+  // Total time spent waiting to acquire the zone locks.
   double lock_wait_ms = 2;
+  // Time naming the first-word targets, after the locks.
   double resolve_ms = 3;
+  // Time attributing owners, after the locks. 0 when owners is disabled.
   double owners_ms = 4;
 }
 
 // Blocks grouped by what their first word points to.
 message TypeRow {
   enum Kind {
-    // The type was not named on device
+    // The row has an address instead of a name.
     UNSPECIFIED = 0;
-    // ObjC (as is) / Swift (mangled)
+    // An Objective-C or Swift class (mangled).
     CLASS = 1;
-    // C++ (mangled)
+    // A polymorphic C++ class (Mangled)
     CXX = 2;
   }
 
   oneof identity {
-    // Named on device. Mangled.
+    // The type's name, mangled as described by Kind. Set for every named row.
     string name = 1;
-    // Not named on device: where the first word points. Symbolicating it against the image's
-    // dSYM may name it (a C++ class without RTTI shows as "vtable for Foo + 16"). If it can't be
-    // symbolicated, the type stays unnamed.
+    // Set when the type could not be named on device. Symbolicating it may name the type.
+    // If it does not symbolicate, the row stays unnamed but its blocks still count.
     ImageAddress address = 5;
   }
+  // Set only with name; UNSPECIFIED with address.
   Kind kind = 2;
   uint64 blocks = 3;
   uint64 bytes = 4;
 }
 
+// One malloc zone. Apps typically have DefaultMallocZone plus zones of their own or of system
+// frameworks (QuartzCore, AttributeGraph, etc). 
 message ZoneRow {
+  // The zone's name as malloc reports it.
   string name = 1;
+  // Blocks and bytes recorded in this zone. 0 if it was not enumerated.
   uint64 blocks = 2;
   uint64 bytes = 3;
+  // Time this zone was locked.
   double lock_held_ms = 4;
-  // The zone was locked and enumerated.
+  // The zone was locked and enumerated. False when it was skipped, does not support enumeration,
+  // could not be locked, or got no share of the budget.
   bool enumerated = 5;
-  // The enumerator reported at least one batch. Enumerated but not seen: its blocks are missing.
+  // The zone's enumerator reported at least one batch of blocks. Enumerated but not seen means
+  // the zone reported nothing: its blocks are missing from the census (known for AttributeGraph).
   bool seen = 6;
-  // The zone is never locked (e.g. WebKit Malloc zone).
+  // The zone is never locked by design (e.g. WebKit Malloc)
   bool skipped = 7;
-  // The zone spent its budget share before its enumeration finished.
+  // The zone ran out of its share of the budget, or had none left: its counts are a floor.
   bool truncated = 8;
 }
