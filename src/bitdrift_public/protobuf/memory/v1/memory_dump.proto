@@ -160,39 +160,38 @@ message ImageChargeRow {
 // - The by_type rows with a name sum to named; those with an address sum to images.
 // - unclassified.histogram sums to unclassified.blocks.
 // - owners is a subset of unclassified, never an addition to it.
-// Blocks the census never recorded (dropped.skipped_blocks, skipped zones, zones never seen) are
+// Blocks the census never recorded (skipped_blocks, skipped zones, zones never seen) are
 // in no total.
 message Heap {
   // Some zone ran out of its share of the time budget before its enumeration finished: the
-  // figures are a floor, not an inventory. See dropped.skipped_blocks and ZoneRow.truncated.
+  // figures are a floor, not an inventory. See skipped_blocks and ZoneRow.truncated.
   bool truncated = 1;
+  // Blocks reported by a zone after its share of the budget ran out. In no total, and their sizes
+  // are not known. Non-zero only if some ZoneRow is truncated.
+  uint64 skipped_blocks = 2;
   // Every block recorded, in every zone.
-  BlockCount total = 2;
+  BlockCount total = 3;
   // Size of the largest block recorded.
-  uint64 largest_block_bytes = 3;
+  uint64 largest_block_bytes = 4;
   // Instances of a named type.
-  BlockCount named = 4;
+  BlockCount named = 5;
   // Swift heap objects with no class: closure contexts, boxed captured variables, existential and
   // error boxes. Counted, never named in the SDK.
-  BlockCount swift_boxes = 5;
+  BlockCount swift_boxes = 6;
   // Blocks whose first word points into a loaded image but that could not be named on device.
-  BlockCount images = 6;
+  BlockCount images = 7;
   // The tables the census itself allocated. Counted in total but in no other category.
-  BlockCount reporter = 7;
+  BlockCount reporter = 8;
   // Blocks with no type: plain malloc buffers (byte arrays, strings' storage, image data) and
   // anything whose first word is not a recognizable pointer.
-  Unclassified unclassified = 8;
+  Unclassified unclassified = 9;
   // Who holds the unclassified buffers. Provides some sort of precedence.
-  Owners owners = 9;
-  // Blocks and candidates the census lost, with the reason.
-  Dropped dropped = 10;
-  // Where the time went.
-  HeapTimings timings = 11;
+  Owners owners = 10;
   // Blocks grouped by type: rows with a name (sum to `named`) and rows with an address (sum to
   // `images`). Two classes with the same name and kind, e.g. from different images, share a row.
-  repeated TypeRow by_type = 12;
+  repeated TypeRow by_type = 11;
   // One row per malloc zone in the process, enumerated or not.
-  repeated ZoneRow zones = 13;
+  repeated ZoneRow zones = 12;
 }
 
 message BlockCount {
@@ -226,32 +225,6 @@ message Owners {
   repeated TypeRow by_type = 5;
 }
 
-// Blocks the census could not account for. None of these is in any total.
-message Dropped {
-  // Blocks reported by a zone after its share of the budget ran out. Their sizes are not known.
-  // Non-zero only if some ZoneRow is truncated.
-  uint64 skipped_blocks = 1;
-  // Blocks that stayed unclassified because the SDK table of distinct first words was full. Counted
-  // in unclassified.
-  uint64 candidate_overflow = 2;
-  // Distinct first-word targets (not blocks) that could not be read after the locks, usually
-  // because the memory was unmapped meanwhile. Their blocks stay in unclassified.
-  uint64 unreadable_candidates = 3;
-}
-
-message HeapTimings {
-  // Total time zone locks were held. While a zone is locked, any thread allocating from it waits.
-  // Can exceed the budget: running out of budget stops recording, but a zone stays locked until
-  // its enumerator finishes.
-  double lock_held_ms = 1;
-  // Total time spent waiting to acquire the zone locks.
-  double lock_wait_ms = 2;
-  // Time naming the first-word targets, after the locks.
-  double resolve_ms = 3;
-  // Time attributing owners, after the locks. 0 when owners is disabled.
-  double owners_ms = 4;
-}
-
 // Blocks grouped by what their first word points to.
 message TypeRow {
   enum Kind {
@@ -268,12 +241,12 @@ message TypeRow {
     string name = 1;
     // Set when the type could not be named on device. Symbolicating it may name the type.
     // If it does not symbolicate, the row stays unnamed but its blocks still count.
-    ImageAddress address = 5;
+    ImageAddress address = 2;
   }
   // Set only with name; UNSPECIFIED with address.
-  Kind kind = 2;
-  uint64 blocks = 3;
-  uint64 bytes = 4;
+  Kind kind = 3;
+  uint64 blocks = 4;
+  uint64 bytes = 5;
 }
 
 // One malloc zone. Apps typically have DefaultMallocZone plus zones of their own or of system
@@ -284,16 +257,14 @@ message ZoneRow {
   // Blocks and bytes recorded in this zone. 0 if it was not enumerated.
   uint64 blocks = 2;
   uint64 bytes = 3;
-  // Time this zone was locked.
-  double lock_held_ms = 4;
   // The zone was locked and enumerated. False when it was skipped, does not support enumeration,
   // could not be locked, or got no share of the budget.
-  bool enumerated = 5;
+  bool enumerated = 4;
   // The zone's enumerator reported at least one batch of blocks. Enumerated but not seen means
   // the zone reported nothing: its blocks are missing from the census (known for AttributeGraph).
-  bool seen = 6;
+  bool seen = 5;
   // The zone is never locked by design (e.g. WebKit Malloc)
-  bool skipped = 7;
+  bool skipped = 6;
   // The zone ran out of its share of the budget, or had none left: its counts are a floor.
-  bool truncated = 8;
+  bool truncated = 7;
 }
