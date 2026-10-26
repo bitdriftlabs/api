@@ -54,6 +54,7 @@ message WellKnownCommandOptions {
   string key = 1;
   string description = 2;
   repeated DeviceCommandArgumentDefinition argument_definitions = 3;
+  bool is_privacy_sensitive = 4;
 }
 
 extend google.protobuf.EnumValueOptions {
@@ -69,6 +70,7 @@ enum WellKnownCommandType {
   }];
   TAKE_SCREENSHOT = 2 [(well_known_command_options) = {
     key: "take_screenshot"
+    is_privacy_sensitive: true
     description: "Captures the device's current screen as a JPEG image."
   }];
 }
