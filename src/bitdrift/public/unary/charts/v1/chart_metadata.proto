@@ -53,6 +53,54 @@ message ChartMetadata {
       // Configuration for exporting data to a connector.
       message ConnectorExportConfig {
         message OtlpConnectorExportConfig {
+          // Selects exactly one histogram representation. Use a different metric name when
+          // changing representation to avoid incompatible metric types at the receiver.
+          message HistogramConfiguration {
+            message Summary {
+              // Unique quantiles emitted independently of chart display percentiles.
+              repeated double percentiles = 1 [(validate.rules).repeated = {
+                min_items: 1
+                max_items: 20
+                items: {
+                  double: {
+                    gte: 0
+                    lte: 1
+                  }
+                }
+              }];
+            }
+
+            // Exponential buckets approximate the source sketch: original sums and extrema are
+            // not retained. Sums are estimated for nonnegative populations and omitted otherwise.
+            // Conversion starts at scale 5 and downscales to at most 256 dense buckets per sign,
+            // including across cumulative intervals. Wide ranges reduce resolution; collapsed
+            // sketch bins cannot be recovered.
+            message Exponential {
+              enum Temporality {
+                TEMPORALITY_UNSPECIFIED = 0;
+                CUMULATIVE = 1;
+                DELTA = 2;
+              }
+
+              // Unspecified defaults to `CUMULATIVE`. `DELTA` exports independent one-minute
+              // populations and requires a compatible receiver. `CUMULATIVE` accumulates those
+              // populations in memory; restart, metric-setting changes, or worker reassignment
+              // starts a new accumulation with a new start timestamp. Credential rotation
+              // preserves accumulation. Only processed minutes contribute; missing populations
+              // are not inferred. Use a different metric name when changing temporality.
+              .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.OtlpConnectorExportConfig.HistogramConfiguration.Exponential.Temporality temporality = 1 [(validate.rules).enum = {defined_only: true}];
+            }
+
+            oneof histogram_type {
+              option (validate.required) = true;
+              // Emits the selected quantiles as an OTLP summary.
+              .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.OtlpConnectorExportConfig.HistogramConfiguration.Summary summary = 1;
+
+              // Emits an OTLP exponential histogram with configurable temporality.
+              .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.OtlpConnectorExportConfig.HistogramConfiguration.Exponential exponential = 2;
+            }
+          }
+
           // The metric name emitted to the configured OTLP endpoint.
           string metric_name = 1 [(validate.rules).string = {
             min_len: 1
@@ -79,17 +127,8 @@ message ChartMetadata {
             lte: 86400
           }];
 
-          // Unique quantiles emitted in histogram summaries, independently of chart display percentiles.
-          // Histograms require at least one quantile; counters must leave this list empty.
-          repeated double percentiles = 4 [(validate.rules).repeated = {
-            max_items: 20
-            items: {
-              double: {
-                gte: 0
-                lte: 1
-              }
-            }
-          }];
+          // Required for histogram-backed exports; counters must leave this unset.
+          .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.OtlpConnectorExportConfig.HistogramConfiguration histogram_configuration = 6;
         }
 
         message CloudwatchConnectorExportConfig {
@@ -130,7 +169,7 @@ message ChartMetadata {
           // metrics.
           .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.CloudwatchConnectorExportConfig cloudwatch_connector_export_config = 2;
 
-          // OTLP export for counters and histogram summaries. Rate and average metrics export
+          // OTLP export for counters, summaries, and exponential histograms. Rate and average metrics export
           // separate counters with /numerator and /denominator appended to the supplied name.
           .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.OtlpConnectorExportConfig otlp_connector_export_config = 3;
         }
