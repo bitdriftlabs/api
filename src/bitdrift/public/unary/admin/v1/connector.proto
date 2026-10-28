@@ -107,6 +107,12 @@ message ConnectorConfig {
     // Configuration for an OTLP metrics connector using HTTP binary protobuf.
     .bitdrift.public.unary.admin.v1.ConnectorConfig.OtlpConnectorConfig otlp_connector_config = 3;
   }
+
+  // The team that owns this connector. When creating a connector, omitting this field makes it
+  // organization-owned. When updating a connector, omitting it preserves the current owner.
+  // Set it to an empty string to transfer ownership to the organization; this requires
+  // CONNECTOR_ADMIN permission.
+  optional string team_id = 4 [(validate.rules).string = {max_len: 100}];
 }
 
 message UpsertConnectorRequest {
@@ -116,10 +122,13 @@ message UpsertConnectorRequest {
 
 message UpsertConnectorResponse {}
 
-message GetConnectorsRequest {}
+message GetConnectorsRequest {
+  // When set, returns connectors that can be used by the authenticated user on this workflow.
+  optional string workflow_id = 1 [(validate.rules).string = {max_len: 255}];
+}
 
 message GetConnectorsResponse {
-  // The connectors configured for the organization.
+  // The connectors available to the authenticated user for the requested scope.
   repeated .bitdrift.public.unary.admin.v1.ConnectorConfig connectors = 1;
 }
 
