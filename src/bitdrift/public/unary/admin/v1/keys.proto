@@ -43,6 +43,21 @@ message ApiKeyResponse {
   repeated .bitdrift.public.unary.admin.v1.Permission permissions = 4;
 }
 
+message PersonalAccessTokenResponse {
+  // A non-secret hint for recognizing the token: its prefix and last four characters.
+  string display_hint = 1;
+
+  // The permissions the token was created with. Requests made with the token are limited to the
+  // permissions that are both listed here and currently held by the owner.
+  repeated .bitdrift.public.unary.admin.v1.Permission permissions = 2;
+
+  // The ID of the user that owns the token. Requests made with the token act as this user.
+  string owner_user_id = 3;
+
+  // When the token last authenticated a request. Updated about once per minute.
+  .google.protobuf.Timestamp last_used_at = 4;
+}
+
 message KeyResponse {
   // The ID of the key to be used for revocation and further operations.
   uint64 id = 1;
@@ -63,6 +78,9 @@ message KeyResponse {
 
     // The API key details when this key is an API key.
     .bitdrift.public.unary.admin.v1.ApiKeyResponse api_key = 6;
+
+    // The personal access token details when this key is a personal access token.
+    .bitdrift.public.unary.admin.v1.PersonalAccessTokenResponse personal_access_token = 8;
   }
 
   // The name of the key, used for (human) identification purposes.
@@ -136,3 +154,48 @@ message RevokeKeyRequest {
 }
 
 message RevokeKeyResponse {}
+
+message CreatePersonalAccessTokenRequest {
+  // The name of the token, used for (human) identification purposes.
+  string name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // The permissions the token should have. Each permission must be held by the caller.
+  repeated .bitdrift.public.unary.admin.v1.Permission permissions = 2 [(validate.rules).repeated = {
+    min_items: 1
+    max_items: 100
+    items: {
+      enum: {defined_only: true}
+    }
+  }];
+
+  // When the token expires. Required, and at most 90 days in the future.
+  .google.protobuf.Timestamp expires_at = 3 [(validate.rules).timestamp = {
+    required: true
+    gt_now: true
+  }];
+}
+
+message CreatePersonalAccessTokenResponse {
+  // The created token's details.
+  .bitdrift.public.unary.admin.v1.KeyResponse key = 1;
+
+  // The token secret. It is returned only in this response and cannot be retrieved later.
+  string token = 2;
+}
+
+message ListPersonalAccessTokensRequest {}
+
+message ListPersonalAccessTokensResponse {
+  // The caller's personal access tokens, including revoked and expired ones.
+  repeated .bitdrift.public.unary.admin.v1.KeyResponse tokens = 1;
+}
+
+message RevokePersonalAccessTokenRequest {
+  // The ID of the caller's token to revoke.
+  uint64 id = 1;
+}
+
+message RevokePersonalAccessTokenResponse {}

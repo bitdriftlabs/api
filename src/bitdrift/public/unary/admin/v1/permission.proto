@@ -14,6 +14,10 @@ enum Permission {
   SDK_KEY_ADMIN = 1;
   // Allows creating API keys.
   API_KEY_CREATOR = 16;
+  // Allows creating personal access tokens that act as the caller. The Workflow Analyst role
+  // grants it and Admin gets it through its wildcard; Viewer and the add-on Trace Manager role do
+  // not. Revoking your own tokens does not require it.
+  PERSONAL_ACCESS_TOKEN_CREATE = 41;
   // Allows editing any workflow.
   WORKFLOW_ADMIN = 2;
   // Allows reading any workflow.
