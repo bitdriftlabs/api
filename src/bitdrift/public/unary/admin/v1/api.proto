@@ -77,6 +77,23 @@ service AdminService {
   // Revokes an API key or SDK key by ID.
   rpc RevokeKey(.bitdrift.public.unary.admin.v1.RevokeKeyRequest) returns (.bitdrift.public.unary.admin.v1.RevokeKeyResponse);
 
+  // Creates a personal access token that acts as the calling user.
+  //
+  // Requires PERSONAL_ACCESS_TOKEN_CREATE and a signed-in user session; a token cannot create other
+  // tokens. The token's permissions must be held by the caller, and requests made with it are
+  // limited to the permissions the caller still holds when the request is made. The secret is
+  // returned only in this response.
+  rpc CreatePersonalAccessToken(.bitdrift.public.unary.admin.v1.CreatePersonalAccessTokenRequest) returns (.bitdrift.public.unary.admin.v1.CreatePersonalAccessTokenResponse);
+
+  // Lists the calling user's personal access tokens. Secrets are never returned.
+  rpc ListPersonalAccessTokens(.bitdrift.public.unary.admin.v1.ListPersonalAccessTokensRequest) returns (.bitdrift.public.unary.admin.v1.ListPersonalAccessTokensResponse);
+
+  // Revokes one of the calling user's personal access tokens.
+  //
+  // Requires a signed-in user session but no permission, so users can always revoke their own
+  // tokens. Revocation takes effect within about 90 seconds.
+  rpc RevokePersonalAccessToken(.bitdrift.public.unary.admin.v1.RevokePersonalAccessTokenRequest) returns (.bitdrift.public.unary.admin.v1.RevokePersonalAccessTokenResponse);
+
   // Lists roles the authenticated user can assign.
   //
   // Returns roles available to the organization whose permissions the caller can grant.
