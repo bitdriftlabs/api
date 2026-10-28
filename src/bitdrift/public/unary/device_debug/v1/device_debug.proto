@@ -323,6 +323,14 @@ message SetDeviceCommandEnabledRequest {
   }
 
   bool enabled = 3;
+
+  // Acknowledges the privacy notice below. Defaults to false; must be true when `enabled` is true
+  // for a privacy-sensitive built-in command. Not required when disabling a command or enabling
+  // a non-sensitive built-in or registered command.
+  //
+  // This command may collect personal or sensitive information. Before enabling it, make sure you
+  // have permission to collect this information and obtain user consent where required.
+  bool agree_to_privacy_sensitive_enable = 4;
 }
 
 message SetDeviceCommandEnabledResponse {
@@ -387,6 +395,9 @@ service DebugService {
   rpc ListDeviceCommands(.bitdrift.public.unary.device_debug.v1.ListDeviceCommandsRequest) returns (.bitdrift.public.unary.device_debug.v1.ListDeviceCommandsResponse);
 
   // Enables or disables a built-in or registered command for this account.
+  //
+  // Enabling a privacy-sensitive built-in command requires
+  // `agree_to_privacy_sensitive_enable` to be true, including when it is already enabled.
   rpc SetDeviceCommandEnabled(.bitdrift.public.unary.device_debug.v1.SetDeviceCommandEnabledRequest) returns (.bitdrift.public.unary.device_debug.v1.SetDeviceCommandEnabledResponse);
 
   // Removes a registered command that is not referenced by any saved workflow.

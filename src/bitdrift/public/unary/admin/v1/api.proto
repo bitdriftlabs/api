@@ -130,10 +130,10 @@ service AdminService {
   // Requires the current user to have edit permission on the target.
   rpc SetAccess(.bitdrift.public.unary.admin.v1.SetAccessRequest) returns (.bitdrift.public.unary.admin.v1.SetAccessResponse);
 
-  // Lists all connectors for the organization.
+  // Lists connectors available to the authenticated user.
   rpc GetConnectors(.bitdrift.public.unary.admin.v1.GetConnectorsRequest) returns (.bitdrift.public.unary.admin.v1.GetConnectorsResponse);
 
-  // Creates or updates a connector for the organization.
+  // Creates or updates a connector for the organization or a team.
   rpc UpsertConnector(.bitdrift.public.unary.admin.v1.UpsertConnectorRequest) returns (.bitdrift.public.unary.admin.v1.UpsertConnectorResponse);
 
   // Deletes a connector by ID.
