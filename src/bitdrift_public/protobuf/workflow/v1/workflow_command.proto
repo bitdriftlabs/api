@@ -13,6 +13,36 @@ import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "google/protobuf/descriptor.proto";
 import "validate/validate.proto";
 
+// Compatibility requirements for a well-known command or one of its arguments.
+// Argument requirements intersect with the command's requirements only when the argument is
+// supplied. Omitted argument requirements inherit the command's requirements; they never widen them.
+message DeviceCommandAvailability {
+  enum Platform {
+    PLATFORM_UNSPECIFIED = 0;
+    ANDROID = 1;
+    APPLE = 2;
+  }
+
+  message PlatformSupport {
+    Platform platform = 1 [(validate.rules).enum.defined_only = true];
+    // Inclusive OS release floor, not an Android API level. Numeric components are compared with
+    // missing trailing components treated as zero. Apple denotes the entire platform family.
+    // Required on commands; omission on an argument inherits the command's floor for this platform.
+    optional string min_os_version = 2 [(validate.rules).string = {
+      min_len: 1
+      max_len: 64
+    }];
+    // Inclusive shared-core config capability floor. A native SDK's config version equals its
+    // SemVer MINOR component, so a floor of 49 requires SDK minor 49 or later (for example, 0.49.x).
+    // Required for every declared platform, including argument-specific availability overrides.
+    int64 min_config_version = 3 [(validate.rules).int64.gt = 0];
+  }
+
+  // Commands declare a nonempty list without duplicate platforms. An empty argument list inherits
+  // command platforms; an explicit argument list must be a subset of its command's platforms.
+  repeated PlatformSupport supported_platforms = 1 [(validate.rules).repeated.max_items = 2];
+}
+
 // Defines one named argument accepted by a device command. Invocation values are supplied in
 // WorkflowCommandSelector.arguments using this name and type.
 message DeviceCommandArgumentDefinition {
@@ -48,6 +78,10 @@ message DeviceCommandArgumentDefinition {
   }];
   // Whether callers may omit this argument from an invocation.
   bool optional = 4;
+  // Additional compatibility requirements for a supplied well-known command argument. Unsupported
+  // invocations are not delivered; arguments are never silently removed. Not accepted on custom
+  // registered commands. Absence inherits command availability.
+  DeviceCommandAvailability availability = 5;
 }
 
 message WellKnownCommandOptions {
@@ -55,6 +89,8 @@ message WellKnownCommandOptions {
   string description = 2;
   repeated DeviceCommandArgumentDefinition argument_definitions = 3;
   bool is_privacy_sensitive = 4;
+  // Required compatibility declaration for every nonzero well-known command.
+  DeviceCommandAvailability availability = 5;
 }
 
 extend google.protobuf.EnumValueOptions {
@@ -67,11 +103,72 @@ enum WellKnownCommandType {
   DUMP_DEVICE_BUFFER = 1 [(well_known_command_options) = {
     key: "dump_device_buffer"
     description: "Requests the device's buffered logs."
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "6.0"
+          min_config_version: 49
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 49
+        }
+      ]
+    }
   }];
   TAKE_SCREENSHOT = 2 [(well_known_command_options) = {
     key: "take_screenshot"
     is_privacy_sensitive: true
     description: "Captures the device's current screen as a JPEG image."
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 49
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 49
+        }
+      ]
+    }
+  }];
+  STACK_SAMPLING_TRACE = 3 [(well_known_command_options) = {
+    key: "stack_sampling_trace"
+    description: "Captures a Perfetto stack sampling trace of the application's process."
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "15"
+          min_config_version: 50
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "duration_ms"
+        type: INT64
+        description: "How long to sample, in milliseconds. Defaults to 3000. The client clamps it to its configured maximum and to the command execution timeout."
+        optional: true
+      },
+      {
+        name: "frequency_hz"
+        type: INT64
+        description: "Sampling frequency in Hz. Defaults to 100; the client clamps it to 10-250."
+        optional: true
+      },
+      {
+        name: "buffer_size_kb"
+        type: INT64
+        description: "Trace buffer size in KB. Defaults to 2048; the client clamps it to 256-16384."
+        optional: true
+      }
+    ]
   }];
 }
 
