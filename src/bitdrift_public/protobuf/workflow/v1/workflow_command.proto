@@ -34,8 +34,8 @@ message DeviceCommandAvailability {
     }];
     // Inclusive shared-core config capability floor. A native SDK's config version equals its
     // SemVer MINOR component, so a floor of 49 requires SDK minor 49 or later (for example, 0.49.x).
-    // Required on commands; omission on an argument inherits this platform's command floor.
-    optional int64 min_config_version = 3 [(validate.rules).int64.gt = 0];
+    // Required for every declared platform, including argument-specific availability overrides.
+    int64 min_config_version = 3 [(validate.rules).int64.gt = 0];
   }
 
   // Commands declare a nonempty list without duplicate platforms. An empty argument list inherits
