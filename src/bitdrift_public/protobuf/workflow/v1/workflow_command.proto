@@ -126,7 +126,7 @@ enum WellKnownCommandType {
       supported_platforms: [
         {
           platform: ANDROID
-          min_os_version: "6.0"
+          min_os_version: "8.0"
           min_config_version: 49
         },
         {
@@ -137,17 +137,15 @@ enum WellKnownCommandType {
       ]
     }
   }];
-  // Android 15+ only. Records a Perfetto stack sampling trace of the application's process and
-  // uploads it as the command attachment. Other platforms fail the command as unsupported.
   STACK_SAMPLING_TRACE = 3 [(well_known_command_options) = {
     key: "stack_sampling_trace"
-    description: "Captures a Perfetto stack sampling trace of the application's process (Android 15+)."
+    description: "Captures a Perfetto stack sampling trace of the application's process."
     availability: {
       supported_platforms: [
         {
           platform: ANDROID
           min_os_version: "15"
-          min_config_version: 49
+          min_config_version: 50
         }
       ]
     }
