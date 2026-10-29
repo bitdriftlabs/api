@@ -29,6 +29,21 @@ message MemoryDump {
   // The loaded images that some row in this dump refers to, in order of first reference.
   // This doesnt include every loaded image, only the ones that appear in the report.
   repeated Image images = 4;
+  // Capture-time layout identity used only for global Apple memory-symbol indexes. Missing or
+  // invalid identity disables system naming, not capture conversion or tenant symbol lookup.
+  SystemIdentity system_identity = 5;
+}
+
+// Selects one system-memory layout. This is not application identity or authorization.
+message SystemIdentity {
+  // Hardware product identifier, such as iPhone16,1; never an installation ID or marketing name.
+  string product_type = 1;
+  // Exact running OS build, such as 24B115; not the OS release version or application build.
+  string os_build = 2;
+  // Architecture of the running system cache, such as arm64e; not the application's target.
+  string cache_architecture = 3;
+  // Main dyld shared-cache UUID, exactly 16 bytes in native UUID order.
+  bytes shared_cache_uuid = 4;
 }
 
 // A loaded Mach-O image: the app executable, an embedded framework or a system library.
