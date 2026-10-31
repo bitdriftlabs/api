@@ -35,5 +35,10 @@ jobs:
           flatc --cpp -I src -o "$temp_dir" "${schemas[@]}"
       - name: Format
         run: tools/format.sh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test license enforcement
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools -p 'license_header_test.py'
       - name: Check license
         run: tools/check_license.sh

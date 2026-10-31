@@ -1,66 +1,92 @@
-import os
+# api - bitdrift's client/server API definitions
+# Copyright Bitdrift, Inc. All rights reserved.
+#
+# Use of this source code and APIs are governed by a source available license that can be found in
+# the LICENSE file or at:
+# https://polyformproject.org/licenses/strict/1.0.0
 
-# Define the header you want to check for and insert
-rust_header = """
+import argparse
+import hashlib
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+
+STRICT_URL = 'https://polyformproject.org/licenses/strict/1.0.0'
+STRICT_LICENSE_SHA256 = '90f9e6b7d79f381706abd79e5302039ca09856922a2cdc9bc91087fd1535581e'
+
+HEADER = """
 // api - bitdrift's client/server API definitions
 // Copyright Bitdrift, Inc. All rights reserved.
 //
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
-// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
-"""
+// https://polyformproject.org/licenses/strict/1.0.0
+""".lstrip()
 
-headers = {
-    '.proto': rust_header,
-    '.fbs': rust_header
-}
-
-# TODO(mattklein123): Figure out if we want our license at the top of the generated proto files.
-# If so we need to build it into the generator.
-exclude_dirs = (
-    './.git',
-    './protoc-gen-validate',
-    './thirdparty',
-)
-
-extensions_to_check = ('.proto', '.fbs')
+EXCLUDED_DIRS = {'.git', 'protoc-gen-validate', 'thirdparty'}
+EXTENSIONS = {'.proto', '.fbs'}
 
 
-def check_file(file_path):
-    for dir in exclude_dirs:
-        if file_path.startswith(dir):
-            return
+def is_excluded(path: Path) -> bool:
+    return bool(path.parts) and path.parts[0] in EXCLUDED_DIRS
 
-    _, ext = os.path.splitext(file_path)
-    if not ext in extensions_to_check:
-        return
 
-    print(f'Checking {file_path}')
-    with open(file_path, 'r+') as file:
-        content = file.read()
+def check_file(path: Path, check: bool) -> bool:
+    if is_excluded(path) or path.suffix not in EXTENSIONS:
+        return True
 
-        if (file_path.endswith('Cargo.toml') and
-            not file_path == './Cargo.toml' and
-                not 'license-file = "LICENSE"' in content):
-            raise Exception(
-                f'license-file = "LICENSE" not found in {file_path}')
+    print(f'Checking {path}')
+    original = path.read_text()
+    banner = HEADER.splitlines(keepends=True)[0]
+    for match in re.finditer(re.escape(banner), original):
+        block = original[match.start():].partition('\n\n')[0]
+        if not original.startswith(HEADER, match.start()) and re.search(
+            r'^//[^\n]*licens', block, flags=re.MULTILINE | re.IGNORECASE,
+        ):
+            print(f'Unrecognized license header: {path}', file=sys.stderr)
+            return False
+    content = original
+    while content.startswith(HEADER):
+        content = content[len(HEADER):].lstrip('\n')
 
-        header = headers.get(ext)
-        if not header:
-            return
-        header = header.lstrip()
-
-        if not content.startswith(header):
-            file.seek(0, 0)
-            file.write(header + '\n' + content)
+    expected = HEADER + '\n' + content.lstrip('\n')
+    if original != expected:
+        if check:
+            print(f'Missing or incorrect license header: {path}', file=sys.stderr)
+            return False
+        path.write_text(expected)
+    return True
 
 
 def iterate_over_files():
-    for root, _, files in os.walk('.'):
-        for file in files:
-            file_path = os.path.join(root, file)
-            check_file(file_path)
+    files = subprocess.check_output(
+        ['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard'])
+    for name in sorted(set(os.fsdecode(files).split('\0')) - {''}):
+        path = Path(name)
+        if path.is_file() and not is_excluded(path):
+            yield path
 
 
-# Run the script
-iterate_over_files()
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--check', action='store_true', help='Check without modifying files')
+    parser.add_argument('files', nargs='*')
+    args = parser.parse_args()
+    try:
+        if hashlib.sha256(Path('LICENSE').read_bytes()).hexdigest() != STRICT_LICENSE_SHA256:
+            raise RuntimeError('LICENSE must contain PolyForm Strict License 1.0.0')
+        paths = (Path(os.path.relpath(path)) for path in args.files) if args.files else iterate_over_files()
+        valid = True
+        for path in paths:
+            valid = check_file(path, args.check) and valid
+        return 0 if valid else 1
+    except (OSError, RuntimeError, subprocess.CalledProcessError) as error:
+        print(error, file=sys.stderr)
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())
