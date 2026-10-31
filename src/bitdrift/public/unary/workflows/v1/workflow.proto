@@ -4430,7 +4430,8 @@ message HistoricalWorkflowDeployment {
   // The time when this workflow version was deployed.
   .google.protobuf.Timestamp deployed_at = 4;
 
-  // The time when this workflow version was stopped. Unset for an active deployment.
+  // The earlier of an explicit stop or an elapsed deployment expiry. Unset for an active deployment.
+  // This is the effective end time, not confirmation that every SDK has received the updated configuration.
   .google.protobuf.Timestamp stopped_at = 5;
 
   // The user who deployed this workflow version.

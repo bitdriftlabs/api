@@ -261,6 +261,12 @@ message WellKnownDeviceCommand {
   .bitdrift_public.protobuf.workflow.v1.WellKnownCommandType type = 1 [(validate.rules).enum.defined_only = true];
 
   .bitdrift.public.unary.device_debug.v1.DeviceCommandMetadata metadata = 2 [(validate.rules).message.required = true];
+
+  // Compatibility requirements, independent of account enablement. Direct invocations require a
+  // matching connected SDK instance. Workflows are delivered only to compatible clients, including
+  // the requirements of every supplied argument; unsupported arguments are never removed.
+  // Each platform's minimum config version maps to the native SDK release's SemVer MINOR component.
+  .bitdrift_public.protobuf.workflow.v1.DeviceCommandAvailability availability = 3 [(validate.rules).message.required = true];
 }
 
 // A command available in the account's catalog.
