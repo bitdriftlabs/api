@@ -97,9 +97,10 @@ message ResolvedChart {
     // The time when the latest workflow version was deployed.
     .google.protobuf.Timestamp deployed_at = 2;
 
-    // The time when the latest deployment stopped being active.
+    // The earlier of an explicit stop or an elapsed expiry of the latest deployment.
     //
     // If this is not set, the workflow is still deployed.
+    // This is not confirmation that every SDK has received the updated configuration.
     .google.protobuf.Timestamp stopped_at = 3;
   }
 

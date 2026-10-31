@@ -22,6 +22,7 @@ message WorkflowMetadata {
 
     message LastSeen {
       // The duration after which the deployment expires if the data from the workflow has not been seen for the specified time.
+      // Retrieving the workflow from any client, including the CLI and MCP, counts as seeing its data and restarts this period.
       .google.protobuf.Duration time = 1 [(validate.rules).message = {required: true}];
     }
 
