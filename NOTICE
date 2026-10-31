@@ -1,5 +1,5 @@
 api
 Copyright Bitdrift, Inc.
 
-The contents of src/ are licensed under PolyForm Shield. See LICENSE for terms.
-Everything else is vendored third party protos which are licensed under their respective terms.
+First-party API definitions and tooling are licensed under PolyForm Strict License 1.0.0.
+See LICENSE for terms. Vendored third-party definitions and tools retain their own licenses.
