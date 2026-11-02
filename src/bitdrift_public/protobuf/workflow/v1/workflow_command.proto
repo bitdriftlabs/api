@@ -144,7 +144,7 @@ enum WellKnownCommandType {
       supported_platforms: [
         {
           platform: ANDROID
-          min_os_version: "15"
+          min_os_version: "15.0"
           min_config_version: 50
         }
       ]
@@ -153,19 +153,19 @@ enum WellKnownCommandType {
       {
         name: "duration_ms"
         type: INT64
-        description: "How long to sample, in milliseconds. Defaults to 3000. The client clamps it to its configured maximum and to the command execution timeout."
+        description: "How long to sample, in milliseconds. The platform clamps it to its supported range, and the capture must finish within the device command execution timeout."
         optional: true
       },
       {
         name: "frequency_hz"
         type: INT64
-        description: "Sampling frequency in Hz. Defaults to 100; the client clamps it to 10-250."
+        description: "Sampling frequency in Hz. The platform clamps it to its supported range."
         optional: true
       },
       {
         name: "buffer_size_kb"
         type: INT64
-        description: "Trace buffer size in KB. Defaults to 2048; the client clamps it to 256-16384."
+        description: "Trace buffer size in KB. The platform clamps it to its supported range."
         optional: true
       }
     ]
