@@ -15,7 +15,8 @@ import "validate/validate.proto";
 
 // Compatibility requirements for a well-known command or one of its arguments.
 // Argument requirements intersect with the command's requirements only when the argument is
-// supplied. Omitted argument requirements inherit the command's requirements; they never widen them.
+// supplied or filled from a default. Omitted argument requirements inherit the command's
+// requirements; they never widen them.
 message DeviceCommandAvailability {
   enum Platform {
     PLATFORM_UNSPECIFIED = 0;
@@ -76,12 +77,18 @@ message DeviceCommandArgumentDefinition {
     min_len: 1
     max_len: 1000
   }];
-  // Whether callers may omit this argument from an invocation.
+  // Whether the effective invocation may omit this argument. A default satisfies a required
+  // argument, so callers may omit it even when optional is false.
   bool optional = 4;
-  // Additional compatibility requirements for a supplied well-known command argument. Unsupported
-  // invocations are not delivered; arguments are never silently removed. Not accepted on custom
-  // registered commands. Absence inherits command availability.
+  // Additional compatibility requirements for a supplied or default-filled well-known command
+  // argument. Unsupported invocations are not delivered; arguments are never silently removed.
+  // Not accepted on custom registered commands. Absence inherits command availability.
   DeviceCommandAvailability availability = 5;
+  // Typed value used by the server when the argument key is absent. Its Data variant must match
+  // type; an unset variant, map, or array is invalid. Explicit values always win, including zero,
+  // false, and empty values. A default satisfies a missing required argument. Absence means no
+  // default, not a zero value. SDK safety limits still apply to the effective value.
+  bitdrift_public.protobuf.logging.v1.Data default_value = 6;
 }
 
 message WellKnownCommandOptions {
@@ -153,20 +160,20 @@ enum WellKnownCommandType {
       {
         name: "duration_ms"
         type: INT64
-        description: "How long to sample, in milliseconds. Defaults to 3000. The client clamps it to its configured maximum and to the command execution timeout."
-        optional: true
+        description: "How long to sample, in milliseconds."
+        default_value: {sint_data: 3000}
       },
       {
         name: "frequency_hz"
         type: INT64
-        description: "Sampling frequency in Hz. Defaults to 100; the client clamps it to 10-250."
-        optional: true
+        description: "Sampling frequency in Hz."
+        default_value: {sint_data: 100}
       },
       {
         name: "buffer_size_kb"
         type: INT64
-        description: "Trace buffer size in KB. Defaults to 2048; the client clamps it to 256-16384."
-        optional: true
+        description: "Trace buffer size in KB."
+        default_value: {sint_data: 2048}
       }
     ]
   }];
@@ -194,6 +201,10 @@ message WorkflowCommandSelector {
     RegisteredCommand registered_command = 2;
   }
 
-  // Named typed arguments passed to the selected command.
+  // Named typed arguments passed to the selected command. The server fills absent keys from the
+  // command's typed defaults before delivery; explicit values always win. Required arguments need
+  // either an explicit value or a default. Default-filled arguments also impose their availability
+  // requirements. Direct commands persist the effective values at submission; workflow defaults
+  // are resolved from current command definitions when client configurations are emitted.
   map<string, bitdrift_public.protobuf.logging.v1.Data> arguments = 3;
 }
