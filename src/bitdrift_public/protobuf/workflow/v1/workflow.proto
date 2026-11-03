@@ -206,6 +206,11 @@ message Workflow {
 
         // The value extracted from a field.
         FieldExtracted field_extracted = 3;
+
+        // The value is the entire string body of the matching log. Non-string bodies and events
+        // without a log body contribute no value. An empty body produces an empty node, which
+        // prevents the completed path from being uploaded.
+        bool log_body_extracted = 5;
       }
 
       // Whether extracting the value with the extension counts toward the limit of the extracted values
