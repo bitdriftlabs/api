@@ -160,19 +160,19 @@ enum WellKnownCommandType {
       {
         name: "duration_ms"
         type: INT64
-        description: "How long to sample, in milliseconds. The client clamps it to its configured maximum and to the command execution timeout."
+        description: "How long to sample, in milliseconds."
         default_value: {sint_data: 3000}
       },
       {
         name: "frequency_hz"
         type: INT64
-        description: "Sampling frequency in Hz. The client clamps it to 10-250."
+        description: "Sampling frequency in Hz."
         default_value: {sint_data: 100}
       },
       {
         name: "buffer_size_kb"
         type: INT64
-        description: "Trace buffer size in KB. The client clamps it to 256-16384."
+        description: "Trace buffer size in KB."
         default_value: {sint_data: 2048}
       }
     ]
