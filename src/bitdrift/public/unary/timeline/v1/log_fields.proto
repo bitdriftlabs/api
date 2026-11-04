@@ -1,0 +1,98 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/licenses/strict/1.0.0
+
+syntax = "proto3";
+
+package bitdrift.public.unary.timeline.v1;
+
+import "bitdrift/public/unary/timeline/v1/search.proto";
+import "bitdrift_public/protobuf/logging/v1/payload.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message AggregateSessionLogFieldsRequest {
+  enum Aggregation {
+    MEAN = 0;
+    MIN = 1;
+    MAX = 2;
+    SUM = 3;
+  }
+
+  message Field {
+    // The literal top-level log field name. Dots are part of the name, not a nested path.
+    string field_name = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 500
+    }];
+
+    // The aggregation applied to numeric samples. Defaults to `MEAN`.
+    .bitdrift.public.unary.timeline.v1.AggregateSessionLogFieldsRequest.Aggregation aggregation = 2 [(validate.rules).enum = {defined_only: true}];
+
+    // Optional inclusive lower bound for this field's numeric samples.
+    optional double min_value = 3;
+
+    // Optional inclusive upper bound. Must be at or above `min_value` when both are set.
+    optional double max_value = 4;
+  }
+
+  // The session ID to query.
+  string session_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // Inclusive start of the query time range.
+  .google.protobuf.Timestamp start_time = 2 [(validate.rules).message = {required: true}];
+
+  // Inclusive end of the query time range. Must be at or after `start_time`.
+  .google.protobuf.Timestamp end_time = 3 [(validate.rules).message = {required: true}];
+
+  // Positive whole-millisecond bucket duration. The range must span at most 2000 buckets,
+  // aligned to the Unix epoch. A bucket timestamp can precede `start_time`.
+  .google.protobuf.Duration aggregation_window = 4 [(validate.rules).message = {required: true}];
+
+  // Restricts samples to this log type. If omitted, uses the default visible timeline logs.
+  optional .bitdrift_public.protobuf.logging.v1.LogType log_type = 5 [(validate.rules).enum.defined_only = true];
+
+  // Predicates combined with AND to select logs before aggregation. At most 20 predicates.
+  repeated .bitdrift.public.unary.timeline.v1.SessionAdvancedSearchRequest.FieldMatch field_matches = 6 [(validate.rules).repeated = {max_items: 20}];
+
+  // One to 20 field aggregations. Numeric values and numeric strings are accepted; missing,
+  // nonnumeric, nonfinite, and out-of-range samples are omitted independently for each field.
+  repeated .bitdrift.public.unary.timeline.v1.AggregateSessionLogFieldsRequest.Field fields = 7 [(validate.rules).repeated = {
+    min_items: 1
+    max_items: 20
+  }];
+}
+
+message AggregateSessionLogFieldsResponse {
+  message Point {
+    // Start of the bucket, aligned to the Unix epoch.
+    .google.protobuf.Timestamp timestamp = 1;
+
+    // Aggregated numeric value for the bucket.
+    double value = 2;
+
+    // Number of samples contributing to the value.
+    uint64 sample_count = 3;
+  }
+
+  message Series {
+    // The requested field name.
+    string field_name = 1;
+
+    // The requested aggregation.
+    .bitdrift.public.unary.timeline.v1.AggregateSessionLogFieldsRequest.Aggregation aggregation = 2;
+
+    // Nonempty buckets in timestamp order.
+    repeated .bitdrift.public.unary.timeline.v1.AggregateSessionLogFieldsResponse.Point points = 3;
+  }
+
+  // One series per requested field aggregation, in request order.
+  repeated .bitdrift.public.unary.timeline.v1.AggregateSessionLogFieldsResponse.Series series = 1;
+}
