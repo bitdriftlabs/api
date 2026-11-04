@@ -235,12 +235,6 @@ message GetAllIssueAlertsRequest {
   // alerts are returned.
   repeated .bitdrift.public.unary.alerts.v1.AllIssueAlertsFilter filters = 3 [(validate.rules).repeated = {max_items: 100}];
 
-  // Deprecated: use sort instead.
-  repeated .bitdrift.public.unary.common.v1.Sort sort_by = 4 [
-    deprecated = true,
-    (validate.rules).repeated = {max_items: 100}
-  ];
-
   // Orders issue alerts by caller-visible attributes. Apply criteria in the order provided.
   repeated .bitdrift.public.unary.alerts.v1.GetAllIssueAlertsRequest.Sort sort = 5 [(validate.rules).repeated = {max_items: 100}];
 }

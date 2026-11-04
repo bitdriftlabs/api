@@ -21,6 +21,29 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
+// Metadata values explicitly owned by a dashboard chart instead of inherited from its workflow.
+message DashboardChartMetadataOverrides {
+  // Metadata containing the values selected by field_paths.
+  .bitdrift.public.unary.charts.v1.ChartMetadata metadata = 1;
+
+  // Selects the metadata fields explicitly owned by the dashboard.
+  //
+  // Paths use protobuf field names. Repeated fields may appear only as the final field in a path
+  // and are replaced in full. For example, overriding "metric_chart_metadata.metadata" requires
+  // metadata for every time series and prevents workflow changes to any time-series metadata from
+  // being inherited until that override is removed. Indexed repeated-field paths are not
+  // supported.
+  repeated string field_paths = 2 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      string: {
+        min_len: 1
+        max_len: 255
+      }
+    }
+  }];
+}
+
 // Metadata sufficient to render a single chart.
 message ResolvedChart {
   // An opaque identifier object for the chart. This should be provided to the
@@ -144,6 +167,12 @@ message ResolvedChart {
 
   // The status of the latest deployment of the workflow backing this chart, if applicable.
   .bitdrift.public.unary.dashboards.v1.ResolvedChart.BackingWorkflowDeploymentStatus backing_workflow_deployment_status = 27;
+
+  // Metadata fields explicitly overridden by this dashboard chart.
+  //
+  // The metadata field above contains the effective values after applying these overrides to the
+  // backing workflow metadata.
+  .bitdrift.public.unary.dashboards.v1.DashboardChartMetadataOverrides dashboard_metadata_overrides = 28;
 }
 
 message DashboardLayoutSettings {
@@ -925,7 +954,18 @@ message ChartComponentLayout {
 
   .bitdrift.public.unary.dashboards.v1.DashboardLayoutSettings layout_settings = 2;
 
-  .bitdrift.public.unary.charts.v1.ChartMetadata chart_metadata = 3;
+  oneof metadata_update {
+    // Legacy incremental metadata update. Only populated values are added to the chart's existing
+    // override set. Default-valued fields cannot clear existing overrides. New clients should use
+    // `dashboard_metadata_overrides` instead.
+    .bitdrift.public.unary.charts.v1.ChartMetadata chart_metadata = 3;
+
+    // The complete set of metadata fields this dashboard chart overrides.
+    //
+    // When present, this replaces the chart's previously stored override set. An empty
+    // `field_paths` list clears all metadata overrides.
+    .bitdrift.public.unary.dashboards.v1.DashboardChartMetadataOverrides dashboard_metadata_overrides = 4;
+  }
 }
 
 message FavoriteCustomDashboardRequest {
@@ -1043,8 +1083,11 @@ service DashboardService {
   // Retrieves a single dashboard by its unique identifier.
   //
   // Returns a list of charts that should be displayed on the dashboard, along
-  // with the metadata required to render them. The chart IDs should be used to
-  // fetch the data.
+  // with the metadata required to render them. For workflow-backed dashboard charts,
+  // ResolvedChart.metadata is the effective metadata after applying the dashboard's explicit
+  // overrides to the current workflow metadata. ResolvedChart.dashboard_metadata_overrides
+  // contains only the dashboard-owned values and paths. The chart IDs should be used to fetch
+  // the data.
   rpc GetDashboard(.bitdrift.public.unary.dashboards.v1.GetDashboardRequest) returns (.bitdrift.public.unary.dashboards.v1.GetDashboardResponse);
 
   // Lists all dashboards available to the authenticated user.
@@ -1083,6 +1126,11 @@ service DashboardService {
   rpc FavoriteCustomDashboard(.bitdrift.public.unary.dashboards.v1.FavoriteCustomDashboardRequest) returns (.bitdrift.public.unary.dashboards.v1.FavoriteCustomDashboardResponse);
 
   // Upserts a custom dashboard.
+  //
+  // Each chart's dashboard_metadata_overrides is the complete explicit override set and replaces
+  // its previously stored override set. Fields outside field_paths continue to inherit from the
+  // current workflow metadata. The legacy chart_metadata field retains incremental update
+  // semantics for compatibility with older clients.
   rpc UpsertCustomDashboard(.bitdrift.public.unary.dashboards.v1.UpsertCustomDashboardRequest) returns (.bitdrift.public.unary.dashboards.v1.UpsertCustomDashboardResponse);
 
   // Deletes a custom dashboard.

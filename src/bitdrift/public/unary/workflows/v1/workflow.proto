@@ -4211,14 +4211,20 @@ message Rule {
       // The value recorded for this node. Workflow validation rejects nodes that omit this field,
       // and `fixed` / `extract_field` must be non-empty when used.
       //
-      // Nodes in the loop section of the Sankey must use `extract_field`. Nodes outside the loop
-      // section must use `fixed`.
+      // In flows with loops, nodes in the loop section must use `extract_field` or
+      // `extract_log_body`, and nodes outside it must use `fixed`. In flows without loops,
+      // either fixed or extracted values may be used at any node.
       oneof node_value {
         // The fixed value.
         string fixed = 2 [(validate.rules).string = {max_len: 255}];
 
         // The name of the field whose value should be extracted.
         string extract_field = 3 [(validate.rules).string = {max_len: 100}];
+
+        // Record the entire string body of the log that matched this node, without normalization
+        // or truncation. Non-string bodies and events without a log body contribute no value.
+        // An empty body produces an empty node, preventing upload of the completed path.
+        bool extract_log_body = 4 [(validate.rules).bool.const = true];
       }
     }
 

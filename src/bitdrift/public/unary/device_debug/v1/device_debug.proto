@@ -36,7 +36,8 @@ message DeviceCommand {
     uuid: true
   }];
 
-  // The command being executed.
+  // The command being executed, including the effective arguments captured at submission after
+  // filling omitted keys from command defaults. Later definition changes do not alter these values.
   .bitdrift_public.protobuf.workflow.v1.WorkflowCommandSelector command = 3 [(validate.rules).message.required = true];
 
   // The time when the command was created.
@@ -235,7 +236,8 @@ message DeviceCommandMetadata {
   // An optional description of the command.
   optional string description = 2 [(validate.rules).string.max_len = 1000];
 
-  // Arguments accepted by this command. An empty list accepts no arguments.
+  // Arguments accepted by this command, including typed defaults. An empty list accepts no arguments.
+  // A default satisfies an omitted required argument; explicit invocation values always win.
   repeated .bitdrift_public.protobuf.workflow.v1.DeviceCommandArgumentDefinition argument_definitions = 3 [(validate.rules).repeated.max_items = 50];
 }
 
@@ -264,7 +266,8 @@ message WellKnownDeviceCommand {
 
   // Compatibility requirements, independent of account enablement. Direct invocations require a
   // matching connected SDK instance. Workflows are delivered only to compatible clients, including
-  // the requirements of every supplied argument; unsupported arguments are never removed.
+  // the requirements of every supplied or default-filled argument; unsupported arguments are never
+  // removed.
   // Each platform's minimum config version maps to the native SDK release's SemVer MINOR component.
   .bitdrift_public.protobuf.workflow.v1.DeviceCommandAvailability availability = 3 [(validate.rules).message.required = true];
 }
