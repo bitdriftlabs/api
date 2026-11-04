@@ -406,13 +406,15 @@ enum ArtifactPayloadEncoding {
 }
 
 message UploadArtifactRequest {
-  // Upload UUID used to provide idempotence and to correlate a response with this request.
+  // Attempt UUID correlating the response. Legacy uploads also use it for idempotence;
+  // chunked identity is authenticated owner + artifact_id, not this per-attempt value.
   string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
 
   // The type of the artifact being uploaded.
   string type_id = 2 [(validate.rules).string = {min_len: 1}];
 
-  // The artifact to upload. This is a binary blob that is interpreted by the server based on the type_id.
+  // The complete legacy artifact, or the encoded chunk selected by chunk_index. Chunked
+  // create/resume/query requests leave this empty.
   bytes contents = 3;
 
   // A client-generated ID that uniquely identifies the artifact being uploaded. This is used to correlate
@@ -440,7 +442,8 @@ message UploadArtifactRequest {
   // this field; workflow command artifacts remain session artifacts and leave it unset.
   optional string command_id = 10 [(validate.rules).string.uuid = true];
 
-  // The encoding of contents. Only workflow and direct command attachments may use zlib encoding.
+  // Legacy payload encoding. Only workflow and direct command attachments may use zlib.
+  // Chunked uploads leave this RAW; their descriptors are the sole source of chunk encoding.
   ArtifactPayloadEncoding payload_encoding = 11;
 
   // The MIME type of a workflow or direct command attachment, when supplied by its handler.
@@ -448,14 +451,69 @@ message UploadArtifactRequest {
   // application/octet-stream; supplied values must be concrete MIME types of at most 255 bytes.
   // Accepted MIME types are preserved by the corresponding attachment download endpoint.
   optional string content_type = 12;
+
+  // Presence selects chunked upload, including a zero-length remote file. Available for config
+  // version >= 52 with runtime admission enabled; server support is assumed, not negotiated.
+  // Every request repeats the immutable artifact metadata and fields 13-17. IDs and MIME must
+  // be canonical, origin metadata must be bounded strings, and legacy-only fields stay empty.
+  optional uint64 logical_bytes = 13 [(validate.rules).uint64.lte = 268435456];
+  bytes logical_sha256 = 14 [(validate.rules).bytes = {
+    ignore_empty: true
+    len: 32
+  }];
+  repeated ArtifactChunkDescriptor chunks = 15 [(validate.rules).repeated.max_items = 256];
+  google.protobuf.Timestamp upload_deadline = 16;
+  // Durable SDK admission, never refreshed on retry. time <= admitted_at < upload_deadline,
+  // with at most 24 hours between admission and the proposed deadline.
+  google.protobuf.Timestamp admitted_at = 17;
+
+  // Absent: create/resume/query. Present: upload contents using this manifest descriptor.
+  // All durable receipts automatically make the upload eligible for durable finalization.
+  // Abandonment does not cancel the command or extend its deadline.
+  optional uint32 chunk_index = 18 [(validate.rules).uint32.lt = 256];
 }
 
 message UploadArtifactResponse {
+  enum State {
+    // Legacy ACKs leave state unset. This is never a successful chunked ACK.
+    STATE_UNSPECIFIED = 0;
+    STATE_RECEIVING = 1;
+    STATE_FINALIZING = 2;
+    // Canonical object, authoritative catalog/receipt and required processing notification are
+    // durable. Processing success is separate. Only this state completes a chunked artifact.
+    STATE_FINALIZED = 3;
+    // Back off and repeat create/resume/query with the original metadata and retained bytes.
+    STATE_RETRYABLE = 4;
+    // Permanent rejection/retirement. The SDK may release retained bytes and report failure.
+    STATE_REJECTED = 5;
+  }
+
   // The UUID corresponding to the upload request.
   string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
 
-  // Optional error message which indicates that artifact upload failed.
+  // Legacy error semantics are unchanged. Chunked retryable/rejected states require an error of
+  // at most 1024 bytes and omit deadline/bitmap; active/finalized states require an empty error.
   string error = 2;
+
+  // Chunked progress only. Legacy ACK semantics and fields 1-2 are unchanged.
+  State state = 3 [(validate.rules).enum.defined_only = true];
+  // Present for receiving/finalizing/finalized. The first accepted deadline never changes.
+  google.protobuf.Timestamp accepted_deadline = 4;
+  // Exactly ceil(chunks.size / 8) bytes, low bit first. Unused high bits are zero.
+  // Bits reflect authoritative durable receipts, not object listings or attempted transmissions.
+  bytes received_chunks = 5 [(validate.rules).bytes.max_len = 32];
+}
+
+// Fixed 1 MiB logical chunks, with a short last chunk. Position in the manifest determines index,
+// offset and logical size. ZLIB is permitted only when it is smaller than the logical bytes.
+message ArtifactChunkDescriptor {
+  uint32 encoded_bytes = 1 [(validate.rules).uint32 = {
+    gt: 0
+    lte: 1048576
+  }];
+  ArtifactPayloadEncoding encoding = 2 [(validate.rules).enum.defined_only = true];
+  bytes logical_sha256 = 3 [(validate.rules).bytes.len = 32];
+  bytes encoded_sha256 = 4 [(validate.rules).bytes.len = 32];
 }
 
 // The response sent as part of stream establishment.

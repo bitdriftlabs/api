@@ -25,6 +25,16 @@ enum StorageFormat {
 
 // the upload manager to coordinate intents and uploads.
 message ArtifactUploadIndex {
+  // Chunk ownership uses the same index commit/recovery as legacy artifacts, but a separate entry
+  // field prevents an older SDK from interpreting a chunk or manifest as a whole legacy payload.
+  message ChunkedArtifact {
+    // Payload-free template: no attempt UUID, contents or current chunk index. Wire requests fill
+    // those transient fields without changing the admitted metadata.
+    UploadArtifactRequest request = 1;
+    // Absent until the first accepted create/resume reply; never refreshed or extended on retry.
+    google.protobuf.Timestamp accepted_deadline = 2;
+  }
+
   message Artifact {
     // Name of the file to upload.
     string name = 1;
@@ -68,6 +78,10 @@ message ArtifactUploadIndex {
 
   // List of files, in order of time, that are pending upload.
   repeated Artifact artifact = 1;
+
+  // M1 defines metadata only. M2 wires shared atomic/fsynced commits, recovery and payload cleanup.
+  // Retain all chunks until finalized or explicit rejection/deadline retirement.
+  repeated ChunkedArtifact chunked_artifact = 2;
 }
 
 // Durable local ownership and retirement state for a workflow attachment.
