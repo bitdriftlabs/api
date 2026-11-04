@@ -84,7 +84,8 @@ message SessionSearchSpanRequest {
   // Selects the results page. Defaults to `1` when omitted.
   optional uint64 page = 4 [(validate.rules).uint64 = {gte: 1}];
 
-  // Limits how many top-level matched spans are returned per page. Defaults to `100` when omitted.
+  // Limits how many top-level matched spans are returned per page. When omitted, up to `10000`
+  // top-level spans are returned. Additional matches require pagination.
   //
   // Child spans included under each returned top-level span do not count toward this page size.
   optional uint64 per_page = 5 [(validate.rules).uint64 = {

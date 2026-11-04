@@ -239,13 +239,18 @@ message ChartMetadata {
           max_items: 4
         }];
       }
+    }
 
-      // Selects the aggregate displayed by a counter metric. Rate and
-      // average-count metrics always display their full-range ratio instead.
+    // Properties used whenever the chart is rendered as a heat map. This is separate from the
+    // display mode selector so callers can customize heat map behavior while continuing to
+    // inherit the selected display mode.
+    message HeatMapConfiguration {
+      // Selects the aggregate displayed by a counter metric. Rate and average-count metrics
+      // always display their full-range ratio instead.
       .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HeatMapDisplayMode.CounterCalculation counter_calculation = 1;
 
-      // Counter-backed tiles are equal-sized by default. Rate and average-count
-      // tiles always use their denominator, regardless of this value.
+      // Counter-backed tiles are equal-sized by default. Rate and average-count tiles always use
+      // their denominator, regardless of this value.
       .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HeatMapDisplayMode.CounterSizing counter_sizing = 2 [(validate.rules).enum = {defined_only: true}];
 
       // When absent, tiles use a neutral color.
@@ -289,6 +294,10 @@ message ChartMetadata {
     // default object and defaults will be used. In resolved chart responses, each entry includes
     // its server-generated time_series_id.
     repeated .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata metadata = 4 [(validate.rules).repeated = {max_items: 100}];
+
+    // Heat map properties stored independently from `display_mode`. When absent, clients may
+    // fall back to the deprecated properties in `heat_map_display_mode` for compatibility.
+    .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HeatMapConfiguration heat_map_configuration = 12;
   }
 
   message FunnelChartMetadata {

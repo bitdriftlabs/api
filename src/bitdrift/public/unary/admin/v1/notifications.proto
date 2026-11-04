@@ -23,7 +23,11 @@ message NotificationGroup {
       INFO = 3;
     }
 
-    // Routing key for the PagerDuty integration to notify.
+    // Routing key for the PagerDuty integration to notify. GetNotificationGroups returns this as
+    // <redacted> after creation. UpsertNotificationGroup accepts <redacted> to preserve the stored
+    // value only when exactly one existing target in the same group has the same severity. If no
+    // target or more than one target matches, the request fails with INVALID_ARGUMENT and the full
+    // routing key must be resubmitted.
     string routing_key = 1 [(validate.rules).string = {
       min_len: 1
       max_len: 255

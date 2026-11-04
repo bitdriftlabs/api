@@ -80,13 +80,26 @@ message AdvancedFilter {
       // For exceptions, this is the exception message; for other crashes (for example, ANRs), this may be a larger diagnostic report.
       // The only supported operators are SEARCH and NOT_SEARCH.
       LHS_TYPED_DETAILS = 16;
+      // The ID of the device that sent the report.
+      // The only supported operators are EQUAL and IN.
+      LHS_TYPED_DEVICE_ID = 17;
+      // An entity hash, as returned by the entity APIs. Matches reports from the devices the entity
+      // used during the query time range: a device counts when one of its connections for the
+      // entity overlaps the range. A connection is recorded when it closes, so a device whose only
+      // such connection is still open does not match yet. The devices are looked up each time the
+      // query runs rather than when the filter is saved, so a saved view follows the entity to
+      // devices it starts using later. Entity-device associations are kept for 6 months, so a
+      // range older than that matches no reports.
+      // The only supported operators are EQUAL and IN.
+      LHS_TYPED_ENTITY_HASH = 18;
     }
 
     // The filter key to match against.
     .bitdrift.public.unary.issues.v1.AdvancedFilter.Condition.LhsTyped lhs_typed = 4 [(validate.rules).enum = {defined_only: true}];
 
     // LHS_TYPED_FUNCTION, LHS_TYPED_FILE, LHS_TYPED_MODULE, and LHS_TYPED_DETAILS support only
-    // SEARCH and NOT_SEARCH. All other keys support every operator except SEARCH and NOT_SEARCH.
+    // SEARCH and NOT_SEARCH. LHS_TYPED_DEVICE_ID and LHS_TYPED_ENTITY_HASH support only EQUAL and
+    // IN. All other keys support every operator except SEARCH and NOT_SEARCH.
     .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
 
     string rhs = 3 [(validate.rules).string = {max_len: 255}];
@@ -468,7 +481,9 @@ message ListIssuesV2Request {
     SESSION_CAPTURE_FILTER_UNSPECIFIED = 0;
     // Returns all issues without additional session-capture filtering.
     ALL_ISSUES = 1;
-    // Returns only issues whose associated session has captured data.
+    // Returns only issues whose associated session has captured data. Capture records are
+    // matched from a monthly cutoff between one day and about 32 days before the requested start
+    // time, so a session whose captured data is all older than that cutoff is not included.
     CAPTURED_SESSIONS_ONLY = 2;
   }
 

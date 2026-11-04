@@ -512,12 +512,6 @@ message GetAllAlertsRequest {
   // alerts are returned.
   repeated .bitdrift.public.unary.alerts.v1.AllAlertsFilter filters = 3 [(validate.rules).repeated = {max_items: 100}];
 
-  // Deprecated: use sort instead.
-  repeated .bitdrift.public.unary.common.v1.Sort sort_by = 4 [
-    deprecated = true,
-    (validate.rules).repeated = {max_items: 100}
-  ];
-
   // Orders alerts by caller-visible attributes. Apply criteria in the order provided.
   repeated .bitdrift.public.unary.alerts.v1.GetAllAlertsRequest.Sort sort = 5 [(validate.rules).repeated = {max_items: 100}];
 }
@@ -730,6 +724,10 @@ service AlertsService {
   rpc GetAlertConfig(.bitdrift.public.unary.alerts.v1.GetAlertConfigRequest) returns (.bitdrift.public.unary.alerts.v1.GetAlertConfigResponse);
 
   // Upserts alert configuration for a workflow chart.
+  //
+  // Set `alert_config` without `id` to create an alert, set both to update an existing alert, or
+  // set `id` without `alert_config` to delete that alert. A request that sets neither `id` nor
+  // `alert_config` is rejected with `INVALID_ARGUMENT`.
   rpc UpsertAlertConfig(.bitdrift.public.unary.alerts.v1.UpsertAlertConfigRequest) returns (.bitdrift.public.unary.alerts.v1.UpsertAlertConfigResponse);
 
   // Lists workflow alerts for the organization.
