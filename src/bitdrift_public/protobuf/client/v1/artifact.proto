@@ -47,6 +47,15 @@ enum StorageFormat {
 
 // the upload manager to coordinate intents and uploads.
 message ArtifactUploadIndex {
+  // Chunk ownership uses the same index commit/recovery as whole-file artifacts. A separate entry
+  // field prevents an older SDK from interpreting a chunk or manifest as a complete artifact payload.
+  message ChunkedArtifact {
+    // Payload-free Begin/resume template: no attempt UUID, contents or current chunk index.
+    // The planned M5 uploader retains this full manifest locally but derives thin chunk/Query
+    // requests from identity and logical size, adding only attempt UUID and chunk index/bytes.
+    UploadArtifactRequest request = 1;
+  }
+
   message Artifact {
     // Name of the file to upload.
     string name = 1;
@@ -93,6 +102,10 @@ message ArtifactUploadIndex {
 
   // List of files, in order of time, that are pending upload.
   repeated Artifact artifact = 1;
+
+  // M1 defines metadata only. M2 wires shared atomic/fsynced commits, recovery and payload cleanup.
+  // Retain all chunks until finalized or explicit rejection.
+  repeated ChunkedArtifact chunked_artifact = 2;
 }
 
 // Durable local ownership and retirement state for a workflow attachment.

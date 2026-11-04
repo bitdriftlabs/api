@@ -429,13 +429,16 @@ enum ArtifactPayloadEncoding {
 }
 
 message UploadArtifactRequest {
-  // Upload UUID used to provide idempotence and to correlate a response with this request.
+  // Attempt UUID correlating the response. Whole-file uploads also use it for idempotence;
+  // chunked identity is authenticated owner + artifact_id, not this per-attempt value.
   string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
 
-  // The type of the artifact being uploaded.
-  string type_id = 2 [(validate.rules).string = {min_len: 1}];
+  // Required for whole-file uploads and chunked Begin/resume; thin chunk/Query leave this empty.
+  // The server enforces these operation-dependent requirements after ordinary PGV validation.
+  string type_id = 2;
 
-  // The artifact to upload. This is a binary blob that is interpreted by the server based on the type_id.
+  // The complete artifact for a whole-file upload, or the encoded chunk selected by chunk_index.
+  // Begin/resume and Query leave this empty; descriptors are not chunk payloads.
   bytes contents = 3;
 
   // A client-generated ID that uniquely identifies the artifact being uploaded. This is used to correlate
@@ -446,8 +449,9 @@ message UploadArtifactRequest {
   // this may capture information about the device at the time of a crash.
   map<string, logging.v1.Data> state_metadata = 5;
 
-  // The timestamp associated with this upload. This allows us to possibly reject the upload of very old artifacts.
-  google.protobuf.Timestamp time = 6 [(validate.rules).message = {required: true}];
+  // Capture timestamp, required for whole-file uploads and chunked Begin/resume. Thin chunk/Query
+  // omit it; on non-data chunked requests its presence selects Begin/resume rather than Query.
+  google.protobuf.Timestamp time = 6;
 
   // The session ID associated with the artifact if applicable.
   string session_id = 7;
@@ -463,7 +467,8 @@ message UploadArtifactRequest {
   // this field; workflow command artifacts remain session artifacts and leave it unset.
   optional string command_id = 10 [(validate.rules).string.uuid = true];
 
-  // The encoding of contents. Workflow/direct command attachments and crash profiles may use zlib.
+  // Whole-file payload encoding. Workflow/direct command attachments and crash profiles may use zlib.
+  // Chunked uploads leave this RAW; their descriptors are the sole source of chunk encoding.
   ArtifactPayloadEncoding payload_encoding = 11;
 
   // The MIME type of a workflow attachment, direct command attachment, or crash profile.
@@ -474,14 +479,68 @@ message UploadArtifactRequest {
 
   // Report links for type_id = "crash_profile".
   CrashProfileMetadata crash_profile = 13;
+
+  // Presence selects chunked upload, including a zero-length remote file. Available for config
+  // version >= 52 with runtime admission enabled; server support is assumed, not negotiated.
+  // Every chunk-mode request retains this mode/size marker, but full metadata is sent only at
+  // Begin/resume. Thin chunk/Query use authenticated, durably admitted server metadata.
+  // IDs/MIME are canonical; origin is bounded; whole-file-only fields stay empty.
+  optional uint64 logical_bytes = 14 [(validate.rules).uint64.lte = 268435456];
+  bytes logical_sha256 = 15 [(validate.rules).bytes = {
+    ignore_empty: true
+    len: 32
+  }];
+  // Descriptors for the entire logical file, not multiple payloads or concurrent uploads.
+  // Only Begin/resume sends this list; chunk/Query leave it empty.
+  repeated ArtifactChunkDescriptor chunks = 16 [(validate.rules).repeated.max_items = 256];
+  // Present, including zero: upload exactly one chunk using the server's admitted descriptor,
+  // omitting manifest-only fields. Absent: Begin/resume with full metadata, or thin Query.
+  // logical_bytes stays present;
+  // time presence selects Begin/resume, and its absence selects Query with manifest fields empty.
+  // All durable receipts automatically make the upload eligible for durable finalization.
+  // Abandonment does not cancel the command or extend its deadline.
+  optional uint32 chunk_index = 17 [(validate.rules).uint32.lt = 256];
 }
 
 message UploadArtifactResponse {
+  enum State {
+    // Whole-file ACKs leave state unset. This is never a successful chunked ACK.
+    STATE_UNSPECIFIED = 0;
+    STATE_RECEIVING = 1;
+    STATE_FINALIZING = 2;
+    // Canonical object, authoritative catalog/receipt and required processing notification are
+    // durable. Processing success is separate. Only this state completes a chunked artifact.
+    STATE_FINALIZED = 3;
+    // Back off and repeat Begin/resume with the original durable metadata and retained bytes.
+    STATE_RETRYABLE = 4;
+    // Permanent rejection/retirement. The SDK may release retained bytes and report failure.
+    STATE_REJECTED = 5;
+  }
+
   // The UUID corresponding to the upload request.
   string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
 
-  // Optional error message which indicates that artifact upload failed.
+  // Whole-file error semantics are unchanged. Chunked retryable/rejected states require an error of
+  // at most 1024 bytes and omit the bitmap; active/finalized states require an empty error.
   string error = 2;
+
+  // Chunked progress only. Whole-file ACK semantics and fields 1-2 are unchanged.
+  State state = 3 [(validate.rules).enum.defined_only = true];
+  // Exactly ceil(admitted chunk count / 8) bytes, low bit first. Unused high bits are zero.
+  // Bits reflect authoritative durable receipts, not object listings or attempted transmissions.
+  bytes received_chunks = 4 [(validate.rules).bytes.max_len = 32];
+}
+
+// Fixed 1 MiB logical chunks, with a short last chunk. Position in the admitted manifest determines
+// index, offset and logical size. ZLIB is permitted only when it is smaller than the logical bytes.
+message ArtifactChunkDescriptor {
+  uint32 encoded_bytes = 1 [(validate.rules).uint32 = {
+    gt: 0
+    lte: 1048576
+  }];
+  ArtifactPayloadEncoding encoding = 2 [(validate.rules).enum.defined_only = true];
+  bytes logical_sha256 = 3 [(validate.rules).bytes.len = 32];
+  bytes encoded_sha256 = 4 [(validate.rules).bytes.len = 32];
 }
 
 // The response sent as part of stream establishment.
