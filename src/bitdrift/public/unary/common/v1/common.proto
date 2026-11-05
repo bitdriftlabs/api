@@ -21,6 +21,18 @@ message Owner {
   string id = 2 [(validate.rules).string = {max_len: 100}];
 
   optional string name = 3 [(validate.rules).string = {max_len: 100}];
+
+  // What kind of principal this owner is.
+  .bitdrift.public.unary.common.v1.OwnerKind kind = 5 [(validate.rules).enum = {defined_only: true}];
+}
+
+// What kind of principal an owner, creator or deployer is.
+enum OwnerKind {
+  // A user.
+  OWNER_KIND_USER = 0;
+  // An organization token. Its ID is org-token/<key ID>, its name is the token's name, and it has
+  // no email.
+  OWNER_KIND_ORG_TOKEN = 1;
 }
 
 enum SortDirection {
