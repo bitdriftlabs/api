@@ -177,6 +177,45 @@ enum WellKnownCommandType {
       }
     ]
   }];
+  HEAP_PROFILE_TRACE = 4 [(well_known_command_options) = {
+    key: "heap_profile_trace"
+    description: "Captures a Perfetto heap profile of the application's process."
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "15"
+          min_config_version: 51
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "duration_ms"
+        type: INT64
+        description: "How long to profile, in milliseconds."
+        default_value: {sint_data: 5000}
+      },
+      {
+        name: "buffer_size_kb"
+        type: INT64
+        description: "Trace buffer size in KB."
+        default_value: {sint_data: 8192}
+      },
+      {
+        name: "sampling_interval_bytes"
+        type: INT64
+        description: "Mean number of bytes allocated between two recorded samples."
+        default_value: {sint_data: 65536}
+      },
+      {
+        name: "track_java_allocations"
+        type: BOOL
+        description: "Records Java heap allocations instead of native ones; a profile records one or the other."
+        default_value: {bool_data: false}
+      }
+    ]
+  }];
 }
 
 // Selects one locally registered or built-in workflow command.
