@@ -63,6 +63,8 @@ message DeviceCommandArgumentDefinition {
     INT64 = 5;
     // Data.bool_data.
     BOOL = 6;
+    // Any data type;
+    ANY = 99;
   }
 
   // The name used as the key in the command invocation's arguments map.
@@ -199,6 +201,295 @@ enum WellKnownCommandType {
         type: INT64
         description: "Trace buffer size in KB."
         default_value: {sint_data: 2048}
+      }
+    ]
+  }];
+  // Remove a value from app settings, using `UserDefaults` on Apple platforms or `SharedPreferences`
+  // on Android.
+  //
+  // Specify a key to remove a corresponding value from settings. On Android, the `file_name` argument
+  // is required and equivalent to `Context.getSharedPreferences(file_name)`.
+  USER_SETTINGS_REMOVE = 4 [(well_known_command_options) = {
+    key: "user_settings_remove"
+    description: "Removes a value from UserDefaults (Apple platforms) or SharedPreferences (Android)"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 50
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 50
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "key"
+        type: STRING
+        description: "Settings key to remove"
+      },
+      {
+        name: "file_name"
+        type: STRING
+        description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        availability: {
+          supported_platforms: [
+            {
+              platform: ANDROID
+              min_os_version: "8.0"
+              min_config_version: 50
+            }
+          ]
+        }
+      }
+    ]
+  }];
+  // Set a value in app settings, using `UserDefaults` on Apple platforms or `SharedPreferences` on
+  // Android.
+  //
+  // Specify a key and value to set. On Android, the `file_name` argument is required and equivalent
+  // to `Context.getSharedPreferences(file_name)`.
+  USER_SETTINGS_SET = 5 [(well_known_command_options) = {
+    key: "user_settings_set"
+    description: "Updates a value in UserDefaults (Apple platforms) or SharedPreferences (Android)"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 49
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 49
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "key"
+        type: STRING
+        description: "Settings key to update"
+      },
+      {
+        name: "value"
+        type: ANY
+        description: "New settings value"
+      },
+      {
+        name: "file_name"
+        type: STRING
+        description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        availability: {
+          supported_platforms: [
+            {
+              platform: ANDROID
+              min_os_version: "8.0"
+              min_config_version: 50
+            }
+          ]
+        }
+      }
+    ]
+  }];
+  // Get a value from app settings, using `UserDefaults` on Apple platforms or `SharedPreferences` on
+  // Android.
+  //
+  // Specify a key to fetch. On Android, the `file_name` argument is required and equivalent to
+  // `Context.getSharedPreferences(file_name)`.
+  USER_SETTINGS_GET = 6 [(well_known_command_options) = {
+    key: "user_settings_get"
+    description: "Reads a value from UserDefaults (Apple platforms) or SharedPreferences (Android)"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 50
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 50
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "key"
+        type: STRING
+        description: "Settings key to read"
+      },
+      {
+        name: "file_name"
+        type: STRING
+        description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        availability: {
+          supported_platforms: [
+            {
+              platform: ANDROID
+              min_os_version: "8.0"
+              min_config_version: 49
+            }
+          ]
+        }
+      }
+    ]
+  }];
+  // Remove all values from app settings, using `UserDefaults` on Apple platforms or
+  // `SharedPreferences` on Android.
+  //
+  // On Android, the `file_name` argument is required and equivalent to
+  // `Context.getSharedPreferences(file_name)`.
+  USER_SETTINGS_CLEAR = 7 [(well_known_command_options) = {
+    key: "user_settings_clear"
+    description: "Removes all values from UserDefaults (Apple platforms) or SharedPreferences (Android)"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 49
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 49
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "file_name"
+        type: STRING
+        description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        availability: {
+          supported_platforms: [
+            {
+              platform: ANDROID
+              min_os_version: "8.0"
+              min_config_version: 49
+            }
+          ]
+        }
+      }
+    ]
+  }];
+  // List files within the cache directory
+  //
+  // Lists the file names with the cache directory or a directory within the cache if the path
+  // argument is specified
+  FILE_LIST = 8 [(well_known_command_options) = {
+    key: "file_list"
+    description: "List file names relative to the cache directory"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 50
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 50
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "path"
+        type: STRING
+        description: "Directory path relative to the area or unspecified for the entire area"
+        optional: true
+      }
+    ]
+  }];
+  // Read the size of a file or directory
+  //
+  // Returns the size of the cache directory or a directory within the cache if the path
+  // argument is specified
+  FILE_SIZE = 9 [(well_known_command_options) = {
+    key: "file_size"
+    description: "Get the size of a file or directory within the cache"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 50
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 50
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "path"
+        type: STRING
+        description: "Directory path relative to the area or unspecified for the entire area"
+        optional: true
+      }
+    ]
+  }];
+  // Delete the contents of the cache directory
+  FILE_CLEAR = 10 [(well_known_command_options) = {
+    key: "file_clear"
+    description: "Delete the contents of the cache"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 49
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 49
+        }
+      ]
+    }
+  }];
+  // Delete a file or directory within the cache directory
+  //
+  // Directories are only removed if the recursive argument is set
+  FILE_DELETE = 11 [(well_known_command_options) = {
+    key: "file_delete"
+    description: "Delete a file or directory within the cache"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 50
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 50
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "path"
+        type: STRING
+        description: "Directory path relative to the area"
+      },
+      {
+        name: "recursive"
+        type: BOOL
+        description: "Set true to remove a directory and all contents"
+        optional: true
       }
     ]
   }];
