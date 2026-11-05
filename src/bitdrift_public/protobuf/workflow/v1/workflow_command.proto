@@ -212,7 +212,7 @@ enum WellKnownCommandType {
         name: "track_java_allocations"
         type: BOOL
         description: "Records Java heap allocations instead of native ones; a profile records one or the other."
-        default_value: {bool_data: false}
+        default_value: {bool_data: true}
       }
     ]
   }];
