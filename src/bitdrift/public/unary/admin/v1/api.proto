@@ -75,7 +75,12 @@ service AdminService {
   // Creates an API key or SDK key for the authenticated user.
   rpc CreateKey(.bitdrift.public.unary.admin.v1.CreateKeyRequest) returns (.bitdrift.public.unary.admin.v1.CreateKeyResponse);
 
-  // Revokes an API key or SDK key by ID.
+  // Revokes an API key, SDK key or organization token by ID. Revocation takes effect within about
+  // 90 seconds.
+  //
+  // API keys and SDK keys require SDK_KEY_ADMIN. Organization tokens require ORG_TOKEN_ADMIN and a
+  // signed-in user session, and the token's name still identifies what it created. Personal access
+  // tokens are revoked by their owner with RevokePersonalAccessToken.
   rpc RevokeKey(.bitdrift.public.unary.admin.v1.RevokeKeyRequest) returns (.bitdrift.public.unary.admin.v1.RevokeKeyResponse);
 
   // Creates a personal access token that acts as the calling user.
@@ -94,6 +99,23 @@ service AdminService {
   // Requires a signed-in user session but no permission, so users can always revoke their own
   // tokens. Revocation takes effect within about 90 seconds.
   rpc RevokePersonalAccessToken(.bitdrift.public.unary.admin.v1.RevokePersonalAccessTokenRequest) returns (.bitdrift.public.unary.admin.v1.RevokePersonalAccessTokenResponse);
+
+  // Creates an organization token, which acts as its own principal rather than as a user.
+  //
+  // Requires ORG_TOKEN_ADMIN and a signed-in user session. The token's permissions must be held by
+  // the caller and stay fixed afterward, so the token keeps working when its creator leaves. The
+  // secret is returned only in this response. Revoke the token with RevokeKey.
+  rpc CreateOrgToken(.bitdrift.public.unary.admin.v1.CreateOrgTokenRequest) returns (.bitdrift.public.unary.admin.v1.CreateOrgTokenResponse);
+
+  // Lists the organization's tokens. Secrets are never returned. Requires a signed-in user session.
+  // Tokens are revoked with RevokeKey.
+  rpc ListOrgTokens(.bitdrift.public.unary.admin.v1.ListOrgTokensRequest) returns (.bitdrift.public.unary.admin.v1.ListOrgTokensResponse);
+
+  // Issues a new secret for an organization token and sets a new expiry, keeping its ID, name,
+  // permissions and ownership. The current secret keeps working for a grace period so the new one
+  // can be deployed, and both changes take effect within about 90 seconds. Requires a signed-in
+  // user session that holds every permission the token has.
+  rpc RotateOrgTokenSecret(.bitdrift.public.unary.admin.v1.RotateOrgTokenSecretRequest) returns (.bitdrift.public.unary.admin.v1.RotateOrgTokenSecretResponse);
 
   // Lists roles the authenticated user can assign.
   //

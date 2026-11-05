@@ -19,6 +19,9 @@ enum Permission {
   // grants it and Admin gets it through its wildcard; Viewer and the add-on Trace Manager role do
   // not. Revoking your own tokens does not require it.
   PERSONAL_ACCESS_TOKEN_CREATE = 41;
+  // Allows creating, listing, rotating and revoking organization tokens. Admin gets it through its
+  // wildcard; no other built-in role grants it.
+  ORG_TOKEN_ADMIN = 42;
   // Allows editing any workflow.
   WORKFLOW_ADMIN = 2;
   // Allows reading any workflow.

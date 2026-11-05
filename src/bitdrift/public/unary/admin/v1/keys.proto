@@ -10,6 +10,7 @@ syntax = "proto3";
 package bitdrift.public.unary.admin.v1;
 
 import "bitdrift/public/unary/admin/v1/permission.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
@@ -59,6 +60,26 @@ message PersonalAccessTokenResponse {
   .google.protobuf.Timestamp last_used_at = 4;
 }
 
+message OrgTokenResponse {
+  // A non-secret hint for recognizing the current secret: its prefix and last four characters.
+  string display_hint = 1;
+
+  // The permissions the token holds. Requests made with the token act as the token itself, with
+  // exactly these permissions.
+  repeated .bitdrift.public.unary.admin.v1.Permission permissions = 2;
+
+  // The ID of the user that created the token. The token does not depend on this user after it is
+  // created.
+  string created_by_user_id = 3;
+
+  // When the token last authenticated a request. Updated about once per minute.
+  .google.protobuf.Timestamp last_used_at = 4;
+
+  // When the secret replaced by the last rotation stops working. Unset when no previous secret is
+  // still valid.
+  .google.protobuf.Timestamp previous_secret_expires_at = 5;
+}
+
 message KeyResponse {
   // The ID of the key to be used for revocation and further operations.
   uint64 id = 1;
@@ -82,6 +103,9 @@ message KeyResponse {
 
     // The personal access token details when this key is a personal access token.
     .bitdrift.public.unary.admin.v1.PersonalAccessTokenResponse personal_access_token = 8;
+
+    // The organization token details when this key is an organization token.
+    .bitdrift.public.unary.admin.v1.OrgTokenResponse org_token = 9;
   }
 
   // The name of the key, used for (human) identification purposes.
@@ -200,3 +224,65 @@ message RevokePersonalAccessTokenRequest {
 }
 
 message RevokePersonalAccessTokenResponse {}
+
+message CreateOrgTokenRequest {
+  // The name of the token. It identifies the token wherever it appears as an actor, such as the
+  // creator of a dashboard, so it is limited to the length of an owner's name.
+  string name = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The permissions the token should have. Each permission must be held by the caller.
+  // Credential-management permissions are not allowed.
+  repeated .bitdrift.public.unary.admin.v1.Permission permissions = 2 [(validate.rules).repeated = {
+    min_items: 1
+    max_items: 100
+    items: {
+      enum: {defined_only: true}
+    }
+  }];
+
+  // When the token expires. Defaults to 30 days from now, which is also the longest lifetime
+  // unless the organization is configured to allow longer; the server checks this limit.
+  .google.protobuf.Timestamp expires_at = 3 [(validate.rules).timestamp.gt_now = true];
+}
+
+message CreateOrgTokenResponse {
+  // The created token's details.
+  .bitdrift.public.unary.admin.v1.KeyResponse key = 1;
+
+  // The token secret. It is returned only in this response and cannot be retrieved later.
+  string token = 2;
+}
+
+message ListOrgTokensRequest {}
+
+message ListOrgTokensResponse {
+  // The organization's tokens, including revoked and expired ones.
+  repeated .bitdrift.public.unary.admin.v1.KeyResponse tokens = 1;
+}
+
+message RotateOrgTokenSecretRequest {
+  // The ID of the token to rotate.
+  uint64 id = 1;
+
+  // The token's new expiry. Defaults to 30 days from now, which is also the longest lifetime
+  // unless the organization is configured to allow longer; the server checks this limit.
+  .google.protobuf.Timestamp expires_at = 2 [(validate.rules).timestamp.gt_now = true];
+
+  // How long the current secret keeps working alongside the new one, at most 7 days. Defaults to 24
+  // hours. Servers pick up a rotation within about 90 seconds, so with a shorter period, including
+  // zero, the current secret keeps working until they do. Otherwise it stops when this period ends.
+  // An expired token's secret is never extended. Only one previous secret is kept: rotating again
+  // during a grace period ends that grace period.
+  .google.protobuf.Duration previous_secret_grace_period = 3;
+}
+
+message RotateOrgTokenSecretResponse {
+  // The token's updated details. Its ID, name and permissions are unchanged.
+  .bitdrift.public.unary.admin.v1.KeyResponse key = 1;
+
+  // The new token secret. It is returned only in this response and cannot be retrieved later.
+  string token = 2;
+}
