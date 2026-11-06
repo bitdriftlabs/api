@@ -316,25 +316,48 @@ message MatchRule {
   // The synthetic `Command completed` end span contains `_result` (`success`, `failure`, or
   // `canceled`), optional `_command_message`, and typed `command_attachment` metadata when an
   // attachment was produced. SDK cancellation invalidates the pending command step rather than
-  // advancing it. Fetch `command_attachment.artifact_id` from the uploaded outcome log. Attachment
-  // metadata is not
-  // available for device-side matching or field extraction. Download the artifact with
-  // GET /v1/workflow-commands/{artifact_id}, using SESSION_READ (sessions:read).
-  // Responses use Content-Encoding: zstd. Perfetto artifacts return a processed TAR by default:
-  // pending processing returns 409 with Retry-After. If processing fails, the default download
-  // returns the original trace with 200; processing failure diagnostics are recorded in the download
-  // trace. Successful artifact downloads include `X-Bitdrift-Attachment-Disposition: raw` or
-  // `X-Bitdrift-Attachment-Disposition: processed` to identify the returned representation. Use
-  // ?variant=raw for the original trace, ?variant=processed for the bundle (422 if processing
-  // failed), and append /status for processing state and diagnostics. Other attachments preserve
-  // their original Content-Type.
-  // This UUID is not a device command ID, workflow ID, registration key, or completion token.
+  // advancing it. Attachment metadata is not available for device-side matching or field extraction.
   //
   // Completion means local attachment admission, not remote upload completion. Capture or flush
-  // the referencing outcome log to drive attachment upload. A 404 can mean not yet uploaded or
-  // unavailable; use bounded retries rather than assuming eventual availability.
-  // GetDeviceCommand does not return status or attachment references for workflow commands. Use
-  // the artifact-ID endpoint above, not the device-command attachment endpoint, for downloads.
+  // the referencing outcome log to drive upload. From the uploaded outcome log, use
+  // `command_attachment.artifact_id` with source `WORKFLOW` at
+  // `GET /v1/workflow-commands/{artifact_id}`, using public API authentication and `SESSION_READ`
+  // (`sessions:read`). This artifact UUID is not a device command ID, workflow ID, registration key,
+  // or completion token. `GetDeviceCommand` does not track workflow commands.
+  //
+  // Download and status requests do not wait for upload or processing. Before upload, HTTP 404 can
+  // mean not yet uploaded or unavailable; use bounded retries rather than assuming eventual
+  // availability. Once uploaded, the original attachment is complete and does not grow on later
+  // downloads. Retention can eventually make it unavailable.
+  //
+  // Append `?variant=raw` for the original uploaded contents without waiting for processing. With
+  // no variant, attachments without processing return original contents; attachments with
+  // processing return the processed result when ready. Pending processing returns HTTP 409 with
+  // `Retry-After: 2` and JSON `processing_state`; wait before retrying or select raw. Failed
+  // processing returns a command- or format-specific fallback with HTTP 200, not a guarantee of
+  // processed output. Explicit `?variant=processed` returns HTTP 422 with `error_code` and
+  // `diagnostics` when processing failed, or HTTP 404 when no processed representation exists.
+  // Do not retry failed processing as though it were still pending. Consult the command definition
+  // for result formats and fallback behavior; built-in commands are documented on
+  // `WellKnownCommandType`.
+  //
+  // `GET /v1/workflow-commands/{artifact_id}/status` returns JSON with `kind`,
+  // `processing_state` (`not_requested`, `pending`, `processing`, `ready`, or `failed`),
+  // `raw_available`, `processed_available`, `partial`, `error_code`, and `diagnostics`.
+  // HTTP 200 on this route is a successful metadata read, not a processed-download guarantee.
+  // `partial` describes processing quality, not an incomplete upload.
+  //
+  // HTTP 400 means an invalid UUID or download query; correct the request. HTTP 401 requires valid
+  // authentication; HTTP 403 requires `SESSION_READ`. HTTP 404 on either route can also mean an
+  // unknown artifact, wrong account, or expired/unavailable data. Error bodies need not be JSON.
+  //
+  // Read response `Content-Type` and `Content-Encoding` rather than inferring the format from log
+  // metadata. Honor `Content-Encoding`, including negotiated HTTP compression on JSON. When
+  // `Content-Encoding: zstd` is present, decode exactly once; a response with no content encoding
+  // needs no decompression. Downloads identify the selected representation with
+  // `X-Bitdrift-Attachment-Disposition: raw` or `processed`. Original logical contents are fixed
+  // while retained; default, raw, and processed representations can differ, and identical HTTP
+  // serialization, compression, or headers are not guaranteed.
   message MatchRunCommand {
     // Exactly one command to execute, with optional named typed arguments. Registered commands
     // must also be registered by the app. Buffer-dump commands are not supported in workflows.
