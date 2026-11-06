@@ -22,6 +22,9 @@ message Matcher {
       // no value will be returned and no match will occur. Said another way, a missing key will
       // not yield the empty string, but no string at all.
       string static_device_metadata = 1 [(validate.rules).string.min_len = 1];
+      // Reads an application label. Missing labels do not match, including an empty RHS.
+      // Supported by environment rules, not static-device configuration selection.
+      string label = 2 [(validate.rules).string = {min_len: 1, max_len: 64}];
     }
   }
 
