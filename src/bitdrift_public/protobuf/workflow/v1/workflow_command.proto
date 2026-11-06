@@ -107,6 +107,13 @@ extend google.protobuf.EnumValueOptions {
 // Commands implemented by the client without application registration.
 enum WellKnownCommandType {
   TYPE_UNSPECIFIED = 0;
+  // Requests the device's buffered logs.
+  //
+  // The attachment is an `application/json` array of log records, assembled in upload order,
+  // including an empty array when no logs were captured. Stored batches are decompressed before
+  // JSON assembly; the download does not preserve their original zstd frames. HTTP compression can
+  // be negotiated separately; decode according to the response's `Content-Encoding`.
+  // There is no processed representation. This command is not supported in workflows.
   DUMP_DEVICE_BUFFER = 1 [(well_known_command_options) = {
     key: "dump_device_buffer"
     description: "Requests the device's buffered logs."
@@ -125,6 +132,11 @@ enum WellKnownCommandType {
       ]
     }
   }];
+  // Captures the device's current screen as a JPEG image.
+  //
+  // The original attachment has MIME type `image/jpeg` and uses `Content-Encoding: zstd` when
+  // downloaded. Decode the HTTP content encoding before treating the contents as a JPEG.
+  // There is no processed representation.
   TAKE_SCREENSHOT = 2 [(well_known_command_options) = {
     key: "take_screenshot"
     is_privacy_sensitive: true
@@ -144,6 +156,19 @@ enum WellKnownCommandType {
       ]
     }
   }];
+  // Captures a Perfetto stack sampling trace of the application's process.
+  //
+  // The original attachment has MIME type `application/vnd.bitdrift.perfetto-trace`. Use
+  // `?variant=raw` to download that original trace without waiting for processing. The default
+  // download and `?variant=processed` return a processed Perfetto TAR bundle when ready; after HTTP
+  // zstd decompression, extract the TAR rather than interpreting the entire bundle as a raw trace.
+  //
+  // Processing-pending downloads return HTTP 409 with `Retry-After: 2`. If processing fails, the
+  // default download returns the original trace with HTTP 200, while `?variant=processed` returns
+  // HTTP 422 with `error_code` and `diagnostics`. Inspect attachment `/status` for processing state,
+  // availability, and quality diagnostics; `partial` describes capture/processing limitations,
+  // not a trace that is still uploading. Downloads include
+  // `X-Bitdrift-Attachment-Disposition: raw` or `processed`.
   STACK_SAMPLING_TRACE = 3 [(well_known_command_options) = {
     key: "stack_sampling_trace"
     description: "Captures a Perfetto stack sampling trace of the application's process."
