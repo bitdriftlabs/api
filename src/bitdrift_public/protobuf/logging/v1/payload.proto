@@ -58,18 +58,32 @@ enum LogType {
   SPAN = 8;
 }
 
+// Describes an attachment produced by a command, not the attachment bytes or a remote-upload
+// confirmation. In particular, workflow metadata can exist before upload completes. Downloads
+// return complete attachments, not growing prefixes of progressive uploads.
 message CommandAttachment {
+  // Identifies the command lifecycle and how to locate its attachment.
   enum Source {
+    // The lifecycle is unknown; do not infer a download endpoint from the artifact ID alone.
     UNSPECIFIED = 0;
+    // Download with GET /v1/workflow-commands/{artifact_id}, using SESSION_READ. Local completion
+    // does not confirm upload: capture/flush the referencing outcome log and use bounded retries
+    // for HTTP 404. Append /status to check availability and optional processing.
     WORKFLOW = 1;
+    // Poll GetDeviceCommand using the separately returned direct command ID. After success with
+    // an attachment, download with GET /v1/device-commands/{command_id}/attachment. This
+    // metadata's artifact_id is not the command_id required by that route.
     DIRECT_COMMAND = 2;
   }
 
-  // The UUID identifying the artifact produced by the command.
+  // The UUID identifying the artifact, not a direct command ID. Use source to choose the download
+  // flow; metadata alone does not guarantee remote availability.
   string artifact_id = 1;
-  // The MIME type of the artifact.
+  // The MIME type of the original artifact. Read the download response's Content-Type for the
+  // selected representation, which can differ after processing or a failure fallback.
   string content_type = 2;
-  // The byte size reported when the artifact was persisted.
+  // The original artifact size reported by the producer, not remote-upload progress or the
+  // encoded download size. Processing and HTTP compression can change the response size.
   uint64 size_bytes = 3;
   // The command lifecycle responsible for uploading the artifact.
   Source source = 4;
