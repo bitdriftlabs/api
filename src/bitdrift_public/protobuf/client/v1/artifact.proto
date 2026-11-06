@@ -77,4 +77,6 @@ message WorkflowAttachmentState {
   optional uint64 occurred_at_micros = 2;
   optional string content_type = 3;
   bool uploaded = 4;
+  // SDK-owned identity and label snapshot captured when the attachment is admitted.
+  map<string, string> origin = 5;
 }
