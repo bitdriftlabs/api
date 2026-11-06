@@ -46,7 +46,11 @@ message Log {
   // The recorded timestamp of the log.
   .google.protobuf.Timestamp timestamp = 11;
 
-  // The artifact produced by a command associated with this log.
+  // Metadata for a command attachment, not its bytes or an upload-completion guarantee.
+  // For source `WORKFLOW`, fetch `artifact_id` with `GET /v1/workflow-commands/{artifact_id}`;
+  // capture/flush the referencing outcome log to drive upload and use bounded retries on HTTP 404.
+  // For source `DIRECT_COMMAND`, use the separately returned command ID with `GetDeviceCommand`
+  // and its attachment endpoint, not this artifact ID. See `CommandAttachment` for source details.
   .bitdrift_public.protobuf.logging.v1.CommandAttachment command_attachment = 13;
 }
 
