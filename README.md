@@ -6,6 +6,7 @@ This repository contains the public-facing bitdrift API definitions.
 
 For API documentation, see:
 
+- [Linked Android crash-profile contracts](docs/crash-profiles.md)
 - API guide: https://docs.bitdrift.io/api-guide/
 - Full API content (Markdown): https://docs.bitdrift.io/api/index.md
 

@@ -356,6 +356,11 @@ message SankeyIntentRequest {
   string sankey_diagram_id = 3 [(validate.rules).string = {min_len: 1}];
 }
 
+message CrashProfileMetadata {
+  // Artifact IDs of the crash reports associated with this profile.
+  repeated string report_ids = 1;
+}
+
 message UploadArtifactIntentRequest {
   // The UUID of the intent being negotiated. This is used to correlate the response with the request.
   string intent_uuid = 1 [(validate.rules).string = {min_len: 1}];
@@ -378,6 +383,9 @@ message UploadArtifactIntentRequest {
   // The session ID associated with the artifact. This allows correlating the intent with a specific user session.
   // This may not be set for all kinds of artifacts, such as state snapshots.
   optional string session_id = 7;
+
+  // Report links for type_id = "crash_profile".
+  CrashProfileMetadata crash_profile = 8;
 }
 
 message UploadArtifactIntentResponse {
@@ -440,14 +448,17 @@ message UploadArtifactRequest {
   // this field; workflow command artifacts remain session artifacts and leave it unset.
   optional string command_id = 10 [(validate.rules).string.uuid = true];
 
-  // The encoding of contents. Only workflow and direct command attachments may use zlib encoding.
+  // The encoding of contents. Workflow/direct command attachments and crash profiles may use zlib.
   ArtifactPayloadEncoding payload_encoding = 11;
 
-  // The MIME type of a workflow or direct command attachment, when supplied by its handler.
+  // The MIME type of a workflow attachment, direct command attachment, or crash profile.
   // Workflow screenshots use image/jpeg. Missing or empty values default to
   // application/octet-stream; supplied values must be concrete MIME types of at most 255 bytes.
   // Accepted MIME types are preserved by the corresponding attachment download endpoint.
   optional string content_type = 12;
+
+  // Report links for type_id = "crash_profile".
+  CrashProfileMetadata crash_profile = 13;
 }
 
 message UploadArtifactResponse {
