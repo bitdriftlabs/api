@@ -15,6 +15,7 @@ import "bitdrift_public/protobuf/client/v1/metric.proto";
 import "bitdrift_public/protobuf/client/v1/runtime.proto";
 import "bitdrift_public/protobuf/config/v1/config.proto";
 import "bitdrift_public/protobuf/filter/v1/filter.proto";
+import "bitdrift_public/protobuf/filter/v1/scrub.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "bitdrift_public/protobuf/state/v1/scope.proto";
 import "bitdrift_public/protobuf/state/v1/state_payload.proto";
@@ -644,6 +645,11 @@ message ConfigurationUpdate {
     // NOTE: "already deployed" implies that the workflow will be found in the
     // workflows_configuration field. The server will not de-dup for simplification purposes.
     workflow.v1.WorkflowsConfiguration debug_workflows = 9;
+
+    // Redaction rules applied to every log before the filters. Sent only to clients whose
+    // configuration version supports scrub rules; older clients receive the same rules as the
+    // leading entries of filters_configuration.
+    filter.v1.ScrubConfiguration scrub_configuration = 10;
   }
 
   // A version nonce that can be used for both tracking the last applied update as well as for
