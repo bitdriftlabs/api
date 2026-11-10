@@ -573,6 +573,11 @@ table Report {
 
     // Complete source-specific crash evidence
     crash_info:[CrashInfo];
+
+    // Android SDK only: an encoded bitdrift_public.protobuf.client.v1.CrashProfileSource for the
+    // process that produced this report. The SDK uses it on-device to attribute system-triggered
+    // ANR/OOM profiles to this report.
+    crash_profile_source:[ubyte];
 }
 
 root_type Report;
