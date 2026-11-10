@@ -1,0 +1,34 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package bitdrift_public.protobuf.filter.v1;
+
+import "bitdrift_public/protobuf/filter/v1/filter.proto";
+import "validate/validate.proto";
+
+// Redaction rules applied to every log, in order, before any filter. There is no matcher: the
+// server selects the rules for each device and sends them as one flat list.
+message ScrubConfiguration {
+  repeated ScrubRule rules = 1;
+}
+
+// A single redaction rule. Each rule's result for a field depends only on that field's key and
+// value, so the same rules can be applied to any set of fields with the same result.
+message ScrubRule {
+  oneof rule {
+    option (validate.required) = true;
+
+    // Removes the field with this name.
+    Filter.Transform.RemoveField remove_field = 1;
+
+    // Replaces matches of a pattern in one named field, in every field except an ignore list
+    // (global_scrub), or in the message body.
+    Filter.Transform.RegexMatchAndSubstituteField regex = 2;
+  }
+}
