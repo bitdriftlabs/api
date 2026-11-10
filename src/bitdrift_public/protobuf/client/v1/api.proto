@@ -265,6 +265,20 @@ message LogUploadRequest {
   // Optional buffer-dump command whose persisted log bytes this upload contributes to. The outer
   // upload_uuid is this batch's stable idempotency key.
   optional string command_id = 8 [(validate.rules).string.uuid = true];
+
+  // The field sets referenced by logs in this upload through Log.field_set_version, one entry per
+  // version. A version a log refers to may be missing when the client no longer has it; the
+  // server then marks that log as missing its persistent fields.
+  repeated FieldSet field_sets = 9;
+}
+
+// The full set of persistent log fields at one field-set version.
+message FieldSet {
+  // The version that logs refer to through Log.field_set_version. Never zero.
+  uint64 version = 1;
+
+  // The fields of this version. Keys are unique.
+  repeated bitdrift_public.protobuf.logging.v1.Log.Field fields = 2;
 }
 
 // Empty message to maintain a application layer keep alive mechanism.
