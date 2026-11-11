@@ -92,11 +92,13 @@ message CommandAttachment {
 message Log {
   message Field {
     string key = 1;
-    Data value = 2;
-    // Set on a log with a field_set_version for a key from that field set which was removed from
-    // this log. Such a field has no value. The server does not restore the key from the field set
-    // and drops this field before passing the log on.
-    bool cleared = 3;
+    oneof value_type {
+      Data value = 2;
+      // Set on a log with a field_set_version for a key from that field set which was removed
+      // from this log. The server does not restore the key from the field set and drops this
+      // field before passing the log on.
+      bool cleared = 3;
+    }
   }
 
   message CompressedContents {
