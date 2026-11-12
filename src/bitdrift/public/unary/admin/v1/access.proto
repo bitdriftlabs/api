@@ -4,6 +4,7 @@
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
 syntax = "proto3";
 
 package bitdrift.public.unary.admin.v1;
@@ -14,35 +15,48 @@ import "validate/validate.proto";
 
 // The level of access granted to a principal.
 //
-// In SetAccessRequest, an omitted access level defaults to VIEW.
+// In `SetAccessRequest`, an omitted access level defaults to `VIEW`.
 enum AccessLevel {
+  // The principal can view the entity.
   VIEW = 0;
+  // The principal can view and edit the entity.
   EDIT = 1;
+  // The principal has no access to the entity, even when a broader grant would otherwise allow it.
   NONE = 2;
 }
 
-// Message used when receiving queries for access permission levels.
+// Selects entities by the access level a user or team has to them.
 message AccessPermissionQuery {
+  // An access level to match against.
   enum AccessLevel {
+    // Matches entities the principal can at least view.
     VIEW = 0;
+    // Matches entities the principal can edit.
     EDIT = 1;
+    // Matches entities the principal owns.
     OWNER = 2;
   }
 
+  // How a condition compares the principal's access with the requested level.
   enum Operator {
+    // Matches when the principal has the access level.
     IS = 0;
+    // Matches when the principal does not have the access level.
     IS_NOT = 1;
   }
 
   // A single predicate: e.g. "access IS EDIT" or "access IS_NOT OWNER".
   message Condition {
+    // How to compare the principal's access with `level`.
     .bitdrift.public.unary.admin.v1.AccessPermissionQuery.Operator operator = 1 [(validate.rules).enum = {defined_only: true}];
 
+    // The access level to compare against.
     .bitdrift.public.unary.admin.v1.AccessPermissionQuery.AccessLevel level = 2 [(validate.rules).enum = {defined_only: true}];
   }
 
   // All conditions must be true (logical AND).
   message AllOf {
+    // The conditions that must all match.
     repeated .bitdrift.public.unary.admin.v1.AccessPermissionQuery.Condition conditions = 1 [(validate.rules).repeated = {
       min_items: 1
       max_items: 20
@@ -52,42 +66,53 @@ message AccessPermissionQuery {
   // A filter that matches when at least one AllOf group is satisfied (logical OR of ANDs).
   // Example: (IS VIEW AND IS_NOT OWNER) OR (IS EDIT)
   message AccessFilter {
+    // The condition groups, at least one of which must match.
     repeated .bitdrift.public.unary.admin.v1.AccessPermissionQuery.AllOf any_of = 1 [(validate.rules).repeated = {
       min_items: 1
       max_items: 20
     }];
   }
 
+  // Selects entities by the access a user has, directly or through their teams.
   message Individual {
+    // The ID of the user whose access is evaluated.
     string user_id = 1 [(validate.rules).string = {
       min_len: 1
       max_len: 100
     }];
 
+    // The access conditions the user must satisfy.
     .bitdrift.public.unary.admin.v1.AccessPermissionQuery.AccessFilter filter = 2;
   }
 
+  // Selects entities by the access a team has.
   message Team {
+    // The ID of the team whose access is evaluated.
     string team_id = 1 [(validate.rules).string = {
       min_len: 1
       max_len: 100
     }];
 
+    // The access conditions the team must satisfy.
     .bitdrift.public.unary.admin.v1.AccessPermissionQuery.AccessFilter filter = 2;
   }
 
   oneof type {
     option (validate.required) = true;
+    // Queries the access of a user.
     .bitdrift.public.unary.admin.v1.AccessPermissionQuery.Individual individual = 1;
 
+    // Queries the access of a team.
     .bitdrift.public.unary.admin.v1.AccessPermissionQuery.Team team = 2;
   }
 }
 
-// Used to represent the current access permission of an entity.
-// This gives the full scope of which users/teams have what level of access,
-// the level of access given to the entire org, and the ownership of the entity (team or user).
+// The current access permissions of an entity.
+//
+// Lists the access level granted to each user and team, the access level granted to the entire
+// organization, and the user or team that owns the entity.
 message AccessPermission {
+  // Access granted to a single user.
   message Individual {
     // The user who currently has access.
     .bitdrift.public.unary.common.v1.Owner details = 1;
@@ -96,6 +121,7 @@ message AccessPermission {
     .bitdrift.public.unary.admin.v1.AccessLevel access = 2 [(validate.rules).enum = {defined_only: true}];
   }
 
+  // Access granted to a team.
   message Team {
     // The team that currently has access.
     .bitdrift.public.unary.admin.v1.Team details = 1;
@@ -104,15 +130,19 @@ message AccessPermission {
     .bitdrift.public.unary.admin.v1.AccessLevel access = 2 [(validate.rules).enum = {defined_only: true}];
   }
 
+  // Access granted to the entire organization.
   message Org {
     // The access level currently granted to the organization.
     .bitdrift.public.unary.admin.v1.AccessLevel access = 1 [(validate.rules).enum = {defined_only: true}];
   }
 
+  // The user or team that owns the entity.
   message Owner {
     oneof id {
+      // The user that owns the entity.
       .bitdrift.public.unary.common.v1.Owner user = 1;
 
+      // The team that owns the entity.
       .bitdrift.public.unary.admin.v1.Team team = 2;
     }
   }
@@ -131,8 +161,11 @@ message AccessPermission {
   .bitdrift.public.unary.admin.v1.AccessPermission.Owner owner = 4;
 }
 
+// Request to set the access permissions of a dashboard, view, or workflow.
 message SetAccessRequest {
+  // The access permissions to set.
   message SetAccessPermission {
+    // Access to grant a single user.
     message Individual {
       // The ID of the user to set access for.
       string id = 1 [(validate.rules).string = {
@@ -144,6 +177,7 @@ message SetAccessRequest {
       .bitdrift.public.unary.admin.v1.AccessLevel access = 2 [(validate.rules).enum = {defined_only: true}];
     }
 
+    // Access to grant a team.
     message Team {
       // The ID of the team to set access for.
       string id = 1 [(validate.rules).string = {
@@ -155,19 +189,23 @@ message SetAccessRequest {
       .bitdrift.public.unary.admin.v1.AccessLevel access = 2 [(validate.rules).enum = {defined_only: true}];
     }
 
+    // Access to grant the entire organization.
     message Org {
       // The access level to set for the organization. Defaults to VIEW when omitted.
       .bitdrift.public.unary.admin.v1.AccessLevel access = 1 [(validate.rules).enum = {defined_only: true}];
     }
 
+    // The user or team to make the owner of the entity.
     message Owner {
       oneof id {
         option (validate.required) = true;
+        // The ID of the user to make the owner.
         string user_id = 1 [(validate.rules).string = {
           min_len: 1
           max_len: 100
         }];
 
+        // The ID of the team to make the owner.
         string team_id = 2 [(validate.rules).string = {
           min_len: 1
           max_len: 100
@@ -189,20 +227,24 @@ message SetAccessRequest {
     .bitdrift.public.unary.admin.v1.SetAccessRequest.SetAccessPermission.Owner owner = 4;
   }
 
+  // The access permissions to set on the target entity.
   .bitdrift.public.unary.admin.v1.SetAccessRequest.SetAccessPermission access_permission = 1;
 
   oneof target {
     option (validate.required) = true;
+    // The ID of the dashboard to update.
     string dashboard_id = 2 [(validate.rules).string = {
       min_len: 1
       max_len: 100
     }];
 
+    // The ID of the view to update.
     string view_id = 3 [(validate.rules).string = {
       min_len: 1
       max_len: 100
     }];
 
+    // The ID of the workflow to update.
     string workflow_id = 4 [(validate.rules).string = {
       min_len: 1
       max_len: 100
@@ -210,6 +252,7 @@ message SetAccessRequest {
   }
 }
 
+// Response containing the updated access permissions.
 message SetAccessResponse {
   // The new access permissions for the updated entity.
   .bitdrift.public.unary.admin.v1.AccessPermission result = 1;

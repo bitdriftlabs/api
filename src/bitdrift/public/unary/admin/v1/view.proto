@@ -4,6 +4,7 @@
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
 syntax = "proto3";
 
 package bitdrift.public.unary.admin.v1;
@@ -224,10 +225,7 @@ message ListViewsRequest {
   // Selects which service's views to return.
   .bitdrift.public.unary.admin.v1.ListViewsRequest.ServiceType service_type = 1 [(validate.rules).enum = {defined_only: true}];
 
-  // The preferred pagination parameters for the request.
-  //
-  // If both pagination and deprecated_offset or deprecated_limit are provided,
-  // pagination takes precedence.
+  // Selects the page of views to return.
   .bitdrift.public.unary.common.v1.Pagination pagination = 5;
 
   // An optional name to filter by.

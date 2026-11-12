@@ -4,6 +4,7 @@
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
 syntax = "proto3";
 
 package bitdrift.public.unary.workflows.v1;
@@ -78,7 +79,7 @@ service WorkflowService {
   //
   // Chart metadata includes information such as the chart title, description, and
   // the metric query that the chart is based on. This determines how workflow output
-  // data is rendered in the UI.
+  // data is presented as a chart.
   rpc UpsertWorkflowChartMetadata(.bitdrift.public.unary.charts.v1.UpsertWorkflowChartMetadataRequest) returns (.bitdrift.public.unary.charts.v1.UpsertWorkflowChartMetadataResponse);
 }
 

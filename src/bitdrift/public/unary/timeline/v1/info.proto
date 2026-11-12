@@ -4,6 +4,7 @@
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
 syntax = "proto3";
 
 package bitdrift.public.unary.timeline.v1;
@@ -24,9 +25,8 @@ message GetSessionInfoResponse {
   // The model of the device.
   string device_model = 2;
 
-  // The user id associated with the session.
-  // This one is a special case, where we rely on the SDK being configured to return this.
-  // There may be other special cases like this in the future.
+  // The user ID associated with the session. Present only when the app reports a user ID
+  // through the Capture SDK.
   optional string user_id = 4;
 
   // The start time of the session.

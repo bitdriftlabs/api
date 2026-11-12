@@ -4,6 +4,7 @@
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
 syntax = "proto3";
 
 package bitdrift.public.unary.charts.v1;
@@ -294,8 +295,7 @@ message ChartMetadata {
     // its server-generated time_series_id.
     repeated .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata metadata = 4 [(validate.rules).repeated = {max_items: 100}];
 
-    // Heat map properties stored independently from `display_mode`. When absent, clients may
-    // fall back to the deprecated properties in `heat_map_display_mode` for compatibility.
+    // Heat map properties, set independently from `display_mode`.
     .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.HeatMapConfiguration heat_map_configuration = 12;
   }
 

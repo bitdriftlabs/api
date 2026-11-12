@@ -4,6 +4,7 @@
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
 syntax = "proto3";
 
 package bitdrift.public.unary.issues.v1;
@@ -11,27 +12,38 @@ package bitdrift.public.unary.issues.v1;
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
+// The kind of code a stack frame comes from.
 enum FrameType {
+  // The frame type is unknown.
   UNKNOWN = 0;
+  // A native frame that is symbolicated with DWARF debug files.
   DWARF = 1;
+  // A native frame from an Android app.
   ANDROID_NDK = 2;
+  // A frame from a Java or Android virtual machine.
   JVM = 3;
+  // A JavaScript frame, such as one from a React Native app.
   JAVASCRIPT = 4;
 }
 
+// The source location of a stack frame.
 message SourceFile {
   // The path to the source file.
   string path = 1 [(validate.rules).string = {min_len: 1}];
 
+  // The line number in the source file.
   int32 lineno = 2;
 
+  // The column number in the source file.
   uint32 column = 3;
 }
 
+// A single frame of a stack trace.
 message Frame {
-  // The result of the symbolication process.
+  // The kind of code the frame comes from.
   .bitdrift.public.unary.issues.v1.FrameType frame_type = 1 [(validate.rules).enum = {defined_only: true}];
 
+  // The source location of the frame, when available.
   .bitdrift.public.unary.issues.v1.SourceFile source_file = 2;
 
   // The method or function name of the frame.
@@ -49,26 +61,32 @@ message Frame {
   // The name of the symbol that was resolved during symbolication.
   optional string symbolicated_name = 7;
 
-  // The original index of this frame before symbolication. Some languages may expand
-  // a single frame into multiple during symbolication, so keeping this field allows
-  // us to track this.
+  // The original index of this frame before symbolication. Symbolication can expand a single
+  // frame into multiple frames, such as inlined functions, which share the same original index.
   uint64 original_index = 8;
 
   // Whether this frame comes from the application or from a library/third party framework.
   bool in_app = 9;
 
-  // The starting address of the image which contains this frame
+  // The starting address of the image that contains this frame.
   optional uint64 image_load_address = 10;
 
-  // The unique identifier of the image which contains this frame
+  // The unique identifier of the image that contains this frame.
   optional string image_id = 11;
 
+  // The symbolication status of a frame.
   enum FrameStatus {
+    // The symbolication status is unknown or does not apply to this frame type.
     UNKNOWN = 0;
+    // The debug file for the frame's image could not be found.
     MISSING = 1;
+    // The frame was symbolicated successfully.
     SYMBOLICATED = 2;
+    // The debug file was found, but it does not contain a symbol for the frame's address.
     MISSING_SYMBOL = 3;
+    // No image is known for the frame's address.
     UNKNOWN_IMAGE = 4;
+    // The debug file for the frame's image could not be processed.
     MALFORMED = 5;
   }
 
@@ -76,79 +94,118 @@ message Frame {
   // This can be used to determine if the frame was successfully symbolicated or not.
   .bitdrift.public.unary.issues.v1.Frame.FrameStatus status = 12 [(validate.rules).enum = {defined_only: true}];
 
-  // contextual info about the frame
+  // Contextual information about the frame.
   repeated string state = 13;
 }
 
+// A crash or error report with its errors, threads, and app and device context.
 message Report {
+  // A key-value field attached to the report.
   message Field {
+    // The field key.
     string key = 1 [(validate.rules).string = {min_len: 1}];
 
+    // The field value.
     string value = 2 [(validate.rules).string = {min_len: 1}];
   }
 
+  // An error captured in the report.
   message Error {
+    // The name of the error, such as an exception class name or signal.
     string reason = 1 [(validate.rules).string = {min_len: 1}];
 
+    // Additional details about the error, such as the exception message.
     string details = 2 [(validate.rules).string = {min_len: 1}];
 
+    // The stack trace frames of the error, from the most recently executed frame to the least
+    // recently executed frame.
     repeated .bitdrift.public.unary.issues.v1.Frame frames = 3 [(validate.rules).repeated = {min_items: 1}];
   }
 
+  // Information about the app that generated the report.
   message AppMetrics {
+    // The memory pressure level reported by the operating system.
     enum MemoryPressureLevel {
+      // The memory pressure level is unknown.
       MEMORY_PRESSURE_UNKNOWN = 0;
+      // Memory pressure is normal.
       MEMORY_PRESSURE_NORMAL = 1;
+      // Memory pressure is elevated.
       MEMORY_PRESSURE_WARNING = 2;
+      // Memory pressure is critical.
       MEMORY_PRESSURE_CRITICAL = 3;
     }
 
+    // The app identifier, such as the Android application ID or the Apple bundle identifier.
     string app_id = 1 [(validate.rules).string = {min_len: 1}];
 
+    // The installed app version.
     string version = 2 [(validate.rules).string = {min_len: 1}];
 
     oneof build_number {
+      // The Apple bundle version (`CFBundleVersion`).
       string bundle_version = 3;
 
+      // The Android version code.
       int64 version_code = 4;
     }
 
+    // The memory pressure level at the time of the event, when reported.
     optional .bitdrift.public.unary.issues.v1.Report.AppMetrics.MemoryPressureLevel memory_pressure_level = 5 [(validate.rules).enum = {defined_only: true}];
   }
 
+  // Information about the device that generated the report.
   message DeviceMetrics {
+    // The CPU architecture of the device.
     enum Architecture {
+      // The architecture is unknown.
       UNKNOWN_ARCH = 0;
+      // 32-bit ARM.
       ARM32 = 1;
+      // 64-bit ARM.
       ARM64 = 2;
+      // 32-bit x86.
       X86 = 3;
+      // 64-bit x86.
       X86_64 = 4;
     }
 
+    // The power state of the device.
     enum PowerState {
+      // The power state is unknown.
       UNKNOWN_POWER_STATE = 0;
+      // The device is running on battery power.
       RUNNING_ON_BATTERY = 1;
+      // The device is plugged in and has no battery.
       PLUGGED_IN_NO_BATTERY = 2;
+      // The device is plugged in and charging.
       PLUGGED_IN_CHARGING = 3;
+      // The device is plugged in and fully charged.
       PLUGGED_IN_CHARGED = 4;
     }
 
+    // The time at which the event occurred.
     .google.protobuf.Timestamp time = 1 [(validate.rules).string = {min_len: 1}];
 
+    // The device manufacturer.
     string manufacturer = 2 [(validate.rules).string = {min_len: 1}];
 
+    // The device model.
     string model = 3 [(validate.rules).string = {min_len: 1}];
 
+    // The CPU architecture of the device.
     .bitdrift.public.unary.issues.v1.Report.DeviceMetrics.Architecture architecture = 4 [(validate.rules).enum = {defined_only: true}];
 
-    // OS metrics
+    // The name of the operating system.
     string os = 5 [(validate.rules).string = {min_len: 1}];
 
+    // The version of the operating system.
     string os_version = 6 [(validate.rules).string = {min_len: 1}];
 
-    // Power metrics
+    // The power state of the device.
     .bitdrift.public.unary.issues.v1.Report.DeviceMetrics.PowerState power_state = 7 [(validate.rules).enum = {defined_only: true}];
 
+    // The battery level as a percentage from 0 to 100.
     uint32 battery_level = 8 [(validate.rules).uint32 = {
       gte: 0
       lte: 100
@@ -158,9 +215,11 @@ message Report {
     string user_id = 9 [(validate.rules).string = {min_len: 1}];
   }
 
+  // The threads captured in the report.
   message ThreadDetails {
+    // A thread captured in the report.
     message Thread {
-      // true if this thread is reporting the problem
+      // Whether this thread reported the problem.
       bool active = 1;
 
       // The name of the thread.
@@ -183,37 +242,44 @@ message Report {
       repeated .bitdrift.public.unary.issues.v1.Frame frames = 7 [(validate.rules).message = {required: true}];
     }
 
+    // The total number of threads, which can exceed the number of threads captured in `threads`.
     uint32 total_threads = 1;
 
+    // The captured threads, in no guaranteed order.
     repeated .bitdrift.public.unary.issues.v1.Report.ThreadDetails.Thread threads = 2;
   }
 
+  // A binary image loaded by the app.
   message BinaryImage {
-    // globally unique identifier for this image
+    // The globally unique identifier of the image.
     string id = 1 [(validate.rules).string = {min_len: 1}];
 
-    // path to the binary on disk or base name if unavailable
+    // The path to the binary on disk, or its base name when the path is unavailable.
     string path = 2 [(validate.rules).string = {min_len: 1}];
 
-    // mount point of the image at runtime in bytes
+    // The address at which the image was loaded at runtime.
     uint64 load_address = 3;
 
-    // size of the image in bytes
+    // The size of the image in bytes.
     uint64 length = 4;
   }
 
+  // The errors in the report. The first entry is the reported error; later entries are related
+  // errors, such as its causes.
   repeated .bitdrift.public.unary.issues.v1.Report.Error errors = 1;
 
+  // Information about the device that generated the report.
   .bitdrift.public.unary.issues.v1.Report.DeviceMetrics device_metrics = 2;
 
   // State of the thread when the event was reported.
   .bitdrift.public.unary.issues.v1.Report.ThreadDetails thread_details = 3;
 
+  // Information about the app that generated the report.
   .bitdrift.public.unary.issues.v1.Report.AppMetrics app_metrics = 4;
 
   // Additional report fields captured from the client report payload.
   repeated .bitdrift.public.unary.issues.v1.Report.Field fields = 5;
 
-  // Binary images present in the thread stack traces of the report
+  // The binary images referenced by the stack traces in the report.
   repeated .bitdrift.public.unary.issues.v1.Report.BinaryImage binary_images = 6;
 }

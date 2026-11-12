@@ -4,6 +4,7 @@
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
 syntax = "proto3";
 
 package bitdrift.public.unary.device_debug.v1;
@@ -110,13 +111,19 @@ message SendDeviceCommandResponse {
   }
 }
 
-// Requests a device command's current status without waiting for execution or upload to complete.
+// Requests a device command's status, optionally waiting for execution and upload to complete.
 message GetDeviceCommandRequest {
   // The opaque identifier returned by SendDeviceCommand.
   string command_id = 1 [(validate.rules).string = {
     max_len: 36
     uuid: true
   }];
+
+  // Maximum readiness wait in seconds, from 0 to 30. Omitted or zero returns immediately.
+  // Returns on success, failure, or expiry; a deadline returns the latest observed `pending`
+  // snapshot. Success confirms finalized original upload, not optional attachment processing.
+  // Set the transport timeout above this wait plus ordinary response latency.
+  optional uint32 wait_seconds = 2 [(validate.rules).uint32.lte = 30];
 }
 
 // Returns a snapshot of command state, upload progress, and terminal context, never attachment bytes.
@@ -141,7 +148,10 @@ message GetDeviceCommandResponse {
   // When `attachment` is present, download it with
   // `GET /v1/device-commands/{command_id}/attachment`, using `device_command.command_id` and the
   // same authentication as the public API. Download and status reads require `DEVICE_DEBUG`.
-  // The download does not wait for execution, upload, or processing to finish.
+  // Downloads are immediate by default. Add `wait_seconds=1` through `wait_seconds=30` to wait
+  // for upload and the selected representation under one readiness deadline. Omitted or zero
+  // preserves immediate behavior. Timeout returns the existing not-ready HTTP 409, not partial
+  // bytes. Set the transport timeout above this wait plus download time.
   //
   // Append `?variant=raw` for the finalized original attachment, or assembled log JSON. This skips
   // optional processing, not the command-success requirement. Omit `variant` for the default
@@ -247,7 +257,7 @@ message ListDeviceCommandInvocationsRequest {
     }];
 
     // Exact match against the submission-time caller snapshot. Supply ID, email, or both (AND).
-    // At least one must be nonempty; name and avatar_uri are not supported.
+    // At least one must be nonempty; setting `name` is not supported.
     .bitdrift.public.unary.common.v1.Owner invoked_by = 2;
 
     // Matches a selector only. Arguments are not permitted in a history filter.
@@ -451,13 +461,16 @@ service DebugService {
 
   // Retrieves the state and available results of a device command.
   //
-  // Returns the current snapshot without waiting for execution, upload, or processing. Poll while
-  // `pending` using a caller-chosen interval and deadline. `failed` and `expired` are terminal.
+  // Omit `wait_seconds` or use zero for an immediate snapshot. A positive value waits up to 30
+  // seconds for success, failure, or expiry; timeout returns the latest observed `pending` snapshot.
+  // Retry pending reads within a caller-chosen deadline. `failed` and `expired` are terminal.
   // When `succeeded.attachment` is present, its original upload is complete and finalized; fetch
   // bytes with `GET /v1/device-commands/{command_id}/attachment?variant=raw`, substituting
   // `device_command.command_id`. No further upload polling is needed. Optional processing is a
-  // separate stage: inspect `GET /v1/device-commands/{command_id}/attachment/status` or handle
-  // HTTP 409 with `Retry-After` on the default download. See `GetDeviceCommandResponse.Succeeded`
+  // separate stage: inspect `GET /v1/device-commands/{command_id}/attachment/status`, or add
+  // `wait_seconds=1` through `wait_seconds=30` to the download to wait for its representation.
+  // A download wait timeout preserves HTTP 409; status-route reads remain immediate.
+  // See `GetDeviceCommandResponse.Succeeded`
   // for variants, download headers, and HTTP 4xx meanings. Success without `attachment` means there
   // is nothing to download. This method never includes attachment bytes or tracks workflow commands.
   rpc GetDeviceCommand(.bitdrift.public.unary.device_debug.v1.GetDeviceCommandRequest) returns (.bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse);
