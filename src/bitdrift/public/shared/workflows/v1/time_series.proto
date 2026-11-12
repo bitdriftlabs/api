@@ -4,6 +4,7 @@
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
 syntax = "proto3";
 
 package bitdrift.public.shared.workflows.v1;
@@ -81,7 +82,8 @@ message TimeSeries {
   //
   // For workflow-backed time series, this maps back to one or more action IDs and can be reused as
   // `charts.v1.LimitStrategy.IdentifierMatch.DimensionIdentifier.id` when selecting specific groups
-  // from a later `GetChartsData` request.
+  // from a later `GetChartsData` request. It also associates the result with configured display
+  // metadata, including its title, in resolved chart responses.
   string id = 1 [(validate.rules).string = {min_len: 1}];
 
   // The labels associated with this time series.
@@ -99,12 +101,6 @@ message TimeSeries {
   //
   // Note that this may not be set via all APIs.
   optional .bitdrift.public.shared.workflows.v1.Legend legend = 5;
-
-  // A simple title for the time series. This is a more compact version of the
-  // legend that can be used when the legend is too verbose.
-  //
-  // Note that this may not be set via all APIs.
-  optional string title = 6;
 
   // The unique devices count for the entire series based on the TrackUnique configuration.
   // Deduplicates devices across the queried interval rather than summing bucket counts.

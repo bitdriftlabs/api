@@ -4,6 +4,7 @@
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
 syntax = "proto3";
 
 package bitdrift.public.unary.workflows.v1;
@@ -19,7 +20,9 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
+// Additional dimensions attached to the metrics emitted for a chart time series.
 message GroupBy {
+  // Reads a group-by dimension value from app state.
   message StateValue {
     // The scope of the state value to read when producing the group-by dimension.
     .bitdrift.public.unary.workflows.v1.StateScope scope = 1 [(validate.rules).enum = {
@@ -105,7 +108,9 @@ message GroupBy {
   repeated .bitdrift.public.unary.workflows.v1.GroupBy.Value values = 6 [(validate.rules).repeated = {max_items: 100}];
 }
 
+// A workflow definition: its flows, actions, targeting, and deployment state.
 message Workflow {
+  // A tag assigned to a workflow.
   message WorkflowTag {
     // The raw value of the tag. This is what gets stored and used for filtering.
     string value = 1 [(validate.rules).string = {
@@ -117,6 +122,7 @@ message Workflow {
     .bitdrift.public.unary.common.v1.Owner created_by = 2;
   }
 
+  // The deployment state of a workflow.
   enum WorkflowState {
     // The workflow is not currently running and it has not been deployed.
     IDLE = 0;
@@ -190,8 +196,11 @@ message Workflow {
 
 // An individual flow within a workflow.
 message Flow {
+  // Runs the flow one run at a time. An event that advances the active run continues that run;
+  // otherwise, a match on the initial step restarts the flow.
   message ExclusiveFlow {}
 
+  // Allows multiple runs of the flow to be active at the same time.
   message ParallelFlow {
     // The maximum number of active "runs" for this flow. Defaults to 10 if not specified.
     optional uint32 max_active_runs = 1;
@@ -204,8 +213,8 @@ message Flow {
   }];
 
   oneof flow_execution_type {
-    // Any match on the initial step causes the flow to reset. This is the default if not
-    // specified.
+    // Runs one flow run at a time. A match on the initial step restarts the flow only when the
+    // event does not advance the active run. This is the default if not specified.
     .bitdrift.public.unary.workflows.v1.Flow.ExclusiveFlow exclusive = 2;
 
     // Multiple "runs" of the flow can occur in parallel. Runs are replaced FIFO if the active
@@ -222,6 +231,7 @@ message Step {
   // step. When an exit condition is met, the current run is discarded and the flow waits to match
   // the first step again.
   message ExitCondition {
+    // An exit condition that ends the current run when a timeout elapses.
     message TimeoutExit {
       // The ID of this timeout exit. Must be unique within the workflow. This ID can be referenced
       // by actions that accept timeout IDs.
@@ -378,6 +388,7 @@ message MatchRule {
 // Selects a bookmarked entity using the app's current entity ID.
 message KnownEntityMatch {}
 
+// Matches issues processed by an issue script.
 message IssueMatch {
   oneof script_type {
     // A valid ripsaw program. The program will be run against the incoming issue and can produce
@@ -389,6 +400,7 @@ message IssueMatch {
   }
 }
 
+// Matches changes to an app state value, such as a feature flag exposure.
 message StateChangeMatch {
   // Match conditions for the previous state. Leave empty to only match on the new value.
   .bitdrift.public.unary.workflows.v1.StateCondition from = 1;
@@ -402,11 +414,12 @@ message StateChangeMatch {
   // The key of the state value within the given scope.
   string key = 4 [(validate.rules).string = {max_len: 100}];
 
-  // Additional match conditions for this OOTB event. This is an AND in addition to the
-  // previously defined event.
+  // Additional match conditions for this state change. These are combined with the state
+  // conditions using AND.
   .bitdrift.public.unary.workflows.v1.GenericMatch generic_match = 5;
 }
 
+// Matches an out-of-the-box (OOTB) event emitted by the SDK.
 message OotbMatch {
   option (shared.annotations.ootb_default_field_metadata) = {
     fields: {
@@ -643,6 +656,7 @@ message OotbMatch {
   // the same field definitions for values that appear here; only platform-exclusive values add
   // new fields.
   message GenericOotbConditionType {
+    // Cross-platform OOTB event types.
     enum GenericOotbConditionType {
       // Invalid placeholder value. Do not use.
       UNKNOWN = 0;
@@ -2681,6 +2695,7 @@ message OotbMatch {
           example_value: "America/New_York"
         }
       }];
+      // A WebView document lifecycle event occurs.
       WEBVIEW_LIFECYCLE = 32 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Lifecycle"
@@ -2714,6 +2729,7 @@ message OotbMatch {
           suitable_for: OOTB_FIELD_AGGREGATION_GROUP
         }
       }];
+      // A WebView document navigates.
       WEBVIEW_NAVIGATION = 33 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Navigation"
@@ -2815,6 +2831,7 @@ message OotbMatch {
           suitable_for: OOTB_FIELD_AGGREGATION_GROUP
         }
       }];
+      // A long task blocks the WebView main thread.
       WEBVIEW_LONG_TASK = 34 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Long Task"
@@ -2903,6 +2920,7 @@ message OotbMatch {
           supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
         }
       }];
+      // A JavaScript error occurs in a WebView.
       WEBVIEW_ERROR = 35 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView JavaScript Error"
@@ -2935,6 +2953,7 @@ message OotbMatch {
           supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
         }
       }];
+      // An unhandled Promise rejection occurs in a WebView.
       WEBVIEW_PROMISE_REJECTION = 36 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Promise Rejection"
@@ -2953,6 +2972,7 @@ message OotbMatch {
           supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
         }
       }];
+      // A WebView resource fails to load.
       WEBVIEW_RESOURCE_ERROR = 37 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Resource Error"
@@ -2973,6 +2993,7 @@ message OotbMatch {
         well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
         well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
       }];
+      // A console log is emitted by a WebView.
       WEBVIEW_CONSOLE = 38 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Console Log"
@@ -3018,6 +3039,7 @@ message OotbMatch {
           supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
         }
       }];
+      // A user interacts with a WebView element.
       WEBVIEW_USER_INTERACTION = 39 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView User Interaction"
@@ -3102,6 +3124,7 @@ message OotbMatch {
           supported_operators: OOTB_FIELD_OPERATOR_NOT_SET
         }
       }];
+      // A WebView Largest Contentful Paint measurement is reported.
       WEBVIEW_VITAL_LCP = 40 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Core Web Vital - LCP"
@@ -3155,6 +3178,7 @@ message OotbMatch {
         well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
         well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
       }];
+      // A WebView First Contentful Paint measurement is reported.
       WEBVIEW_VITAL_FCP = 41 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Core Web Vital - FCP"
@@ -3208,6 +3232,7 @@ message OotbMatch {
         well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
         well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
       }];
+      // A WebView Time to First Byte measurement is reported.
       WEBVIEW_VITAL_TTFB = 42 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Core Web Vital - TTFB"
@@ -3261,6 +3286,7 @@ message OotbMatch {
         well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
         well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
       }];
+      // A WebView Interaction to Next Paint measurement is reported.
       WEBVIEW_VITAL_INP = 43 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Core Web Vital - INP"
@@ -3314,6 +3340,7 @@ message OotbMatch {
         well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
         well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
       }];
+      // A WebView Cumulative Layout Shift measurement is reported.
       WEBVIEW_VITAL_CLS = 44 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Core Web Vital - CLS"
@@ -3366,6 +3393,7 @@ message OotbMatch {
         well_known_fields: {common_field: OOTB_COMMON_FIELD_HOST}
         well_known_fields: {common_field: OOTB_COMMON_FIELD_NETWORK_PATH_TEMPLATE}
       }];
+      // A WebView page view starts or ends.
       WEBVIEW_PAGE_VIEW = 45 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_WEBVIEW
         title: "WebView Page View"
@@ -3392,7 +3420,9 @@ message OotbMatch {
   // Android-specific OOTB condition types. Includes all generic conditions plus Android-exclusive
   // events. Shared values carry the same well-known fields documented on GenericOotbConditionType.
   message AndroidOotbConditionType {
+    // Android OOTB event types.
     enum AndroidOotbConditionType {
+      // Invalid placeholder value. Do not use.
       UNKNOWN = 0;
       // The SDK's built-in fatal issue handler captures an Android app hang.
       APP_ANDROID_BUILT_IN_ANR = 1 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
@@ -3510,12 +3540,16 @@ message OotbMatch {
           }
         }
       }];
+      // App moves out of the foreground and begins backgrounding.
       APP_BACKGROUND = 3 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_GENERAL
         title: "App Moved To Background"
       }];
+      // The SDK's built-in JS error handler captures a fatal JavaScript error.
       APP_BUILT_IN_JS_FATAL_ERROR = 4;
+      // The SDK's built-in JS error handler captures a non-fatal JavaScript error.
       APP_BUILT_IN_JS_NON_FATAL_ERROR = 5;
+      // App leaves the screen and its foreground UI closes.
       APP_CLOSE = 6;
       // Android app crash. Carries crash details when available. Depending on the source, fields
       // may describe a JVM exception or an OS-reported fatal exit.
@@ -3738,21 +3772,28 @@ message OotbMatch {
       // Deprecated Android-only alias of APP_TERMINATION. Retained for legacy compatibility;
       // prefer APP_TERMINATION for new workflows.
       APP_EXIT = 8;
+      // App moves into the foreground and becomes active.
       APP_FOREGROUND = 9 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_GENERAL
         title: "App Moved To Foreground"
       }];
+      // App launch completes for a new process.
       APP_LAUNCH = 10 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_GENERAL
         title: "App Launch"
       }];
+      // App reached time-to-interactive after launch.
       APP_LAUNCH_TTI = 11;
+      // App opens into the foreground, either on a cold start or when reopened from the background.
       APP_OPEN = 12;
+      // An app termination is recorded, including OS-reported exit information.
       APP_TERMINATION = 13 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
         category: OOTB_EVENT_CATEGORY_GENERAL
         title: "App Exit"
       }];
+      // App updates to a new version.
       APP_UPDATE = 14;
+      // Device battery state changes.
       BATTERY_STATE_CHANGE = 15;
       // A rendering issue is detected for a UI frame. `_frame_issue_type` distinguishes slow,
       // frozen, and ANR-classified frames.
@@ -3798,36 +3839,64 @@ message OotbMatch {
           unit: "ms"
         }
       }];
+      // A GraphQL request starts. Requires supported network instrumentation.
       GQL_REQUEST = 17;
+      // A GraphQL response completes. Requires supported network instrumentation.
       GQL_RESPONSE = 18;
+      // Device low-power mode toggles.
       LOW_POWER_MODE = 19;
+      // App memory usage meets the configured low-memory threshold.
       MEMORY_PRESSURE = 20;
+      // An HTTP network request starts. Requires supported network instrumentation.
       NETWORK_REQUEST = 21;
+      // An HTTP network response completes. Requires supported network instrumentation.
       NETWORK_RESPONSE = 22;
+      // Device orientation changes.
       ORIENTATION_CHANGE = 23;
+      // A periodic snapshot of device and process resource metrics.
       RESOURCE = 24;
+      // A screen or view is displayed.
       SCREEN_VIEW = 25;
+      // SDK configuration is applied during SDK startup.
       SDK_CONFIGURATION = 26;
       // A Session Replay frame is captured. Only emitted when Session Replay is enabled for
       // the app.
       SESSION_REPLAY = 27;
+      // A custom span ends.
       SPAN_END = 28;
+      // A custom span starts.
       SPAN_START = 29;
+      // Device thermal state changes.
       THERMAL_STATE_CHANGE = 30;
+      // Device timezone changes.
       TIMEZONE_CHANGE = 31;
+      // A WebView document lifecycle event occurs.
       WEBVIEW_LIFECYCLE = 32;
+      // A WebView document navigates.
       WEBVIEW_NAVIGATION = 33;
+      // A long task blocks the WebView main thread.
       WEBVIEW_LONG_TASK = 34;
+      // A JavaScript error occurs in a WebView.
       WEBVIEW_ERROR = 35;
+      // An unhandled Promise rejection occurs in a WebView.
       WEBVIEW_PROMISE_REJECTION = 36;
+      // A WebView resource fails to load.
       WEBVIEW_RESOURCE_ERROR = 37;
+      // A console log is emitted by a WebView.
       WEBVIEW_CONSOLE = 38;
+      // A user interacts with a WebView element.
       WEBVIEW_USER_INTERACTION = 39;
+      // A WebView Largest Contentful Paint measurement is reported.
       WEBVIEW_VITAL_LCP = 40;
+      // A WebView First Contentful Paint measurement is reported.
       WEBVIEW_VITAL_FCP = 41;
+      // A WebView Time to First Byte measurement is reported.
       WEBVIEW_VITAL_TTFB = 42;
+      // A WebView Interaction to Next Paint measurement is reported.
       WEBVIEW_VITAL_INP = 43;
+      // A WebView Cumulative Layout Shift measurement is reported.
       WEBVIEW_VITAL_CLS = 44;
+      // A WebView page view starts or ends.
       WEBVIEW_PAGE_VIEW = 45;
     }
   }
@@ -3835,7 +3904,9 @@ message OotbMatch {
   // Apple-specific OOTB condition types. Includes all generic conditions plus Apple-exclusive
   // events. Shared values carry the same well-known fields documented on GenericOotbConditionType.
   message AppleOotbConditionType {
+    // Apple OOTB event types.
     enum AppleOotbConditionType {
+      // Invalid placeholder value. Do not use.
       UNKNOWN = 0;
       // iOS app hang detected when the app stops responding for longer than the configured threshold.
       ANR = 1 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
@@ -3863,10 +3934,15 @@ message OotbMatch {
           example_value: "span-123"
         }
       }];
+      // App moves out of the foreground and begins backgrounding.
       APP_BACKGROUND = 2;
+      // The SDK's built-in JS error handler captures a fatal JavaScript error.
       APP_BUILT_IN_JS_FATAL_ERROR = 3;
+      // The SDK's built-in JS error handler captures a non-fatal JavaScript error.
       APP_BUILT_IN_JS_NON_FATAL_ERROR = 4;
+      // App leaves the screen and its foreground UI closes.
       APP_CLOSE = 5;
+      // App moves into the foreground and becomes active.
       APP_FOREGROUND = 6;
       // The SDK's built-in fatal issue handler captures an iOS app hang.
       APP_IOS_BUILT_IN_ANR = 7 [(.bitdrift.public.shared.annotations.ootb_event_metadata) = {
@@ -3886,42 +3962,76 @@ message OotbMatch {
         well_known_fields: {common_field: OOTB_COMMON_FIELD_APPLE_DEVICE_MODEL}
         well_known_fields: {common_field: OOTB_COMMON_FIELD_APP_EXIT_INFO_APPLE}
       }];
+      // App launch completes for a new process.
       APP_LAUNCH = 9;
+      // App reached time-to-interactive after launch.
       APP_LAUNCH_TTI = 10;
+      // App opens into the foreground, either on a cold start or when reopened from the background.
       APP_OPEN = 11;
+      // The app receives the termination notification.
       APP_TERMINATION = 12;
+      // App updates to a new version.
       APP_UPDATE = 13;
+      // Device battery state changes.
       BATTERY_STATE_CHANGE = 14;
+      // A GraphQL request starts. Requires supported network instrumentation.
       GQL_REQUEST = 15;
+      // A GraphQL response completes. Requires supported network instrumentation.
       GQL_RESPONSE = 16;
+      // Device low-power mode toggles.
       LOW_POWER_MODE = 17;
+      // The system reports memory pressure to the app.
       MEMORY_PRESSURE = 18;
+      // An HTTP network request starts. Requires supported network instrumentation.
       NETWORK_REQUEST = 19;
+      // An HTTP network response completes. Requires supported network instrumentation.
       NETWORK_RESPONSE = 20;
+      // Device orientation changes.
       ORIENTATION_CHANGE = 21;
+      // A periodic snapshot of device and process resource metrics.
       RESOURCE = 22;
+      // A screen or view is displayed.
       SCREEN_VIEW = 23;
+      // SDK configuration is applied during SDK startup.
       SDK_CONFIGURATION = 24;
       // A Session Replay frame is captured. Only emitted when Session Replay is enabled for
       // the app.
       SESSION_REPLAY = 25;
+      // A custom span ends.
       SPAN_END = 26;
+      // A custom span starts.
       SPAN_START = 27;
+      // Device thermal state changes.
       THERMAL_STATE_CHANGE = 28;
+      // Device timezone changes.
       TIMEZONE_CHANGE = 29;
+      // A WebView document lifecycle event occurs.
       WEBVIEW_LIFECYCLE = 30;
+      // A WebView document navigates.
       WEBVIEW_NAVIGATION = 31;
+      // A long task blocks the WebView main thread.
       WEBVIEW_LONG_TASK = 32;
+      // A JavaScript error occurs in a WebView.
       WEBVIEW_ERROR = 33;
+      // An unhandled Promise rejection occurs in a WebView.
       WEBVIEW_PROMISE_REJECTION = 34;
+      // A WebView resource fails to load.
       WEBVIEW_RESOURCE_ERROR = 35;
+      // A console log is emitted by a WebView.
       WEBVIEW_CONSOLE = 36;
+      // A user interacts with a WebView element.
       WEBVIEW_USER_INTERACTION = 37;
+      // A WebView Largest Contentful Paint measurement is reported.
       WEBVIEW_VITAL_LCP = 38;
+      // A WebView First Contentful Paint measurement is reported.
       WEBVIEW_VITAL_FCP = 39;
+      // A WebView Time to First Byte measurement is reported.
       WEBVIEW_VITAL_TTFB = 40;
+      // A WebView Interaction to Next Paint measurement is reported.
       WEBVIEW_VITAL_INP = 41;
+      // A WebView Cumulative Layout Shift measurement is reported.
       WEBVIEW_VITAL_CLS = 42;
+      // A WebView page view starts or ends.
       WEBVIEW_PAGE_VIEW = 43;
     }
   }
@@ -3943,8 +4053,11 @@ message OotbMatch {
   .bitdrift.public.unary.workflows.v1.GenericMatch generic_match = 4;
 }
 
+// A predicate tree over log fields, the log body, and app state.
 message GenericMatch {
+  // A single comparison between a value from the event and a literal or saved value.
   message GenericMatchCondition {
+    // Identifies an app state value by scope and key.
     message StateKey {
       // The scope of the state key to look up.
       .bitdrift.public.unary.workflows.v1.StateScope scope = 1 [(validate.rules).enum = {defined_only: true}];
@@ -4054,7 +4167,9 @@ message RuleStartTracing {
   }];
 }
 
+// Configuration messages for workflow actions and timeout exits.
 message Rule {
+  // A session capture action that flushes buffered logs for the current session.
   message RuleFlushConfiguration {
     // The server-generated ID for this rule action. This can be used to query
     // for sessions that arrive at this rule action.
@@ -4095,6 +4210,7 @@ message Rule {
       }
     }
 
+    // A single time series within a metric chart.
     message TimeSeries {
       // A rate metric that is going to be generated for this time series. This
       // is done by emitting simple counters for each of the extracted values
@@ -4180,10 +4296,12 @@ message Rule {
         .bitdrift.public.unary.workflows.v1.GroupBy group_by = 5;
       }
 
+      // Selects what to count uniquely within each aggregation interval.
       message TrackUnique {
         oneof track_unique_type {
           option (validate.required) = true;
-          // This is computed entirely server-side and thus does not require any client emission.
+          // Counts unique devices that contribute to each aggregation interval. Requires no
+          // additional data from the app.
           bool device_id = 1 [(validate.rules).bool.const = true];
         }
       }
@@ -4250,13 +4368,11 @@ message Rule {
       }
     }
 
-    // The list of nodes. Since workflows can have loops and each node corresponds to a matcher
-    // within a workflow, it's possible for a given matcher and its corresponding node to be visited
-    // multiple times. For each visit, a new value is extracted.
+    // The nodes of the diagram. Workflows can have loops, so a match rule and its corresponding
+    // node can be visited multiple times; each visit extracts a new value.
     //
-    // Additional details related to each node of the diagram. This data is not modified
-    // by the server during workflow updates, allowing the frontend to store
-    // information that remains stable between updates.
+    // The server stores this list as supplied. Each workflow update replaces it with the nodes in
+    // the request, so include every node to keep.
     //
     // All target nodes must be within the same flow. The loop section is the portion of the flow
     // covered by a loop back-edge; nodes in that section are treated as extracted dynamic values,
@@ -4281,7 +4397,9 @@ message Rule {
     repeated string match_ids = 4 [(validate.rules).repeated = {max_items: 100}];
   }
 
+  // A measure time action that records the elapsed time between two matches in a flow.
   message RuleMeasureTime {
+    // A duration threshold that a completed time measurement must satisfy.
     message MeasureTimeCondition {
       // The operator to use when evaluating the duration threshold.
       .bitdrift.public.unary.workflows.v1.Operator operator = 2 [(validate.rules).enum.defined_only = true];
@@ -4323,10 +4441,15 @@ message Rule {
   // exits are terminal and do not advance to another step. A single step can define at most one
   // timeout exit.
   message RuleTimeout {
+    // The unit of a timeout duration.
     enum DurationUnit {
+      // Milliseconds.
       MILLISECONDS = 0;
+      // Seconds.
       SECONDS = 1;
+      // Minutes.
       MINUTES = 2;
+      // Hours.
       HOURS = 3;
     }
 
@@ -4338,25 +4461,41 @@ message Rule {
   }
 }
 
+// The scope of an app state value.
 enum StateScope {
+  // Invalid placeholder value. Do not use.
   UNKNOWN = 0;
+  // Feature flag exposures, keyed by feature flag name.
   FEATURE_FLAG_EXPOSURE = 1;
 }
 
+// How values are interpreted before comparison.
 enum MatchType {
+  // Compares values as strings.
   STRING = 0;
+  // Compares values as integers.
   INT = 1;
+  // Compares values as semantic versions.
   SEMVER = 2;
+  // Compares values as floating-point numbers.
   DOUBLE = 3;
 }
 
+// A comparison operator.
 enum Operator {
+  // Matches when the value equals the comparison value.
   EQUAL = 0;
+  // Matches when the value does not equal the comparison value.
   NOT_EQUAL = 1;
+  // Matches when the value is greater than the comparison value.
   GREATER_THAN = 2;
+  // Matches when the value is greater than or equal to the comparison value.
   GREATER_THAN_OR_EQUAL = 3;
+  // Matches when the value is less than the comparison value.
   LESS_THAN = 4;
+  // Matches when the value is less than or equal to the comparison value.
   LESS_THAN_OR_EQUAL = 5;
+  // Matches when the value matches the regular expression.
   REGEX = 6;
   // The operator expects a list of the elements on the right side.
   // The API supports a single string as the value on the right side of the
@@ -4385,6 +4524,7 @@ enum Operator {
   NOT_SET = 13;
 }
 
+// A condition on an app state value.
 message StateCondition {
   // The type used to interpret both the observed state value and the provided `value` before
   // comparison.
@@ -4405,15 +4545,16 @@ message StateCondition {
   string value = 3 [(validate.rules).string = {max_len: 255}];
 }
 
+// A validation problem found in a workflow.
 message Violation {
   // User friendly message that explains the violation.
   string message = 1;
 
   // The match or rule ID that this violation is associated with.
-  // Only used in v3.
   string match_or_rule_id = 3;
 }
 
+// Request for workflow deployment history.
 message GetWorkflowDeploymentHistoryRequest {
   // Used to paginate through results. To get the next page result, set this to
   // the desired starting offset. For example, setting to 10 will start with the
@@ -4440,6 +4581,7 @@ message GetWorkflowDeploymentHistoryRequest {
   }];
 }
 
+// Response containing workflow deployment history.
 message GetWorkflowDeploymentHistoryResponse {
   // The workflow deployment history entries that match the request.
   repeated .bitdrift.public.unary.workflows.v1.HistoricalWorkflowDeployment deployments = 1;
@@ -4448,6 +4590,7 @@ message GetWorkflowDeploymentHistoryResponse {
   uint32 total_deployments = 2;
 }
 
+// A single deployed version of a workflow.
 message HistoricalWorkflowDeployment {
   // The deployment version.
   uint64 version = 1;
@@ -4466,6 +4609,7 @@ message HistoricalWorkflowDeployment {
   .bitdrift.public.unary.common.v1.Owner deployed_by_user_id = 6;
 }
 
+// Request to retrieve a workflow.
 message GetWorkflowRequest {
   // The ID of the workflow to retrieve.
   string workflow_id = 2 [(validate.rules).string = {
@@ -4474,6 +4618,7 @@ message GetWorkflowRequest {
   }];
 }
 
+// Response containing the requested workflow.
 message GetWorkflowResponse {
   // The workflow that was retrieved in full.
   .bitdrift.public.unary.workflows.v1.Workflow workflow = 1;
@@ -4485,13 +4630,18 @@ message GetWorkflowResponse {
   repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 4;
 }
 
+// A filter based on the current user's relationship to an entity.
 message Filter {
+  // Matches entities owned by the current user.
   message Owned {}
 
+  // Matches entities not owned by the current user.
   message Unowned {}
 
+  // Matches entities favorited by the current user.
   message Favorites {}
 
+  // Matches active entities.
   message Active {}
 
   oneof type {
@@ -4559,31 +4709,42 @@ message WorkflowListQuery {
     START_TRACING = 6;
   }
 
+  // Whether a tag condition requires or excludes the listed tags.
   enum TagOperator {
+    // Invalid placeholder value. Do not use.
     UNSPECIFIED_OPERATOR = 0;
+    // Matches workflows whose tags satisfy `match`.
     INCLUDES = 1;
+    // Matches workflows whose tags do not satisfy `match`.
     EXCLUDES = 2;
   }
 
+  // How the listed tags are compared to a workflow's tags.
   enum TagMatch {
+    // Invalid placeholder value. Do not use.
     UNSPECIFIED_MATCH = 0;
+    // The workflow has at least one of the listed tags.
     ANY_OF = 1;
+    // The workflow has every listed tag.
     ALL_OF = 2;
   }
 
   // A single predicate over workflow tags.
   // Example: "tags INCLUDES ANY_OF [foo, bar]" or "tags EXCLUDES ALL_OF [baz, qux]".
   message TagCondition {
+    // Whether to include or exclude workflows with matching tags.
     .bitdrift.public.unary.workflows.v1.WorkflowListQuery.TagOperator operator = 1 [(validate.rules).enum = {
       defined_only: true
       not_in: [0]
     }];
 
+    // Whether a workflow must have any or all of `tags`.
     .bitdrift.public.unary.workflows.v1.WorkflowListQuery.TagMatch match = 2 [(validate.rules).enum = {
       defined_only: true
       not_in: [0]
     }];
 
+    // The tags to compare against each workflow's tags.
     repeated string tags = 3 [(validate.rules).repeated = {
       min_items: 1
       max_items: 20
@@ -4598,6 +4759,7 @@ message WorkflowListQuery {
 
   // All tag conditions must be true (logical AND).
   message TagAllOf {
+    // The tag conditions that must all be true.
     repeated .bitdrift.public.unary.workflows.v1.WorkflowListQuery.TagCondition conditions = 1 [(validate.rules).repeated = {
       min_items: 1
       max_items: 20
@@ -4607,6 +4769,7 @@ message WorkflowListQuery {
   // A filter that matches when at least one TagAllOf group is satisfied (logical OR of ANDs).
   // Example: (INCLUDES ALL_OF [foo, bar] AND EXCLUDES ANY_OF [baz]) OR (INCLUDES ANY_OF [qux])
   message TagFilter {
+    // The condition groups, at least one of which must be satisfied.
     repeated .bitdrift.public.unary.workflows.v1.WorkflowListQuery.TagAllOf any_of = 1 [(validate.rules).repeated = {
       min_items: 1
       max_items: 20
@@ -4664,15 +4827,25 @@ message WorkflowListQuery {
   }];
 }
 
+// Request to list workflows.
 message ListWorkflowsRequest {
+  // A sort criterion for listed workflows.
   message Sort {
+    // The workflow attribute to sort by.
     enum SortKey {
+      // Invalid placeholder value. Do not use.
       SORT_KEY_UNSPECIFIED = 0;
+      // Sorts by workflow name.
       DISPLAY_NAME = 1;
+      // Sorts by creation time.
       CREATION_TIME = 2;
+      // Sorts by whether the workflow is deployed.
       STATUS = 3;
+      // Sorts by workflow owner.
       OWNER_NAME = 4;
+      // Sorts by whether the current user has favorited the workflow.
       FAVORITED = 5;
+      // Sorts by when the current user last viewed the workflow.
       LAST_VIEWED = 6;
     }
 
@@ -4688,9 +4861,7 @@ message ListWorkflowsRequest {
   // 10th record. The default value is 0.
   optional uint32 offset = 1;
 
-  // This defines the upper bound of the number of items returned. The maximum
-  // value supported is 100, meaning that we’ll never return more than
-  // max(items.count, limit, 100).
+  // The maximum number of workflows to return, from 1 to 100.
   optional uint32 limit = 2 [(validate.rules).uint32 = {
     gte: 1
     lte: 100
@@ -4724,11 +4895,14 @@ message ListWorkflowsRequest {
   }];
 }
 
+// Response containing a page of workflows.
 message ListWorkflowsResponse {
+  // A workflow and its metadata.
   message Item {
     // The workflow returned for this list item.
     .bitdrift.public.unary.workflows.v1.Workflow workflow = 1;
 
+    // The metadata for this workflow.
     .bitdrift.public.unary.workflows.v1.WorkflowMetadata metadata = 5;
   }
 
@@ -4745,6 +4919,7 @@ message ListWorkflowsResponse {
   uint32 total_filtered_workflows = 4;
 }
 
+// Request to create a workflow.
 message CreateWorkflowRequest {
   // The workflow configuration to create.
   .bitdrift.public.unary.workflows.v1.Workflow workflow = 2 [(validate.rules).message.required = true];
@@ -4757,12 +4932,13 @@ message CreateWorkflowRequest {
   repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 5 [(validate.rules).repeated = {max_items: 100}];
 }
 
+// Response for a created workflow.
 message CreateWorkflowResponse {
   // Unique identifier for the created workflow.
-  //
   string id = 1;
 }
 
+// Request to replace a workflow definition.
 message UpdateWorkflowRequest {
   // The ID of the workflow to update.
   string workflow_id = 2 [(validate.rules).string = {
@@ -4783,7 +4959,9 @@ message UpdateWorkflowRequest {
   repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 6 [(validate.rules).repeated = {max_items: 100}];
 }
 
+// Response for a workflow update.
 message UpdateWorkflowResponse {
+  // A violation that prevents the update from being applied.
   message BlockingViolation {
     // A chart has been removed or modified in a way that would cause the alert to no longer be
     // valid (the target aggregated ID has changed). The user must be notified to remove the
@@ -4819,6 +4997,7 @@ message UpdateWorkflowResponse {
   repeated .bitdrift.public.unary.workflows.v1.UpdateWorkflowResponse.BlockingViolation violations = 3;
 }
 
+// Request to rename a workflow.
 message RenameWorkflowRequest {
   // The ID of the workflow to rename.
   string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
@@ -4827,6 +5006,7 @@ message RenameWorkflowRequest {
   string name = 3 [(validate.rules).string = {max_len: 255}];
 }
 
+// Response for a renamed workflow.
 message RenameWorkflowResponse {
   // The renamed workflow with all server-generated fields.
   .bitdrift.public.unary.workflows.v1.Workflow workflow = 1;
@@ -4838,6 +5018,7 @@ message RenameWorkflowResponse {
   repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 4;
 }
 
+// Request to set the tags assigned to a workflow.
 message UpsertWorkflowTagsRequest {
   // The ID of the workflow to update.
   string workflow_id = 1 [(validate.rules).string = {max_len: 100}];
@@ -4854,18 +5035,22 @@ message UpsertWorkflowTagsRequest {
   }];
 }
 
+// Response containing the workflow's tags after the update.
 message UpsertWorkflowTagsResponse {
   // The tags that are assigned to the workflow after the update completes.
   repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag tags = 1;
 }
 
+// Request to list workflow tags.
 message ListTagsRequest {}
 
+// Response containing workflow tags.
 message ListTagsResponse {
   // The available workflow tags.
   repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag tags = 1;
 }
 
+// Request to delete a workflow.
 message DeleteWorkflowRequest {
   // The ID of the workflow to delete.
   string workflow_id = 2 [(validate.rules).string = {
@@ -4874,7 +5059,9 @@ message DeleteWorkflowRequest {
   }];
 }
 
+// Response for a workflow deletion.
 message DeleteWorkflowResponse {
+  // A problem that prevents the workflow from being deleted.
   message Violation {
     // User friendly message that explains the violation.
     string message = 1;
@@ -4884,6 +5071,7 @@ message DeleteWorkflowResponse {
   repeated .bitdrift.public.unary.workflows.v1.DeleteWorkflowResponse.Violation violations = 1;
 }
 
+// Request to deploy a workflow.
 message DeployWorkflowRequest {
   // The ID of the workflow to deploy.
   string workflow_id = 2 [(validate.rules).string = {
@@ -4892,6 +5080,7 @@ message DeployWorkflowRequest {
   }];
 }
 
+// Response for a workflow deployment.
 message DeployWorkflowResponse {
   // If non-empty, the deploy failed due to the configuration not being
   // convertible to a valid client workflow.
@@ -4907,6 +5096,7 @@ message DeployWorkflowResponse {
   repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 4;
 }
 
+// Request to stop a deployed workflow.
 message StopWorkflowRequest {
   // The ID of the workflow to update.
   string workflow_id = 2 [(validate.rules).string = {
@@ -4915,6 +5105,7 @@ message StopWorkflowRequest {
   }];
 }
 
+// Response for a stopped workflow.
 message StopWorkflowResponse {
   // The mutated idle workflow.
   .bitdrift.public.unary.workflows.v1.Workflow workflow = 1;
@@ -4926,6 +5117,7 @@ message StopWorkflowResponse {
   repeated .bitdrift.public.unary.workflows.v1.PerRuleChartMetadata per_rule_chart_metadata = 3;
 }
 
+// Request to favorite or unfavorite a workflow for the current user.
 message FavoriteWorkflowRequest {
   // The ID of the workflow to favorite.
   string workflow_id = 2 [(validate.rules).string = {max_len: 100}];
@@ -4934,4 +5126,5 @@ message FavoriteWorkflowRequest {
   bool favorite = 3;
 }
 
+// Response for a favorite change.
 message FavoriteWorkflowResponse {}

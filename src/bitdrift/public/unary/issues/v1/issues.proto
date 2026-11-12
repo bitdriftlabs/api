@@ -4,6 +4,7 @@
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
 syntax = "proto3";
 
 package bitdrift.public.unary.issues.v1;
@@ -39,8 +40,11 @@ import "validate/validate.proto";
 //   ]
 // }
 message AdvancedFilter {
+  // A single condition that compares a filter key with a value.
   message Condition {
+    // The filter keys that a condition can match against.
     enum LhsTyped {
+      // No filter key is specified.
       LHS_TYPED_UNSPECIFIED = 0;
       // App ID associated with the issue.
       LHS_TYPED_APP_ID = 1;
@@ -91,6 +95,15 @@ message AdvancedFilter {
       // range older than that matches no reports.
       // The only supported operators are EQUAL and IN.
       LHS_TYPED_ENTITY_HASH = 18;
+      // The linked Android crash-profile category: "anr" or "oom", inferred from the report kind.
+      // Matches retained completed links, including failed conversions, not current download
+      // availability. Pending processing counts as absent. EQUAL/IN select categories and
+      // NOT_EQUAL/NOT_IN exclude them, including reports with no profile. An empty RHS with
+      // NOT_EQUAL checks presence; EQUAL checks absence. WILDCARD "*" checks presence and
+      // NOT_WILDCARD "*" or "?*" checks absence; other patterns are not supported.
+      // In group searches, matches groups containing a matching occurrence. A group can contain
+      // both profiled and unprofiled occurrences, so it can match both presence and absence.
+      LHS_TYPED_PROFILE_TYPE = 19;
     }
 
     // The filter key to match against.
@@ -98,21 +111,27 @@ message AdvancedFilter {
 
     // LHS_TYPED_FUNCTION, LHS_TYPED_FILE, LHS_TYPED_MODULE, and LHS_TYPED_DETAILS support only
     // SEARCH and NOT_SEARCH. LHS_TYPED_DEVICE_ID and LHS_TYPED_ENTITY_HASH support only EQUAL and
-    // IN. All other keys support every operator except SEARCH and NOT_SEARCH.
+    // IN. LHS_TYPED_PROFILE_TYPE supports exact category matching and presence/absence as
+    // described on that key. All other keys support every operator except SEARCH and NOT_SEARCH.
     .bitdrift.public.unary.common.v1.Operator operator = 2 [(validate.rules).enum = {defined_only: true}];
 
+    // The value to compare with the filter key.
     string rhs = 3 [(validate.rules).string = {max_len: 255}];
   }
 
+  // A group of conditions that matches when any of its conditions matches.
   message OrCondition {
     // The conditions that are ORed together.
     repeated .bitdrift.public.unary.issues.v1.AdvancedFilter.Condition or_conditions = 1 [(validate.rules).repeated = {max_items: 100}];
   }
 
+  // The condition groups that are ANDed together.
   repeated .bitdrift.public.unary.issues.v1.AdvancedFilter.OrCondition and_conditions = 1 [(validate.rules).repeated = {max_items: 100}];
 }
 
+// Selects issues by a feature flag that was active when they occurred.
 message FeatureFlagFilter {
+  // The name of the feature flag to filter by.
   string name = 1 [(validate.rules).string = {
     min_len: 1
     max_len: 100
@@ -128,6 +147,7 @@ message FeatureFlagFilter {
 
 // Limits what issues are being queried for an endpoint. For issue group queries, this limits which issues are considered when listing issue groups.
 message IssueQuery {
+  // The time range to query issues for. This is required when querying for issues, but optional when saving a view.
   .bitdrift.public.unary.common.v1.TimeRange time_range = 7;
 
   // The platforms to filter by.
@@ -143,6 +163,7 @@ message IssueQuery {
   repeated .bitdrift.public.unary.issues.v1.FeatureFlagFilter feature_flag_filters = 6 [(validate.rules).repeated = {max_items: 100}];
 }
 
+// The triage status of an issue group.
 enum IssueGroupStatus {
   // Newly created issue group that has not yet been triaged.
   NEW = 0;
@@ -181,7 +202,9 @@ message Event {
   uint64 count = 2;
 }
 
+// A group of related issues that share a grouping key.
 message IssueGroup {
+  // Descriptive information that identifies the issue group.
   message Metadata {
     // The issue group type, such as Crash, ANR, or Exception.
     string type = 1;
@@ -199,10 +222,11 @@ message IssueGroup {
     // group and may not represent the entire group.
     optional string details = 4;
 
-    // The platform and app_id associated with the issue group.
+    // The platform and app ID associated with the issue group.
     .bitdrift.public.shared.platform.v1.Platform platform = 5 [(validate.rules).message = {required: true}];
   }
 
+  // Occurrence statistics for the issue group.
   message Stats {
     // The first time the issue group was seen within the time range.
     .google.protobuf.Timestamp first_seen = 1 [(validate.rules).message = {required: true}];
@@ -216,9 +240,10 @@ message IssueGroup {
     // The number of unique users that have experienced this issue.
     uint64 user_count = 3;
 
+    // Issue occurrence counts for each aggregation interval within the time range.
     repeated .bitdrift.public.unary.issues.v1.Event events = 4;
 
-    // The number of unique sessions in which this issue was reported
+    // The number of unique sessions in which this issue was reported.
     uint64 session_count = 5;
   }
 
@@ -228,9 +253,7 @@ message IssueGroup {
   // The metadata for the issue group.
   .bitdrift.public.unary.issues.v1.IssueGroup.Metadata metadata = 2;
 
-  // The platform on which the issue group occurred.
-  // Once we support React Native for issues/crashes, we may encounter issues that span multiple platforms.
-  // Most of the time we expect this to be a single platform.
+  // The platforms on which the issue group occurred. This usually contains a single platform.
   repeated .bitdrift.public.shared.platform.v1.Platform platform = 3;
 
   // The stats for the issue group.
@@ -242,15 +265,17 @@ message IssueGroup {
   // The status of the issue group.
   .bitdrift.public.unary.issues.v1.IssueGroupStatus status = 6;
 
-  // The latest version/version code of the application when marked as fixed
+  // The latest app version or Android version code when the issue group was marked fixed.
   oneof resolution_version {
+    // The latest app version when the issue group was marked fixed.
     string version = 8;
 
-    // android-specific version field
+    // The latest Android version code when the issue group was marked fixed.
     int64 version_code = 9;
   }
 }
 
+// Requests a single issue group.
 message GetIssueGroupRequest {
   // The identifier for the issue group.
   string id = 1 [(validate.rules).string = {
@@ -258,23 +283,36 @@ message GetIssueGroupRequest {
     max_len: 100
   }];
 
+  // Selects the issues counted in the issue group's stats. When omitted, the last 7 days of issues
+  // are used.
   .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 6;
 }
 
+// Returns the requested issue group.
 message GetIssueGroupResponse {
   // The issue group.
   .bitdrift.public.unary.issues.v1.IssueGroup issue_group = 1 [(validate.rules).message = {required: true}];
 }
 
+// Requests a page of issue groups.
 message ListIssueGroupsRequest {
+  // A sort criterion for issue groups.
   message Sort {
+    // The issue group attributes that results can be ordered by.
     enum SortKey {
+      // No sort key is specified. A sort criterion with this key is rejected.
       SORT_KEY_UNSPECIFIED = 0;
+      // Orders results by the most recent occurrence within the queried time range.
       MOST_RECENT_OCCURRENCE = 1;
+      // Orders results by the earliest occurrence within the queried time range.
       EARLIEST_OCCURRENCE = 2;
+      // Orders results by the first time any report was seen for the issue group.
       FIRST_REPORTED = 3;
+      // Orders results by the number of unique users affected.
       IMPACTED_USERS = 4;
+      // Orders results by the number of unique sessions affected.
       IMPACTED_SESSIONS = 5;
+      // Orders results by issue group reason.
       ISSUE_REASON = 6;
     }
 
@@ -300,6 +338,7 @@ message ListIssueGroupsRequest {
   // with no other criteria.
   .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 5;
 
+  // Limits results to issue groups that match these status and assignee filters.
   .bitdrift.public.unary.issues.v1.IssueGroupQuery issue_group_query = 6;
 
   // Orders issue groups by caller-visible attributes. Apply criteria in the order provided.
@@ -315,13 +354,16 @@ message ListIssueGroupsRequest {
   }];
 }
 
+// Returns a page of issue groups.
 message ListIssueGroupsResponse {
   // The issue groups.
   repeated .bitdrift.public.unary.issues.v1.IssueGroup issue_groups = 1;
 
+  // The total number of issue groups that match the request across all pages.
   uint32 total_issue_groups = 2;
 }
 
+// Requests a single issue.
 message GetIssueRequest {
   // The unique identifier for the issue.
   string id = 1 [(validate.rules).string = {
@@ -336,6 +378,7 @@ message GetIssueRequest {
   }];
 }
 
+// A single reported issue, such as a crash or an error, with details about the app and device.
 message Issue {
   // The reason for the issue. This should match the reason in the issue group.
   string reason = 1 [(validate.rules).string = {min_len: 1}];
@@ -352,59 +395,138 @@ message Issue {
   // Information about the device that the issue occurred on.
   .bitdrift.public.shared.platform.v1.Platform platform = 5 [(validate.rules).message = {required: true}];
 
-  string app_id = 6 [(validate.rules).message = {required: true}];
+  // The app ID of the app that reported the issue.
+  string app_id = 6;
 
-  string app_version = 7 [(validate.rules).message = {required: true}];
+  // The app version that reported the issue.
+  string app_version = 7;
 
-  string build_id = 8 [(validate.rules).message = {required: true}];
+  // The build identifier of the app: the bundle version on Apple platforms or the version code on
+  // Android.
+  string build_id = 8;
 
-  string model = 9 [(validate.rules).message = {required: true}];
+  // The device model on which the issue occurred.
+  string model = 9;
 
+  // Whether the app was in the foreground when the issue occurred.
   bool foreground = 15;
 
+  // The network type of the device when the issue occurred.
   string network_type = 16 [(validate.rules).string = {min_len: 1}];
 
+  // The radio type of the device when the issue occurred.
   string radio_type = 17 [(validate.rules).string = {min_len: 1}];
 
+  // The device locale when the issue occurred.
   string locale = 18 [(validate.rules).string = {min_len: 1}];
 
+  // The type of report that captured the issue.
   string report_type = 19 [(validate.rules).string = {min_len: 1}];
 
+  // The processed report for the issue, including its stack traces.
   .bitdrift.public.unary.issues.v1.Report report = 12 [(validate.rules).message = {required: true}];
 
   // The unique identifier for the issue.
   string id = 13 [(validate.rules).string = {min_len: 1}];
 
-  // The unique id of the session that this issue occurred within.
+  // The unique ID of the session that this issue occurred within.
   optional string session_id = 14 [(validate.rules).string = {min_len: 1}];
 
   // The status of the session associated with this issue.
   .bitdrift.public.unary.common.v1.SessionStatusInfo session_status_info = 20;
 }
 
+// Returns the requested issue and its availability.
 message GetIssueResponse {
+  // The requested issue, when it is available.
   .bitdrift.public.unary.issues.v1.Issue issue = 12;
 
+  // The availability of the requested issue.
   enum Status {
+    // The issue was found and its details are available.
     FOUND = 0;
     // No reference to the issue was found.
     NOT_FOUND = 1;
-    // The issue is still pending processing (or something went wrong).
+    // The issue has not finished processing. An issue can stay in this state if processing stalls.
     PENDING = 2;
-    // The issue was processed but an error occurred during processing which prevents the stacktrace from being available.
-    // Note that we don't expose the failure reason as this is not useful to the user.
+    // The issue was processed, but an error during processing prevents its stack trace from being
+    // available. The failure reason is not returned.
     FAILED = 3;
   }
 
   // The status of the issue. If set to FOUND, the issue was found and the details are available.
   .bitdrift.public.unary.issues.v1.GetIssueResponse.Status status = 13 [(validate.rules).enum = {defined_only: true}];
+
+  // Completed Android crash profiles for this occurrence. An empty COMPLETE section does not
+  // distinguish no profile from processing that has not completed. Profile metadata errors never
+  // remove the issue itself. At most 32 profiles are returned; PARTIAL or UNAVAILABLE must not be
+  // presented as an empty successful result. This section is revalidated on every request.
+  .bitdrift.public.unary.issues.v1.IssueProfiles profiles = 14;
 }
 
+message IssueProfiles {
+  enum Status {
+    COMPLETE = 0;
+    PARTIAL = 1;
+    UNAVAILABLE = 2;
+  }
+
+  .bitdrift.public.unary.issues.v1.IssueProfiles.Status status = 1;
+
+  repeated .bitdrift.public.unary.issues.v1.IssueProfile profiles = 2;
+
+  // Additional completed links exceeded the response's 32-profile budget.
+  bool has_more = 3;
+}
+
+message IssueProfile {
+  // Profile UUID. Other occurrences linked to a shared profile are never returned.
+  // With the same organization authorization and `ISSUE_READ` permission, inspect
+  // `GET /v1/crash-profiles/{id}/status` for raw/processed object availability, or download
+  // `GET /v1/crash-profiles/{id}?variant=raw` or
+  // `GET /v1/crash-profiles/{id}?variant=processed`.
+  // These artifact reads do not depend on the linked occurrence still being present or in
+  // the same group. Completion status and timestamps are provided by this descriptor.
+  // The download variant is required. Raw is an original Perfetto trace; processed is a TAR
+  // containing `trace.perfetto`, `symbols.pb` and `deobfuscation.pb`. Processed never falls back to raw.
+  string id = 1;
+
+  .google.protobuf.Timestamp captured_at = 2;
+
+  .google.protobuf.Timestamp processed_at = 3;
+
+  enum ProcessingStatus {
+    SUCCEEDED = 0;
+    FAILED = 1;
+  }
+
+  .bitdrift.public.unary.issues.v1.IssueProfile.ProcessingStatus processing_status = 4;
+
+  enum Availability {
+    UNAVAILABLE = 0;
+    AVAILABLE = 1;
+    EXPIRED = 2;
+    // An expected processed object is missing, corrupt, or could not be checked. Retry rather
+    // than treating this as ordinary absence. Downloads of a promised object can also fail.
+    ERROR = 3;
+  }
+
+  .bitdrift.public.unary.issues.v1.IssueProfile.Availability raw = 5;
+
+  .bitdrift.public.unary.issues.v1.IssueProfile.Availability processed = 6;
+}
+
+// Requests a page of issues in an issue group.
 message ListIssuesRequest {
+  // A sort criterion for issues.
   message Sort {
+    // The issue attributes that results can be ordered by.
     enum SortKey {
+      // No sort key is specified. A sort criterion with this key is rejected.
       SORT_KEY_UNSPECIFIED = 0;
+      // Orders results by the time each issue occurred.
       OCCURRED_AT = 1;
+      // Orders results by issue reason.
       ISSUE_REASON = 2;
     }
 
@@ -415,13 +537,17 @@ message ListIssuesRequest {
     .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
   }
 
+  // A single filter on the issues to list.
   message ListIssuesFilters {
+    // Filters issues by platform.
     message Platform {
-      // The platform of an issue group to filter by.
+      // The platforms to filter by.
       repeated .bitdrift.public.shared.platform.v1.Platform value = 1 [(validate.rules).repeated = {max_items: 100}];
     }
 
+    // Filters issues by time range.
     message TimeRange {
+      // The time range to filter by.
       .bitdrift.public.unary.common.v1.TimeRange time_range = 3;
     }
 
@@ -449,9 +575,8 @@ message ListIssuesRequest {
   // 10th record. The default value is 0.
   uint32 offset = 2;
 
-  // This defines the upper bound of the number of items returned. The maximum
-  // value supported is 100, meaning that we’ll never return more than
-  // max(items.count, limit, 100).
+  // The maximum number of items to return. The server returns at most
+  // min(items.count, limit, 100) items. Defaults to 100.
   optional uint32 limit = 3 [(validate.rules).uint32 = {
     gte: 1
     lte: 100
@@ -462,21 +587,27 @@ message ListIssuesRequest {
   // time range filter is supplied, the server defaults to the last 7 days.
   repeated .bitdrift.public.unary.issues.v1.ListIssuesRequest.ListIssuesFilters filters = 4 [(validate.rules).repeated = {max_items: 100}];
 
+  // Selects the issues to list. When set, its time range is required and `filters` is ignored.
   .bitdrift.public.unary.issues.v1.IssueQuery issue_query = 6;
 
   // Orders issues by caller-visible attributes. Apply criteria in the order provided.
   repeated .bitdrift.public.unary.issues.v1.ListIssuesRequest.Sort sort = 7 [(validate.rules).repeated = {max_items: 100}];
 }
 
+// Returns a page of issues.
 message ListIssuesResponse {
-  // The issue groups.
+  // The issues.
   repeated .bitdrift.public.unary.issues.v1.Issue issues = 1;
 
+  // The total number of issues that match the request across all pages.
   uint32 total_issues = 2;
 }
 
+// Requests a page of issues in an issue group.
 message ListIssuesV2Request {
+  // Selects whether results are limited to issues with captured session data.
   enum SessionCaptureFilter {
+    // Behaves like `ALL_ISSUES`.
     SESSION_CAPTURE_FILTER_UNSPECIFIED = 0;
     // Returns all issues without additional session-capture filtering.
     ALL_ISSUES = 1;
@@ -486,8 +617,11 @@ message ListIssuesV2Request {
     CAPTURED_SESSIONS_ONLY = 2;
   }
 
+  // A sort criterion for issues.
   message Sort {
+    // The issue attributes that results can be ordered by.
     enum SortKey {
+      // No sort key is specified. A sort criterion with this key is rejected.
       SORT_KEY_UNSPECIFIED = 0;
       // Orders results by the time each issue occurred.
       OCCURRED_AT = 1;
@@ -500,6 +634,7 @@ message ListIssuesV2Request {
     .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
   }
 
+  // Selection criteria for the issues to list.
   message Query {
     // Limits results to issues that occurred within the selected time range.
     .bitdrift.public.unary.common.v1.TimeRange time_range = 1;
@@ -535,6 +670,7 @@ message ListIssuesV2Request {
   .bitdrift.public.unary.issues.v1.ListIssuesV2Request.SessionCaptureFilter session_capture_filter = 5 [(validate.rules).enum = {defined_only: true}];
 }
 
+// A summary of a single issue in an issue list.
 message IssueListItem {
   // The unique identifier for the issue.
   string id = 1 [(validate.rules).string = {min_len: 1}];
@@ -573,6 +709,7 @@ message IssueListItem {
   .bitdrift.public.unary.common.v1.SessionStatusInfo session_status_info = 11;
 }
 
+// Returns a page of issues.
 message ListIssuesV2Response {
   // The issues that match the request.
   repeated .bitdrift.public.unary.issues.v1.IssueListItem issues = 1;
@@ -584,6 +721,7 @@ message ListIssuesV2Response {
   optional string next_page_token = 3;
 }
 
+// Requests summary metrics and occurrence events for issues that match a query.
 message GetAggregateIssueSummaryRequest {
   // Specifies the issues to summarize. If the query selects multiple issue groups, the result
   // combines their matching issues and counts each affected user and session once.
@@ -603,7 +741,9 @@ message GetAggregateIssueSummaryRequest {
   .bitdrift.public.unary.issues.v1.IssueGroupQuery issue_group_query = 6;
 }
 
+// Returns summary metrics and occurrence events for the requested issues.
 message GetAggregateIssueSummaryResponse {
+  // Summary metrics and occurrence events for the issues that match the query.
   message Summary {
     // The total number of unique users affected by the issues matching the query.
     //
@@ -660,6 +800,7 @@ message GetAggregateIssueEventsResponse {
   .google.protobuf.Duration aggregation_window = 2;
 }
 
+// Requests the feature flags that were active when an issue occurred.
 message GetIssueFeatureFlagsRequest {
   // The unique identifier for the issue.
   string issue_id = 1 [(validate.rules).string = {
@@ -668,7 +809,9 @@ message GetIssueFeatureFlagsRequest {
   }];
 }
 
+// Returns the feature flags that were active when the issue occurred.
 message GetIssueFeatureFlagsResponse {
+  // A feature flag that was active when the issue occurred.
   message FeatureFlag {
     // The name of the feature flag.
     string name = 1 [(validate.rules).string = {min_len: 1}];
@@ -684,6 +827,7 @@ message GetIssueFeatureFlagsResponse {
   repeated .bitdrift.public.unary.issues.v1.GetIssueFeatureFlagsResponse.FeatureFlag feature_flags = 1;
 }
 
+// Requests a status change for an issue group.
 message UpdateIssueGroupStatusRequest {
   // The unique identifier for the issue group.
   string id = 1 [(validate.rules).string = {
@@ -695,19 +839,22 @@ message UpdateIssueGroupStatusRequest {
   .bitdrift.public.unary.issues.v1.IssueGroupStatus status = 2 [(validate.rules).enum = {defined_only: true}];
 }
 
+// Returns the issue group status after the update.
 message UpdateIssueGroupStatusResponse {
   // The resulting status after the update.
   .bitdrift.public.unary.issues.v1.IssueGroupStatus status = 1 [(validate.rules).enum = {defined_only: true}];
 
-  // The latest version/version code of the application when marked as fixed.
+  // The latest app version or Android version code when the issue group was marked fixed.
   oneof resolution_version {
+    // The latest app version when the issue group was marked fixed.
     string version = 2;
 
-    // Android-specific version field.
+    // The latest Android version code when the issue group was marked fixed.
     int64 version_code = 3;
   }
 }
 
+// Requests a replacement of the assignees of an issue group.
 message UpdateIssueGroupAssigneesRequest {
   // The unique identifier for the issue group.
   string id = 1 [(validate.rules).string = {
@@ -719,11 +866,13 @@ message UpdateIssueGroupAssigneesRequest {
   repeated .bitdrift.public.unary.common.v1.Owner assignees = 2 [(validate.rules).repeated = {max_items: 100}];
 }
 
+// Returns the issue group assignees after the update.
 message UpdateIssueGroupAssigneesResponse {
   // The resulting assignees after the update.
   repeated .bitdrift.public.unary.common.v1.Owner assignees = 1;
 }
 
+// Requests a page of possible assignees for issue groups.
 message ListPossibleAssigneesRequest {
   // Filter assignees by text match.
   optional string search = 1 [(validate.rules).string = {
@@ -751,6 +900,7 @@ message ListPossibleAssigneesRequest {
   }];
 }
 
+// Returns a page of possible assignees for issue groups.
 message ListPossibleAssigneesResponse {
   // Possible values for assignees.
   repeated .bitdrift.public.unary.common.v1.Owner assignees = 1;
@@ -759,11 +909,17 @@ message ListPossibleAssigneesResponse {
   uint32 total = 2;
 }
 
+// Requests changes to the custom attributes of an issue group.
 message UpdateIssueGroupAttributesRequest {
+  // A single change to an issue group attribute.
   message UpdateAttributeOperation {
+    // The kind of attribute change.
     enum OperationType {
+      // No operation type is specified. This value is rejected.
       OPERATION_TYPE_UNSPECIFIED = 0;
+      // Sets the attribute to `value`, adding the attribute if it does not exist.
       UPSERT = 1;
+      // Removes the attribute.
       REMOVE = 2;
     }
 
@@ -798,8 +954,10 @@ message UpdateIssueGroupAttributesRequest {
   repeated .bitdrift.public.unary.issues.v1.UpdateIssueGroupAttributesRequest.UpdateAttributeOperation operations = 2 [(validate.rules).repeated = {max_items: 100}];
 }
 
+// Confirms that the attribute changes were applied.
 message UpdateIssueGroupAttributesResponse {}
 
+// Requests the custom attributes of an issue group.
 message GetIssueGroupAttributesRequest {
   // The unique identifier for the issue group.
   string id = 1 [(validate.rules).string = {
@@ -808,10 +966,14 @@ message GetIssueGroupAttributesRequest {
   }];
 }
 
+// Returns the custom attributes of an issue group.
 message GetIssueGroupAttributesResponse {
+  // A custom attribute of an issue group.
   message Attribute {
+    // The attribute key.
     string key = 1 [(validate.rules).string = {min_len: 1}];
 
+    // The attribute value.
     string value = 2 [(validate.rules).string = {min_len: 1}];
   }
 
