@@ -207,18 +207,11 @@ enum WellKnownCommandType {
   // On Apple platforms the attachment is a `bitdrift_public.protobuf.memory.v1.MemoryDump` with MIME
   // type `application/vnd.bitdrift.ios-memory-dump`: the kernel's memory counters, the VM map by
   // tag and image, and, unless disabled, a census of the malloc heap.
-  //
-  // On Android the attachment is a Perfetto trace holding a Java heap dump.
   MEMORY_DUMP = 12 [(well_known_command_options) = {
     key: "memory_dump"
     description: "Captures a snapshot of the application's memory."
     availability: {
       supported_platforms: [
-        {
-          platform: ANDROID
-          min_os_version: "15"
-          min_config_version: 53
-        },
         {
           platform: APPLE
           min_os_version: "15.0"
@@ -230,30 +223,8 @@ enum WellKnownCommandType {
       {
         name: "include_heap"
         type: BOOL
-        description: "Includes a census of the malloc heap, which briefly locks each malloc zone. Defaults to true."
-        optional: true
-        availability: {
-          supported_platforms: [
-            {
-              platform: APPLE
-              min_config_version: 52
-            }
-          ]
-        }
-      },
-      {
-        name: "buffer_size_kb"
-        type: INT64
-        description: "Trace buffer size in KB. A dump larger than the buffer is truncated."
-        optional: true
-        availability: {
-          supported_platforms: [
-            {
-              platform: ANDROID
-              min_config_version: 53
-            }
-          ]
-        }
+        description: "Includes a census of the malloc heap, which briefly locks each malloc zone."
+        default_value: {bool_data: true}
       }
     ]
   }];
