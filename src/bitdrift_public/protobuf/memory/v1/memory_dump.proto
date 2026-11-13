@@ -135,7 +135,8 @@ message Regions {
   uint64 virtual_size = 7;
   // Regions grouped by VM tag. One row per tag present in the map.
   repeated TagRow by_tag = 8;
-  // Charged attributed to the images whose segments the regions overlap.
+  // Charged attributed to the images whose segments the regions overlap, split by the regions'
+  // VM tag: an image has one row per tag its segments fall in.
   repeated ImageChargeRow by_image = 9;
 }
 
@@ -162,6 +163,9 @@ message ImageChargeRow {
   // Index into MemoryDump.images.
   uint32 image = 1;
   uint64 charged = 2;
+  // The VM tag of the regions this charge comes from, as in TagRow.tag. Part of that tag's
+  // charged.
+  uint32 tag = 3;
 }
 
 // Census of the live blocks in the malloc zones. Each enumerable zone is locked in turn
@@ -170,10 +174,11 @@ message ImageChargeRow {
 // at its class or type metadata.
 //
 // Invariants, in blocks and in bytes:
-// - total = named + swift_boxes + images + reporter + unclassified, exactly.
+// - total = named + swift_boxes + images + unclassified, exactly.
 // - total = the sum of the zone rows.
 // - The by_type rows with a name sum to named; those with an address sum to images.
-// - unclassified.histogram sums to unclassified.blocks.
+// - unclassified.histogram sums to unclassified.blocks, unclassified.histogram_bytes to
+//   unclassified.bytes.
 // - owners is a subset of unclassified, never an addition to it.
 // Blocks the census never recorded (skipped_blocks, skipped zones, zones never seen) are
 // in no total.
@@ -195,15 +200,13 @@ message Heap {
   BlockCount swift_boxes = 6;
   // Blocks whose first word points into a loaded image but that could not be named on device.
   BlockCount images = 7;
-  // The tables the census itself allocated. Counted in total but in no other category.
-  BlockCount reporter = 8;
   // Blocks with no type: plain malloc buffers (byte arrays, strings' storage, image data) and
   // anything whose first word is not a recognizable pointer.
   Unclassified unclassified = 9;
   // Who holds the unclassified buffers. Provides some sort of precedence.
   Owners owners = 10;
   // Blocks grouped by type: rows with a name (sum to `named`) and rows with an address (sum to
-  // `images`). Two classes with the same name and kind, e.g. from different images, share a row.
+  // `images`). Two classes with the same name, e.g. from different images, share a row.
   repeated TypeRow by_type = 11;
   // One row per malloc zone in the process, enumerated or not.
   repeated ZoneRow zones = 12;
@@ -223,6 +226,9 @@ message Unclassified {
   // 2^(n+1)) (entry 0 also holds size 0, the last entry everything from 2^31 up). Blocks
   // that share a first word are placed by their average size.
   repeated uint64 histogram = 3;
+  // Bytes of the blocks counted in each histogram entry: always 32 entries, exact even for the
+  // blocks placed by their average size.
+  repeated uint64 histogram_bytes = 4;
 }
 
 // Unclassified blocks credited to the named object that points at them.
@@ -234,32 +240,20 @@ message Owners {
   uint64 shared_blocks = 3;
   // Blocks left out of attribution because its tables were full. Owners then undercounts.
   uint64 table_overflow = 4;
-  // Owners by the unclassified bytes they hold. Every row has a name and Kind CLASS; blocks and
-  // bytes are what the class's instances own, not the instances themselves. Sums to blocks and
-  // bytes above.
+  // Owners by the unclassified bytes they hold. Every row has a name; blocks and bytes are what
+  // the class's instances own, not the instances themselves. Sums to blocks and bytes above.
   repeated TypeRow by_type = 5;
 }
 
 // Blocks grouped by what their first word points to.
 message TypeRow {
-  enum Kind {
-    // The row has an address instead of a name.
-    UNSPECIFIED = 0;
-    // An Objective-C or Swift class (mangled).
-    CLASS = 1;
-    // A polymorphic C++ class (Mangled)
-    CXX = 2;
-  }
-
   oneof identity {
-    // The type's name, mangled as described by Kind. Set for every named row.
+    // The Objective-C or Swift class's name, mangled. Set for every named row.
     string name = 1;
     // Set when the type could not be named on device. Symbolicating it may name the type.
     // If it does not symbolicate, the row stays unnamed but its blocks still count.
     ImageAddress address = 2;
   }
-  // Set only with name; UNSPECIFIED with address.
-  Kind kind = 3;
   uint64 blocks = 4;
   uint64 bytes = 5;
 }
