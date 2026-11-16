@@ -93,6 +93,13 @@ message ArtifactUploadIndex {
 
   // List of files, in order of time, that are pending upload.
   repeated Artifact artifact = 1;
+
+  // Chunked uploads pending finalization, committed atomically with whole-file ownership above.
+  // Each entry is a complete, payload-free Begin/resume template: upload_uuid, contents and
+  // chunk_index are unset. Network attempts add a fresh upload_uuid; PutChunk requests derive their
+  // identity and descriptor from this template. Retain all chunk files until finalized or rejected.
+  // The separate field keeps older SDKs from interpreting chunked entries as whole-file payloads.
+  repeated UploadArtifactRequest chunked_artifact = 2;
 }
 
 // Durable local ownership and retirement state for a workflow attachment.
