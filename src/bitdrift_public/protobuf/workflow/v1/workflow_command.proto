@@ -245,6 +245,21 @@ enum WellKnownCommandType {
             }
           ]
         }
+      },
+      {
+        name: "suite_name"
+        type: STRING
+        description: "Name of the app group or suite to use, equivalent to `UserDefaults(suiteName: suite_name)`"
+        optional: true
+        availability: {
+          supported_platforms: [
+            {
+              platform: APPLE
+              min_os_version: "15.0"
+              min_config_version: 50
+            }
+          ]
+        }
       }
     ]
   }];
@@ -294,6 +309,21 @@ enum WellKnownCommandType {
             }
           ]
         }
+      },
+      {
+        name: "suite_name"
+        type: STRING
+        description: "Name of the app group or suite to use, equivalent to `UserDefaults(suiteName: suite_name)`"
+        optional: true
+        availability: {
+          supported_platforms: [
+            {
+              platform: APPLE
+              min_os_version: "15.0"
+              min_config_version: 50
+            }
+          ]
+        }
       }
     ]
   }];
@@ -338,6 +368,21 @@ enum WellKnownCommandType {
             }
           ]
         }
+      },
+      {
+        name: "suite_name"
+        type: STRING
+        description: "Name of the app group or suite to use, equivalent to `UserDefaults(suiteName: suite_name)`"
+        optional: true
+        availability: {
+          supported_platforms: [
+            {
+              platform: APPLE
+              min_os_version: "15.0"
+              min_config_version: 50
+            }
+          ]
+        }
       }
     ]
   }];
@@ -374,6 +419,21 @@ enum WellKnownCommandType {
               platform: ANDROID
               min_os_version: "8.0"
               min_config_version: 49
+            }
+          ]
+        }
+      },
+      {
+        name: "suite_name"
+        type: STRING
+        description: "Name of the app group or suite to use, equivalent to `UserDefaults(suiteName: suite_name)`"
+        optional: true
+        availability: {
+          supported_platforms: [
+            {
+              platform: APPLE
+              min_os_version: "15.0"
+              min_config_version: 50
             }
           ]
         }
