@@ -431,20 +431,29 @@ enum ArtifactPayloadEncoding {
 // Uploads an artifact either as one whole-file request or as a resumable sequence of chunks.
 // Chunked uploads require configuration version >= 52 and runtime admission to be enabled.
 //
-// A chunked upload has two operations:
-// 1. Begin/resume: omit chunk_index and contents, and send the complete immutable metadata,
-//    logical file size/checksum and ordered chunk descriptors. Repeating Begin reconciles progress
-//    after a disconnect or retry; it must describe the same artifact as the original Begin.
-// 2. PutChunk: set chunk_index and contents, and send only upload_uuid, artifact_id, command_id
-//    (if applicable) and logical_bytes alongside them. The server uses the admitted descriptor
-//    to decode and verify this chunk.
+// File artifacts use this protocol even when their compressed bytes fit in a single chunk. Begin
+// also negotiates upload intent; do not send a separate artifact_intent or any payload before the
+// server admits the upload.
+//
+// A file upload has two operations:
+// 1. Begin/resume: omit chunk_index and contents, and send the complete immutable metadata, logical
+//    file size/checksum, encoded size and ordered fragment descriptors. Repeating Begin reconciles
+//    progress after a disconnect or retry; it must describe the same artifact as the original
+//    Begin. The first accepted Begin binds its metadata. Resume state_metadata may be re-scrubbed
+//    under current client rules and does not replace that accepted metadata. Every Begin checks
+//    current sampling, enablement and suppression before storage access. These policy checks can
+//    Drop an accepted upload without reading or writing its admission.
+// 2. PutChunk: set chunk_index and contents, and send only upload_uuid, artifact_id, command_id (if
+//    applicable) and logical_bytes alongside them. The server uses the admitted descriptor to
+//    verify this fragment of the complete zlib stream. PutChunk does not repeat Begin's sampling
+//    policy checks.
 //
 // Responses identify durably stored chunks with a receipt bitmap. Send missing chunks, retaining
-// all local payloads until STATE_FINALIZED or STATE_REJECTED. Once all chunks are durable, the server
-// publishes the artifact and any required processing notification without a separate finalize RPC.
-// On retry or unfinished publication, back off and repeat Begin with the original metadata.
-// Finalization does not imply processing success. Stopping uploads does not cancel a command or
-// extend its deadline.
+// all local payloads until STATE_FINALIZED, STATE_DROPPED or STATE_REJECTED. Once all chunks are
+// durable, the server publishes the artifact and any required processing notification without a
+// separate finalize RPC. On retry or unfinished publication, back off and repeat Begin with the
+// original manifest. Finalization does not imply processing success. Stopping uploads does not
+// cancel a command or extend its deadline.
 message UploadArtifactRequest {
   // Attempt UUID correlating the response. Whole-file uploads also use it for idempotence;
   // chunked identity is authenticated owner + artifact_id, not this per-attempt value.
@@ -482,8 +491,8 @@ message UploadArtifactRequest {
   // this field; workflow command artifacts remain session artifacts and leave it unset.
   optional string command_id = 10 [(validate.rules).string.uuid = true];
 
-  // Whole-file payload encoding. Workflow/direct command attachments and crash profiles may use zlib.
-  // Chunked uploads leave this RAW; their descriptors are the sole source of chunk encoding.
+  // Whole-file encoding, or encoding of the complete chunked file on Begin/resume. Nonempty chunked
+  // files use one ZLIB stream; PutChunk leaves this unset/RAW.
   ArtifactPayloadEncoding payload_encoding = 11;
 
   // The MIME type of a workflow attachment, direct command attachment, or crash profile.
@@ -504,12 +513,16 @@ message UploadArtifactRequest {
     ignore_empty: true
     len: 32
   }];
-  // Ordered descriptors covering the entire logical file. Required on Begin/resume except for
+  // Ordered descriptors covering the entire encoded file. Required on Begin/resume except for
   // an empty file; omitted on PutChunk. Each descriptor describes one separately uploaded chunk.
-  repeated ArtifactChunkDescriptor chunks = 16 [(validate.rules).repeated.max_items = 256];
+  repeated ArtifactChunkDescriptor chunks = 16 [(validate.rules).repeated.max_items = 257];
   // Presence selects PutChunk, including index zero. Absence selects Begin/resume, which must carry
   // the complete metadata and descriptors described above.
-  optional uint32 chunk_index = 17 [(validate.rules).uint32.lt = 256];
+  optional uint32 chunk_index = 17 [(validate.rules).uint32.lt = 257];
+
+  // Total encoded bytes covered by the descriptors. Required on Begin/resume, omitted on PutChunk.
+  // Empty remote files use zero bytes, no chunks and RAW encoding.
+  optional uint64 encoded_bytes = 18 [(validate.rules).uint64.lte = 269484032];
 }
 
 message UploadArtifactResponse {
@@ -525,6 +538,10 @@ message UploadArtifactResponse {
     STATE_RETRYABLE = 3;
     // Permanent rejection/retirement. The SDK may release retained bytes and report failure.
     STATE_REJECTED = 4;
+    // Intent negotiation declined this artifact. No payload should be sent. The SDK may release
+    // retained bytes and report the same outcome as a dropped legacy artifact intent. Drops are
+    // not persisted by the server; another Begin re-evaluates intent.
+    STATE_DROPPED = 5;
   }
 
   // The UUID corresponding to the upload request.
@@ -538,24 +555,19 @@ message UploadArtifactResponse {
   State state = 3 [(validate.rules).enum.defined_only = true];
   // Exactly ceil(admitted chunk count / 8) bytes, low bit first. Unused high bits are zero.
   // Bits reflect authoritative durable receipts, not object listings or attempted transmissions.
-  bytes received_chunks = 4 [(validate.rules).bytes.max_len = 32];
+  bytes received_chunks = 4 [(validate.rules).bytes.max_len = 33];
 }
 
-// Fixed 1 MiB logical chunks, with a short last chunk. Position in the admitted manifest determines
-// index, offset and logical size. ZLIB is permitted only when it is smaller than the logical bytes.
+// Fixed 1 MiB encoded fragments, with a short last fragment. Concatenation is one complete zlib
+// stream; individual fragments are not independently decodable.
 message ArtifactChunkDescriptor {
   // Exact number of bytes sent in this chunk's contents, before server-side decoding.
   uint32 encoded_bytes = 1 [(validate.rules).uint32 = {
     gt: 0
     lte: 1048576
   }];
-  // Encoding of the transmitted bytes, independent of how the server stores the chunk.
-  ArtifactPayloadEncoding encoding = 2 [(validate.rules).enum.defined_only = true];
-  // SHA-256 after decoding. Used to verify logical content, including after server recompression.
-  bytes logical_sha256 = 3 [(validate.rules).bytes.len = 32];
-  // SHA-256 before decoding. Allows the SDK to verify retained encoded files cheaply before
-  // transmission and the server to reject changed encoded bytes before decompression.
-  // For RAW chunks this is identical to logical_sha256.
+  reserved 2, 3;
+  // SHA-256 of exactly the transmitted and stored fragment bytes.
   bytes encoded_sha256 = 4 [(validate.rules).bytes.len = 32];
 }
 
