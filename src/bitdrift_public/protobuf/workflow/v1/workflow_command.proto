@@ -618,6 +618,48 @@ enum WellKnownCommandType {
       }
     ]
   }];
+  SYSTEM_TRACE = 14 [(well_known_command_options) = {
+    key: "system_trace"
+    description: "Captures an Android platform-redacted Perfetto system timeline."
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "15"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "duration_ms"
+        type: INT64
+        description: "How long to record, in milliseconds. Android clamps the duration to its supported range."
+        default_value: {sint_data: 5000}
+      }
+    ]
+  }];
+  JAVA_HEAP_DUMP = 15 [(well_known_command_options) = {
+    key: "java_heap_dump"
+    description: "Captures a Perfetto ART heap retention graph. It can expose app class and reference structure and is not log-redacted."
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "15"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "buffer_size_kb"
+        type: INT64
+        description: "Profiler buffer size in KiB, subject to Android's bounds. This is not an output-file limit."
+        default_value: {sint_data: 65536}
+      }
+    ]
+  }];
 }
 
 // Selects one locally registered or built-in workflow command.
