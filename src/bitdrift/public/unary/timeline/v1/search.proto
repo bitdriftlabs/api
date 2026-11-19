@@ -46,7 +46,7 @@ message SessionAdvancedSearchRequest {
   // Matches against a specific field value.
   message FieldMatch {
     // The JSONPath expression identifying the field to match against.
-    // For a known field type like `os_version`, this would be `$.fields.os_version`.
+    // The path is relative to the log's fields, e.g. `$.os_version`.
     string json_path = 1 [(validate.rules).string = {
       min_len: 1
       max_len: 500
@@ -120,7 +120,7 @@ message SessionAdvancedSearchRequest {
   //   }
   // }
   //
-  // matches on $.fields.foo_bar because the query runs against each
+  // reports a match on `$.foo_bar` because the query runs against each
   // top-level field's value.
   message RawMatch {
     // The raw search query.

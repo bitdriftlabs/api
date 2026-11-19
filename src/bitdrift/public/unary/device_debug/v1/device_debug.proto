@@ -216,8 +216,11 @@ message GetDeviceCommandResponse {
     // The time when the command failed.
     .google.protobuf.Timestamp failed_at = 1 [(validate.rules).message.required = true];
 
-    // Optional structured context supplied with the terminal command result.
+    // Optional application context, separate from the failure message.
     .bitdrift_public.protobuf.client.v1.DeviceCommandResultContext context = 2;
+
+    // The human-readable reason the command failed, when available.
+    optional string failure_message = 3 [(validate.rules).string.max_bytes = 4096];
   }
 
   // The execution deadline passed without a persisted terminal outcome.

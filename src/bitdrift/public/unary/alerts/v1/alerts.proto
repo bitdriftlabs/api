@@ -395,10 +395,35 @@ message GetAlertConfigResponse {
 
     // The owner of the alert.
     .bitdrift.public.unary.common.v1.Owner owner = 5;
+
+    // Time when the authenticated user most recently viewed this alert.
+    // Updated only by `AlertsService.GetAlert`; configuration, list, and history reads do not update it.
+    .google.protobuf.Timestamp current_user_last_viewed = 7;
   }
 
   // The list of alert configurations.
   repeated .bitdrift.public.unary.alerts.v1.GetAlertConfigResponse.AlertConfigWithId alert_configs = 1;
+}
+
+// Requests one workflow alert and records that the authenticated user viewed it.
+message GetAlertRequest {
+  // Stable ID of the alert to retrieve.
+  uint64 alert_id = 1 [(validate.rules).uint64 = {
+    gt: 0
+    lte: 9223372036854775807
+  }];
+}
+
+// Returns one workflow alert and its chart identity.
+message GetAlertResponse {
+  // The requested alert, including the updated last-viewed timestamp.
+  .bitdrift.public.unary.alerts.v1.GetAlertConfigResponse.AlertConfigWithId alert = 1;
+
+  // Workflow containing the alert.
+  string workflow_id = 2;
+
+  // Chart containing the alert.
+  string chart_rule_id = 3;
 }
 
 // Requests creation, update, or deletion of an alert configuration.
@@ -718,8 +743,316 @@ message GetAlertHistoryResponse {
   uint32 total_alert_history = 2;
 }
 
+// Identifies the kind of alert returned by the organization-wide alert list.
+enum AlertType {
+  ALERT_TYPE_UNSPECIFIED = 0;
+  ALERT_TYPE_BASIC = 1;
+  ALERT_TYPE_SLO = 2;
+  ALERT_TYPE_ISSUE = 3;
+}
+
+// Describes the current state of an alert in the organization-wide alert list.
+enum AlertStatus {
+  ALERT_STATUS_UNSPECIFIED = 0;
+  ALERT_STATUS_DISABLED = 1;
+  ALERT_STATUS_NOT_FIRING = 2;
+  ALERT_STATUS_FIRING = 3;
+}
+
+// Identifies the kind of resource from which an alert originates.
+enum AlertSourceType {
+  ALERT_SOURCE_TYPE_UNSPECIFIED = 0;
+  ALERT_SOURCE_TYPE_WORKFLOW_CHART = 1;
+  ALERT_SOURCE_TYPE_ISSUE_VIEW = 2;
+}
+
+// Identifies a platform targeted by an alert's Workflow or Issue View.
+enum AlertPlatform {
+  ALERT_PLATFORM_UNSPECIFIED = 0;
+  ALERT_PLATFORM_APPLE = 1;
+  ALERT_PLATFORM_ANDROID = 2;
+}
+
+// Selects alerts using their normalized attributes.
+message AlertFilter {
+  // Matches alerts by their creator, who is their current owner.
+  message Ownership {
+    // User whose alerts to include or exclude.
+    string user_id = 1 [(validate.rules).string = {
+      min_len: 1
+      max_len: 100
+    }];
+
+    // When true, includes alerts not owned by this user, including alerts with no known creator.
+    bool exclude = 2;
+  }
+
+  // Inclusive bounds for a timestamp-valued alert attribute.
+  message TimestampRange {
+    // Includes values at or after this timestamp.
+    .google.protobuf.Timestamp at_or_after = 1;
+
+    // Includes values at or before this timestamp.
+    .google.protobuf.Timestamp at_or_before = 2;
+  }
+
+  // Platforms targeted by the alert's Workflow or Issue View. Values are combined with logical OR.
+  repeated .bitdrift.public.unary.alerts.v1.AlertPlatform platforms = 1 [(validate.rules).repeated = {
+    max_items: 2
+    unique: true
+    items: {
+      enum: {
+        defined_only: true
+        not_in: [0]
+      }
+    }
+  }];
+
+  // Alert states to include. Values are combined with logical OR.
+  repeated .bitdrift.public.unary.alerts.v1.AlertStatus statuses = 2 [(validate.rules).repeated = {
+    max_items: 3
+    unique: true
+    items: {
+      enum: {
+        defined_only: true
+        not_in: [0]
+      }
+    }
+  }];
+
+  // Source kinds to include. Values are combined with logical OR.
+  repeated .bitdrift.public.unary.alerts.v1.AlertSourceType source_types = 3 [(validate.rules).repeated = {
+    max_items: 2
+    unique: true
+    items: {
+      enum: {
+        defined_only: true
+        not_in: [0]
+      }
+    }
+  }];
+
+  // Alert types to include. Values are combined with logical OR.
+  repeated .bitdrift.public.unary.alerts.v1.AlertType alert_types = 4 [(validate.rules).repeated = {
+    max_items: 3
+    unique: true
+    items: {
+      enum: {
+        defined_only: true
+        not_in: [0]
+      }
+    }
+  }];
+
+  // Creator user IDs to include. Alerts without creator information do not match this filter.
+  repeated string creator_ids = 5 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      string: {
+        min_len: 1
+        max_len: 100
+      }
+    }
+  }];
+
+  // Workflow IDs to include. Callers can use workflow names to look up these stable IDs.
+  repeated string workflow_ids = 6 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      string: {
+        min_len: 1
+        max_len: 255
+      }
+    }
+  }];
+
+  // Issue View IDs to include. Callers can use Issue View names to look up these stable IDs.
+  repeated string issue_view_ids = 7 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      string: {
+        min_len: 1
+        max_len: 255
+      }
+    }
+  }];
+
+  // Case-insensitive substring matched against the alert name.
+  optional string alert_name_query = 8 [(validate.rules).string = {max_len: 255}];
+
+  // Chart rule IDs to include. Callers can use chart names to look up these stable IDs.
+  repeated string chart_rule_ids = 9 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      string: {
+        min_len: 1
+        max_len: 255
+      }
+    }
+  }];
+
+  // Inclusive creation-time bounds. Alerts without creation metadata do not match this filter.
+  .bitdrift.public.unary.alerts.v1.AlertFilter.TimestampRange created_at = 10;
+
+  // Inclusive last-fired bounds. Alerts that have never fired do not match this filter.
+  .bitdrift.public.unary.alerts.v1.AlertFilter.TimestampRange last_fired = 11;
+
+  // Inclusive last-resolved bounds. Alerts that have never resolved do not match this filter.
+  .bitdrift.public.unary.alerts.v1.AlertFilter.TimestampRange last_resolved = 12;
+
+  // Filters by alert ownership independently of the source Workflow or Issue View's ownership.
+  .bitdrift.public.unary.alerts.v1.AlertFilter.Ownership ownership = 13;
+}
+
+// Requests one page from the organization-wide alert list.
+message GetAlertsRequest {
+  // Describes one ordering criterion for alerts.
+  message Sort {
+    enum SortKey {
+      SORT_KEY_UNSPECIFIED = 0;
+      ALERT_NAME = 1;
+      SOURCE_TYPE = 2;
+      CREATOR_NAME = 3;
+      ALERT_STATUS = 4;
+      ALERT_TYPE = 5;
+      LAST_FIRED = 6;
+      LAST_RESOLVED = 7;
+      LAST_VIEWED = 8;
+      CREATED_AT = 9;
+    }
+
+    // Attribute used to order the results.
+    .bitdrift.public.unary.alerts.v1.GetAlertsRequest.Sort.SortKey key = 1 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
+
+    // Direction used to order the results.
+    .bitdrift.public.unary.common.v1.SortDirection direction = 2 [(validate.rules).enum = {defined_only: true}];
+  }
+
+  // Filters applied across the complete organization-wide result set.
+  .bitdrift.public.unary.alerts.v1.AlertFilter filter = 3;
+
+  // Ordering criteria applied in the provided order.
+  repeated .bitdrift.public.unary.alerts.v1.GetAlertsRequest.Sort sort = 4 [(validate.rules).repeated = {max_items: 8}];
+
+  // Pagination parameters for the result set.
+  .bitdrift.public.unary.common.v1.Pagination pagination = 5;
+}
+
+// Describes a principal assigned to an alert.
+message AlertAssignee {
+  // Identifies a team assigned to an alert.
+  message Team {
+    // Stable team ID.
+    string id = 1 [(validate.rules).string = {max_len: 100}];
+
+    // Team display name.
+    string name = 2 [(validate.rules).string = {max_len: 255}];
+  }
+
+  oneof principal {
+    // User assigned to the alert.
+    .bitdrift.public.unary.common.v1.Owner user = 1;
+
+    // Team assigned to the alert.
+    .bitdrift.public.unary.alerts.v1.AlertAssignee.Team team = 2;
+  }
+}
+
+// Returns one page from the organization-wide alert list.
+message GetAlertsResponse {
+  // Identifies a workflow chart and the alert attached to it.
+  message WorkflowChartSource {
+    // Stable alert ID.
+    uint64 alert_id = 1;
+
+    // Workflow ID containing the chart.
+    string workflow_id = 2;
+
+    // Display name of the workflow.
+    string workflow_name = 3;
+
+    // Rule ID of the chart within the workflow.
+    string chart_rule_id = 4;
+
+    // Display name of the chart.
+    string chart_name = 5;
+  }
+
+  // Identifies an Issue View and the alert attached to it.
+  message IssueViewSource {
+    // Stable alert UUID within the Issue View.
+    string alert_uuid = 1;
+
+    // Issue View ID.
+    string view_id = 2;
+
+    // Display name of the Issue View.
+    string view_name = 3;
+  }
+
+  // Describes the source and navigation identity of an alert.
+  message Source {
+    oneof type {
+      // Workflow chart containing the alert.
+      .bitdrift.public.unary.alerts.v1.GetAlertsResponse.WorkflowChartSource workflow_chart = 1;
+
+      // Issue View containing the alert.
+      .bitdrift.public.unary.alerts.v1.GetAlertsResponse.IssueViewSource issue_view = 2;
+    }
+  }
+
+  // Describes one normalized alert row.
+  message Item {
+    // Display name of the alert.
+    string name = 1;
+
+    // Source and stable navigation identity of the alert.
+    .bitdrift.public.unary.alerts.v1.GetAlertsResponse.Source source = 2;
+
+    // User who created the alert.
+    .bitdrift.public.unary.common.v1.Owner creator = 3;
+
+    // Principal assigned to the alert. Absent when the alert is unassigned.
+    .bitdrift.public.unary.alerts.v1.AlertAssignee assignee = 4;
+
+    // Current state of the alert.
+    .bitdrift.public.unary.alerts.v1.AlertStatus status = 5;
+
+    // Alert configuration type.
+    .bitdrift.public.unary.alerts.v1.AlertType alert_type = 6;
+
+    // Time when the alert most recently fired. Absent when it has never fired.
+    .google.protobuf.Timestamp last_fired_at = 7;
+
+    // Time when the alert most recently resolved. Absent when it has never resolved.
+    .google.protobuf.Timestamp last_resolved_at = 8;
+
+    // Time when the alert was created. Absent when legacy source data does not provide it.
+    .google.protobuf.Timestamp created_at = 10;
+
+    // Time when the authenticated user most recently viewed this alert.
+    // Updated only by `AlertsService.GetAlert` for workflow alerts or
+    // `IssuesAlertsService.GetAlert` for issue alerts. Configuration, list, and history reads do not update it.
+    .google.protobuf.Timestamp current_user_last_viewed = 11;
+  }
+
+  // Alerts returned for the requested page.
+  repeated .bitdrift.public.unary.alerts.v1.GetAlertsResponse.Item items = 1;
+
+  // Total number of alerts matching the request.
+  uint32 total_alerts = 2;
+}
+
 // Provides workflow alert configuration, listing, and history operations.
 service AlertsService {
+  // Retrieves one workflow alert.
+  //
+  // Records that the authenticated user viewed this alert and returns the updated last-viewed timestamp.
+  rpc GetAlert(.bitdrift.public.unary.alerts.v1.GetAlertRequest) returns (.bitdrift.public.unary.alerts.v1.GetAlertResponse);
+
   // Gets alert configuration for a workflow chart.
   rpc GetAlertConfig(.bitdrift.public.unary.alerts.v1.GetAlertConfigRequest) returns (.bitdrift.public.unary.alerts.v1.GetAlertConfigResponse);
 
@@ -735,4 +1068,10 @@ service AlertsService {
 
   // Gets history for a single workflow alert.
   rpc GetAlertHistory(.bitdrift.public.unary.alerts.v1.GetAlertHistoryRequest) returns (.bitdrift.public.unary.alerts.v1.GetAlertHistoryResponse);
+}
+
+// Provides an organization-wide list of workflow and Issue View alerts.
+service AlertService {
+  // Lists normalized alerts from every supported alert source.
+  rpc GetAlerts(.bitdrift.public.unary.alerts.v1.GetAlertsRequest) returns (.bitdrift.public.unary.alerts.v1.GetAlertsResponse);
 }
