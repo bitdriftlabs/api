@@ -879,8 +879,12 @@ message DeviceCommandUpdate {
 
   // Reports that command execution could not be completed.
   message Failed {
-    // Optional structured context supplied with the failed command result.
+    // Optional application context supplied with the failed command result. Older SDKs put
+    // the failure message in the `error` field when `failure_message` is absent.
     DeviceCommandResultContext context = 1;
+
+    // The human-readable failure message, separate from application context.
+    optional string failure_message = 2;
   }
 
   // The command ID from the corresponding DeviceCommandRequest.
