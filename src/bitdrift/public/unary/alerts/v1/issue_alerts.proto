@@ -141,6 +141,10 @@ message GetIssuesAlertConfigResponse {
 
     // Time when the alert most recently resolved.
     .google.protobuf.Timestamp last_resolved_at = 3;
+
+    // Time when the authenticated user most recently viewed this alert.
+    // Updated only by `IssuesAlertsService.GetAlert`; configuration, list, and history reads do not update it.
+    .google.protobuf.Timestamp current_user_last_viewed = 4;
   }
 
   // Returns the alert configuration for the issues view ID.
@@ -148,6 +152,30 @@ message GetIssuesAlertConfigResponse {
 
   // Per alert information on top of the stored configuration.
   repeated .bitdrift.public.unary.alerts.v1.GetIssuesAlertConfigResponse.PerAlertInfo per_alert_info = 2;
+}
+
+// Requests one issue alert and records that the authenticated user viewed it.
+message GetIssueAlertRequest {
+  // Issues view containing the alert.
+  string view_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+
+  // Stable UUID of the alert to retrieve.
+  string alert_uuid = 2 [(validate.rules).string = {
+    min_len: 1
+    max_len: 255
+  }];
+}
+
+// Returns one issue alert and its per-user state.
+message GetIssueAlertResponse {
+  // The requested alert configuration.
+  .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.IssuesAlert alert = 1;
+
+  // Alert state, including the updated last-viewed timestamp.
+  .bitdrift.public.unary.alerts.v1.GetIssuesAlertConfigResponse.PerAlertInfo info = 2;
 }
 
 // Requests creation, update, or deletion of an issues alert configuration.
@@ -362,6 +390,11 @@ message GetIssueAlertHistoryResponse {
 
 // Provides issues alert configuration, listing, and history operations.
 service IssuesAlertsService {
+  // Retrieves one issue alert.
+  //
+  // Records that the authenticated user viewed this alert and returns the updated last-viewed timestamp.
+  rpc GetAlert(.bitdrift.public.unary.alerts.v1.GetIssueAlertRequest) returns (.bitdrift.public.unary.alerts.v1.GetIssueAlertResponse);
+
   // Gets the alert configuration for an issues view.
   rpc GetAlertConfig(.bitdrift.public.unary.alerts.v1.GetIssuesAlertConfigRequest) returns (.bitdrift.public.unary.alerts.v1.GetIssuesAlertConfigResponse);
 
