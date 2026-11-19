@@ -3,7 +3,7 @@
 //
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
-// https://polyformproject.org/licenses/strict/1.0.0
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 
 syntax = "proto3";
 
@@ -63,6 +63,8 @@ message DeviceCommandArgumentDefinition {
     INT64 = 5;
     // Data.bool_data.
     BOOL = 6;
+    // Any data type;
+    ANY = 99;
   }
 
   // The name used as the key in the command invocation's arguments map.
@@ -107,6 +109,13 @@ extend google.protobuf.EnumValueOptions {
 // Commands implemented by the client without application registration.
 enum WellKnownCommandType {
   TYPE_UNSPECIFIED = 0;
+  // Requests the device's buffered logs.
+  //
+  // The attachment is an `application/json` array of log records, assembled in upload order,
+  // including an empty array when no logs were captured. Stored batches are decompressed before
+  // JSON assembly; the download does not preserve their original zstd frames. HTTP compression can
+  // be negotiated separately; decode according to the response's `Content-Encoding`.
+  // There is no processed representation. This command is not supported in workflows.
   DUMP_DEVICE_BUFFER = 1 [(well_known_command_options) = {
     key: "dump_device_buffer"
     description: "Requests the device's buffered logs."
@@ -125,6 +134,11 @@ enum WellKnownCommandType {
       ]
     }
   }];
+  // Captures the device's current screen as a JPEG image.
+  //
+  // The original attachment has MIME type `image/jpeg` and uses `Content-Encoding: zstd` when
+  // downloaded. Decode the HTTP content encoding before treating the contents as a JPEG.
+  // There is no processed representation.
   TAKE_SCREENSHOT = 2 [(well_known_command_options) = {
     key: "take_screenshot"
     is_privacy_sensitive: true
@@ -144,6 +158,19 @@ enum WellKnownCommandType {
       ]
     }
   }];
+  // Captures a Perfetto stack sampling trace of the application's process.
+  //
+  // The original attachment has MIME type `application/vnd.bitdrift.perfetto-trace`. Use
+  // `?variant=raw` to download that original trace without waiting for processing. The default
+  // download and `?variant=processed` return a processed Perfetto TAR bundle when ready; after HTTP
+  // zstd decompression, extract the TAR rather than interpreting the entire bundle as a raw trace.
+  //
+  // Processing-pending downloads return HTTP 409 with `Retry-After: 2`. If processing fails, the
+  // default download returns the original trace with HTTP 200, while `?variant=processed` returns
+  // HTTP 422 with `error_code` and `diagnostics`. Inspect attachment `/status` for processing state,
+  // availability, and quality diagnostics; `partial` describes capture/processing limitations,
+  // not a trace that is still uploading. Downloads include
+  // `X-Bitdrift-Attachment-Disposition: raw` or `processed`.
   STACK_SAMPLING_TRACE = 3 [(well_known_command_options) = {
     key: "stack_sampling_trace"
     description: "Captures a Perfetto stack sampling trace of the application's process."
@@ -177,7 +204,382 @@ enum WellKnownCommandType {
       }
     ]
   }];
-  HEAP_PROFILE_TRACE = 4 [(well_known_command_options) = {
+  // Remove a value from app settings, using `UserDefaults` on Apple platforms or `SharedPreferences`
+  // on Android.
+  //
+  // Specify a key to remove a corresponding value from settings. On Android, the `file_name` argument
+  // is required and equivalent to `Context.getSharedPreferences(file_name)`.
+  USER_SETTINGS_REMOVE = 4 [(well_known_command_options) = {
+    key: "user_settings_remove"
+    description: "Removes a value from UserDefaults (Apple platforms) or SharedPreferences (Android)"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 52
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "key"
+        type: STRING
+        description: "Settings key to remove"
+      },
+      {
+        name: "file_name"
+        type: STRING
+        description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        availability: {
+          supported_platforms: [
+            {
+              platform: ANDROID
+              min_os_version: "8.0"
+              min_config_version: 52
+            }
+          ]
+        }
+      },
+      {
+        name: "suite_name"
+        type: STRING
+        description: "Name of the app group or suite to use, equivalent to `UserDefaults(suiteName: suite_name)`"
+        optional: true
+        availability: {
+          supported_platforms: [
+            {
+              platform: APPLE
+              min_os_version: "15.0"
+              min_config_version: 52
+            }
+          ]
+        }
+      }
+    ]
+  }];
+  // Set a value in app settings, using `UserDefaults` on Apple platforms or `SharedPreferences` on
+  // Android.
+  //
+  // Specify a key and value to set. On Android, the `file_name` argument is required and equivalent
+  // to `Context.getSharedPreferences(file_name)`.
+  USER_SETTINGS_SET = 5 [(well_known_command_options) = {
+    key: "user_settings_set"
+    description: "Updates a value in UserDefaults (Apple platforms) or SharedPreferences (Android)"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 52
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "key"
+        type: STRING
+        description: "Settings key to update"
+      },
+      {
+        name: "value"
+        type: ANY
+        description: "New settings value"
+      },
+      {
+        name: "file_name"
+        type: STRING
+        description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        availability: {
+          supported_platforms: [
+            {
+              platform: ANDROID
+              min_os_version: "8.0"
+              min_config_version: 52
+            }
+          ]
+        }
+      },
+      {
+        name: "suite_name"
+        type: STRING
+        description: "Name of the app group or suite to use, equivalent to `UserDefaults(suiteName: suite_name)`"
+        optional: true
+        availability: {
+          supported_platforms: [
+            {
+              platform: APPLE
+              min_os_version: "15.0"
+              min_config_version: 52
+            }
+          ]
+        }
+      }
+    ]
+  }];
+  // Get a value from app settings, using `UserDefaults` on Apple platforms or `SharedPreferences` on
+  // Android.
+  //
+  // Specify a key to fetch. On Android, the `file_name` argument is required and equivalent to
+  // `Context.getSharedPreferences(file_name)`.
+  USER_SETTINGS_GET = 6 [(well_known_command_options) = {
+    key: "user_settings_get"
+    description: "Reads a value from UserDefaults (Apple platforms) or SharedPreferences (Android)"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 52
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "key"
+        type: STRING
+        description: "Settings key to read"
+      },
+      {
+        name: "file_name"
+        type: STRING
+        description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        availability: {
+          supported_platforms: [
+            {
+              platform: ANDROID
+              min_os_version: "8.0"
+              min_config_version: 52
+            }
+          ]
+        }
+      },
+      {
+        name: "suite_name"
+        type: STRING
+        description: "Name of the app group or suite to use, equivalent to `UserDefaults(suiteName: suite_name)`"
+        optional: true
+        availability: {
+          supported_platforms: [
+            {
+              platform: APPLE
+              min_os_version: "15.0"
+              min_config_version: 52
+            }
+          ]
+        }
+      }
+    ]
+  }];
+  // Remove all values from app settings, using `UserDefaults` on Apple platforms or
+  // `SharedPreferences` on Android.
+  //
+  // On Android, the `file_name` argument is required and equivalent to
+  // `Context.getSharedPreferences(file_name)`.
+  USER_SETTINGS_CLEAR = 7 [(well_known_command_options) = {
+    key: "user_settings_clear"
+    description: "Removes all values from UserDefaults (Apple platforms) or SharedPreferences (Android)"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 52
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "file_name"
+        type: STRING
+        description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        availability: {
+          supported_platforms: [
+            {
+              platform: ANDROID
+              min_os_version: "8.0"
+              min_config_version: 52
+            }
+          ]
+        }
+      },
+      {
+        name: "suite_name"
+        type: STRING
+        description: "Name of the app group or suite to use, equivalent to `UserDefaults(suiteName: suite_name)`"
+        optional: true
+        availability: {
+          supported_platforms: [
+            {
+              platform: APPLE
+              min_os_version: "15.0"
+              min_config_version: 52
+            }
+          ]
+        }
+      }
+    ]
+  }];
+  // List files within the cache directory
+  //
+  // Lists the file names with the cache directory or a directory within the cache if the path
+  // argument is specified
+  FILE_LIST = 8 [(well_known_command_options) = {
+    key: "file_list"
+    description: "List file names relative to the cache directory"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 52
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "path"
+        type: STRING
+        description: "Directory path relative to the area or unspecified for the entire area"
+        optional: true
+      }
+    ]
+  }];
+  // Read the size of a file or directory
+  //
+  // Returns the size of the cache directory or a directory within the cache if the path
+  // argument is specified
+  FILE_SIZE = 9 [(well_known_command_options) = {
+    key: "file_size"
+    description: "Get the size of a file or directory within the cache"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 52
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "path"
+        type: STRING
+        description: "Directory path relative to the area or unspecified for the entire area"
+        optional: true
+      }
+    ]
+  }];
+  // Delete the contents of the cache directory
+  FILE_CLEAR = 10 [(well_known_command_options) = {
+    key: "file_clear"
+    description: "Delete the contents of the cache"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 52
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 52
+        }
+      ]
+    }
+  }];
+  // Delete a file or directory within the cache directory
+  //
+  // Directories are only removed if the recursive argument is set
+  FILE_DELETE = 11 [(well_known_command_options) = {
+    key: "file_delete"
+    description: "Delete a file or directory within the cache"
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "8.0"
+          min_config_version: 52
+        },
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "path"
+        type: STRING
+        description: "Directory path relative to the area"
+      },
+      {
+        name: "recursive"
+        type: BOOL
+        description: "Set true to remove a directory and all contents"
+        optional: true
+      }
+    ]
+  }];
+  // Captures a snapshot of the application's memory.
+  //
+  // On Apple platforms the attachment is a `bitdrift_public.protobuf.memory.v1.MemoryDump` with MIME
+  // type `application/vnd.bitdrift.ios-memory-dump`: the kernel's memory counters, the VM map by
+  // tag and image, and, unless disabled, a census of the malloc heap.
+  MEMORY_DUMP = 12 [(well_known_command_options) = {
+    key: "memory_dump"
+    description: "Captures a snapshot of the application's memory."
+    availability: {
+      supported_platforms: [
+        {
+          platform: APPLE
+          min_os_version: "15.0"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "include_heap"
+        type: BOOL
+        description: "Includes a census of the malloc heap, which briefly locks each malloc zone."
+        default_value: {bool_data: true}
+      }
+    ]
+  }];
+  HEAP_PROFILE_TRACE = 13 [(well_known_command_options) = {
     key: "heap_profile_trace"
     description: "Captures a Perfetto heap profile of the application's process."
     availability: {
@@ -185,7 +587,7 @@ enum WellKnownCommandType {
         {
           platform: ANDROID
           min_os_version: "15"
-          min_config_version: 51
+          min_config_version: 53
         }
       ]
     }

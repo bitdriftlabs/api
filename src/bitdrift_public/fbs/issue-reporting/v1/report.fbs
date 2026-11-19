@@ -3,7 +3,7 @@
 //
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
-// https://polyformproject.org/licenses/strict/1.0.0
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 
 // Specification for the format of reporting programmatic issues
 
@@ -573,6 +573,11 @@ table Report {
 
     // Complete source-specific crash evidence
     crash_info:[CrashInfo];
+
+    // Android SDK only: an encoded bitdrift_public.protobuf.client.v1.CrashProfileSource for the
+    // process that produced this report. The SDK uses it on-device to attribute system-triggered
+    // ANR/OOM profiles to this report.
+    crash_profile_source:[ubyte];
 }
 
 root_type Report;

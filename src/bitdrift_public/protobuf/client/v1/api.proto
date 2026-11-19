@@ -3,7 +3,7 @@
 //
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
-// https://polyformproject.org/licenses/strict/1.0.0
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 
 syntax = "proto3";
 
@@ -15,6 +15,7 @@ import "bitdrift_public/protobuf/client/v1/metric.proto";
 import "bitdrift_public/protobuf/client/v1/runtime.proto";
 import "bitdrift_public/protobuf/config/v1/config.proto";
 import "bitdrift_public/protobuf/filter/v1/filter.proto";
+import "bitdrift_public/protobuf/filter/v1/scrub.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "bitdrift_public/protobuf/state/v1/scope.proto";
 import "bitdrift_public/protobuf/state/v1/state_payload.proto";
@@ -264,6 +265,20 @@ message LogUploadRequest {
   // Optional buffer-dump command whose persisted log bytes this upload contributes to. The outer
   // upload_uuid is this batch's stable idempotency key.
   optional string command_id = 8 [(validate.rules).string.uuid = true];
+
+  // The field sets referenced by logs in this upload through Log.field_set_version, one entry per
+  // version. A version a log refers to may be missing when the client no longer has it; the
+  // server then marks that log as missing its persistent fields.
+  repeated FieldSet field_sets = 9;
+}
+
+// The full set of persistent log fields at one field-set version.
+message FieldSet {
+  // The version that logs refer to through Log.field_set_version. Never zero.
+  uint64 version = 1;
+
+  // The fields of this version. Keys are unique.
+  repeated bitdrift_public.protobuf.logging.v1.Log.Field fields = 2;
 }
 
 // Empty message to maintain a application layer keep alive mechanism.
@@ -356,6 +371,11 @@ message SankeyIntentRequest {
   string sankey_diagram_id = 3 [(validate.rules).string = {min_len: 1}];
 }
 
+message CrashProfileMetadata {
+  // Artifact IDs of the crash reports associated with this profile.
+  repeated string report_ids = 1;
+}
+
 message UploadArtifactIntentRequest {
   // The UUID of the intent being negotiated. This is used to correlate the response with the request.
   string intent_uuid = 1 [(validate.rules).string = {min_len: 1}];
@@ -378,6 +398,9 @@ message UploadArtifactIntentRequest {
   // The session ID associated with the artifact. This allows correlating the intent with a specific user session.
   // This may not be set for all kinds of artifacts, such as state snapshots.
   optional string session_id = 7;
+
+  // Report links for type_id = "crash_profile".
+  CrashProfileMetadata crash_profile = 8;
 }
 
 message UploadArtifactIntentResponse {
@@ -405,14 +428,42 @@ enum ArtifactPayloadEncoding {
   ARTIFACT_PAYLOAD_ENCODING_ZLIB = 1;
 }
 
+// Uploads an artifact either as one whole-file request or as a resumable sequence of chunks.
+// Chunked uploads require configuration version >= 52 and runtime admission to be enabled.
+//
+// File artifacts use this protocol even when their compressed bytes fit in a single chunk. Begin
+// also negotiates upload intent; do not send a separate artifact_intent or any payload before the
+// server admits the upload.
+//
+// A file upload has two operations:
+// 1. Begin/resume: omit chunk_index and contents, and send the complete immutable metadata, logical
+//    file size/checksum, encoded size and ordered fragment descriptors. Repeating Begin reconciles
+//    progress after a disconnect or retry; it must describe the same artifact as the original
+//    Begin. The first accepted Begin binds its metadata. Resume state_metadata may be re-scrubbed
+//    under current client rules and does not replace that accepted metadata. Every Begin checks
+//    current sampling, enablement and suppression before storage access. These policy checks can
+//    Drop an accepted upload without reading or writing its admission.
+// 2. PutChunk: set chunk_index and contents, and send only upload_uuid, artifact_id, command_id (if
+//    applicable) and logical_bytes alongside them. The server uses the admitted descriptor to
+//    verify this fragment of the complete zlib stream. PutChunk does not repeat Begin's sampling
+//    policy checks.
+//
+// Responses identify durably stored chunks with a receipt bitmap. Send missing chunks, retaining
+// all local payloads until STATE_FINALIZED, STATE_DROPPED or STATE_REJECTED. Once all chunks are
+// durable, the server publishes the artifact and any required processing notification without a
+// separate finalize RPC. On retry or unfinished publication, back off and repeat Begin with the
+// original manifest. Finalization does not imply processing success. Stopping uploads does not
+// cancel a command or extend its deadline.
 message UploadArtifactRequest {
-  // Upload UUID used to provide idempotence and to correlate a response with this request.
+  // Attempt UUID correlating the response. Whole-file uploads also use it for idempotence;
+  // chunked identity is authenticated owner + artifact_id, not this per-attempt value.
   string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
 
-  // The type of the artifact being uploaded.
-  string type_id = 2 [(validate.rules).string = {min_len: 1}];
+  // Artifact type. Required for whole-file uploads and Begin/resume; omitted on PutChunk.
+  string type_id = 2;
 
-  // The artifact to upload. This is a binary blob that is interpreted by the server based on the type_id.
+  // The complete artifact for a whole-file upload, or the encoded chunk selected by chunk_index.
+  // Begin/resume leaves this empty.
   bytes contents = 3;
 
   // A client-generated ID that uniquely identifies the artifact being uploaded. This is used to correlate
@@ -423,8 +474,8 @@ message UploadArtifactRequest {
   // this may capture information about the device at the time of a crash.
   map<string, logging.v1.Data> state_metadata = 5;
 
-  // The timestamp associated with this upload. This allows us to possibly reject the upload of very old artifacts.
-  google.protobuf.Timestamp time = 6 [(validate.rules).message = {required: true}];
+  // Capture timestamp. Required for whole-file uploads and Begin/resume; omitted on PutChunk.
+  google.protobuf.Timestamp time = 6;
 
   // The session ID associated with the artifact if applicable.
   string session_id = 7;
@@ -440,22 +491,84 @@ message UploadArtifactRequest {
   // this field; workflow command artifacts remain session artifacts and leave it unset.
   optional string command_id = 10 [(validate.rules).string.uuid = true];
 
-  // The encoding of contents. Only workflow and direct command attachments may use zlib encoding.
+  // Whole-file encoding, or encoding of the complete chunked file on Begin/resume. Nonempty chunked
+  // files use one ZLIB stream; PutChunk leaves this unset/RAW.
   ArtifactPayloadEncoding payload_encoding = 11;
 
-  // The MIME type of a workflow or direct command attachment, when supplied by its handler.
+  // The MIME type of a workflow attachment, direct command attachment, or crash profile.
   // Workflow screenshots use image/jpeg. Missing or empty values default to
   // application/octet-stream; supplied values must be concrete MIME types of at most 255 bytes.
   // Accepted MIME types are preserved by the corresponding attachment download endpoint.
   optional string content_type = 12;
+
+  // Report links for type_id = "crash_profile".
+  CrashProfileMetadata crash_profile = 13;
+
+  // Total uncompressed file size. Presence selects chunked upload, including a zero-length remote
+  // command file with no chunks. Required and unchanged on every operation for this artifact.
+  optional uint64 logical_bytes = 14 [(validate.rules).uint64.lte = 268435456];
+  // SHA-256 of the entire uncompressed file, in chunk order. Required on Begin/resume and omitted
+  // on PutChunk. This identifies the logical file independently of its transfer/storage encoding.
+  bytes logical_sha256 = 15 [(validate.rules).bytes = {
+    ignore_empty: true
+    len: 32
+  }];
+  // Ordered descriptors covering the entire encoded file. Required on Begin/resume except for
+  // an empty file; omitted on PutChunk. Each descriptor describes one separately uploaded chunk.
+  repeated ArtifactChunkDescriptor chunks = 16 [(validate.rules).repeated.max_items = 257];
+  // Presence selects PutChunk, including index zero. Absence selects Begin/resume, which must carry
+  // the complete metadata and descriptors described above.
+  optional uint32 chunk_index = 17 [(validate.rules).uint32.lt = 257];
+
+  // Total encoded bytes covered by the descriptors. Required on Begin/resume, omitted on PutChunk.
+  // Empty remote files use zero bytes, no chunks and RAW encoding.
+  optional uint64 encoded_bytes = 18 [(validate.rules).uint64.lte = 269484032];
 }
 
 message UploadArtifactResponse {
+  enum State {
+    // Whole-file ACKs leave state unset. This is never a successful chunked ACK.
+    STATE_UNSPECIFIED = 0;
+    // The upload is not finalized. received_chunks describes its durable payloads.
+    STATE_RECEIVING = 1;
+    // Canonical object, authoritative catalog/receipt and required processing notification are
+    // durable. Processing success is separate. Only this state completes a chunked artifact.
+    STATE_FINALIZED = 2;
+    // Back off and repeat Begin/resume with the original durable metadata and retained bytes.
+    STATE_RETRYABLE = 3;
+    // Permanent rejection/retirement. The SDK may release retained bytes and report failure.
+    STATE_REJECTED = 4;
+    // Intent negotiation declined this artifact. No payload should be sent. The SDK may release
+    // retained bytes and report the same outcome as a dropped legacy artifact intent. Drops are
+    // not persisted by the server; another Begin re-evaluates intent.
+    STATE_DROPPED = 5;
+  }
+
   // The UUID corresponding to the upload request.
   string upload_uuid = 1 [(validate.rules).string = {min_len: 1}];
 
-  // Optional error message which indicates that artifact upload failed.
+  // Whole-file error semantics are unchanged. Chunked retryable/rejected states require an error of
+  // at most 1024 bytes and omit the bitmap; active/finalized states require an empty error.
   string error = 2;
+
+  // Chunked progress only. Whole-file ACK semantics and fields 1-2 are unchanged.
+  State state = 3 [(validate.rules).enum.defined_only = true];
+  // Exactly ceil(admitted chunk count / 8) bytes, low bit first. Unused high bits are zero.
+  // Bits reflect authoritative durable receipts, not object listings or attempted transmissions.
+  bytes received_chunks = 4 [(validate.rules).bytes.max_len = 33];
+}
+
+// Fixed 1 MiB encoded fragments, with a short last fragment. Concatenation is one complete zlib
+// stream; individual fragments are not independently decodable.
+message ArtifactChunkDescriptor {
+  // Exact number of bytes sent in this chunk's contents, before server-side decoding.
+  uint32 encoded_bytes = 1 [(validate.rules).uint32 = {
+    gt: 0
+    lte: 1048576
+  }];
+  reserved 2, 3;
+  // SHA-256 of exactly the transmitted and stored fragment bytes.
+  bytes encoded_sha256 = 4 [(validate.rules).bytes.len = 32];
 }
 
 // The response sent as part of stream establishment.
@@ -644,6 +757,11 @@ message ConfigurationUpdate {
     // NOTE: "already deployed" implies that the workflow will be found in the
     // workflows_configuration field. The server will not de-dup for simplification purposes.
     workflow.v1.WorkflowsConfiguration debug_workflows = 9;
+
+    // Redaction rules applied to every log before the filters. Sent only to clients whose
+    // configuration version supports scrub rules; older clients receive the same rules as the
+    // leading entries of filters_configuration.
+    filter.v1.ScrubConfiguration scrub_configuration = 10;
   }
 
   // A version nonce that can be used for both tracking the last applied update as well as for
@@ -761,8 +879,12 @@ message DeviceCommandUpdate {
 
   // Reports that command execution could not be completed.
   message Failed {
-    // Optional structured context supplied with the failed command result.
+    // Optional application context supplied with the failed command result. Older SDKs put
+    // the failure message in the `error` field when `failure_message` is absent.
     DeviceCommandResultContext context = 1;
+
+    // The human-readable failure message, separate from application context.
+    optional string failure_message = 2;
   }
 
   // The command ID from the corresponding DeviceCommandRequest.

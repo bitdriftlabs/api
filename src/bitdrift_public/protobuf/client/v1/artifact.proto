@@ -3,7 +3,7 @@
 //
 // Use of this source code and APIs are governed by a source available license that can be found in
 // the LICENSE file or at:
-// https://polyformproject.org/licenses/strict/1.0.0
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 
 syntax = "proto3";
 
@@ -14,6 +14,28 @@ import "bitdrift_public/protobuf/client/v1/feature_flag.proto";
 import "bitdrift_public/protobuf/logging/v1/payload.proto";
 import "bitdrift_public/protobuf/workflow/v1/workflow.proto";
 import "google/protobuf/timestamp.proto";
+
+// Facts about an Android app process, recorded once at SDK startup, that let a later
+// system-triggered profile be attributed to a crash report from that process. The SDK stores the
+// encoded message in the report's `crash_profile_source` field and in the process-state summary
+// that Android returns with the process's exit record. It is never an API request field.
+message CrashProfileSource {
+  // Random 16-byte UUID identifying this process run.
+  bytes run_id = 1;
+
+  uint32 pid = 2;
+
+  // Settings.Global.BOOT_COUNT when the process started.
+  uint64 boot_count = 3;
+
+  // Process start time in CLOCK_BOOTTIME nanoseconds.
+  uint64 process_start_elapsed_ns = 4;
+
+  // A paired CLOCK_REALTIME / CLOCK_BOOTTIME sample taken at SDK startup. Their difference is the
+  // boot epoch compared with a trace's clock snapshots and converts report wall times to BOOTTIME.
+  int64 wall_ns = 5;
+  uint64 elapsed_ns = 6;
+}
 
 enum StorageFormat {
   // The file was checksummed when it was copied into the artifact upload queue, so we can validate the checksum on upload.
@@ -61,13 +83,23 @@ message ArtifactUploadIndex {
     // The encoding of the retained artifact payload. This survives local uploader restarts.
     ArtifactPayloadEncoding payload_encoding = 12;
 
-    // The MIME type of a workflow or direct command attachment. This survives local uploader
-    // restarts; workflow attachments also retain it before ownership transfers to the uploader.
+    // The MIME type of a workflow/direct command attachment or crash profile. This survives
+    // local uploader restarts; workflow attachments also retain it before ownership transfers.
     optional string content_type = 13;
+
+    // Report links for type_id = "crash_profile", retained across uploader restarts.
+    CrashProfileMetadata crash_profile = 14;
   }
 
   // List of files, in order of time, that are pending upload.
   repeated Artifact artifact = 1;
+
+  // Chunked uploads pending finalization, committed atomically with whole-file ownership above.
+  // Each entry is a complete, payload-free Begin/resume template: upload_uuid, contents and
+  // chunk_index are unset. Network attempts add a fresh upload_uuid; PutChunk requests derive their
+  // identity and descriptor from this template. Retain all chunk files until finalized or rejected.
+  // The separate field keeps older SDKs from interpreting chunked entries as whole-file payloads.
+  repeated UploadArtifactRequest chunked_artifact = 2;
 }
 
 // Durable local ownership and retirement state for a workflow attachment.
