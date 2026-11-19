@@ -236,6 +236,7 @@ enum WellKnownCommandType {
         name: "file_name"
         type: STRING
         description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        optional: true
         availability: {
           supported_platforms: [
             {
@@ -300,6 +301,7 @@ enum WellKnownCommandType {
         name: "file_name"
         type: STRING
         description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        optional: true
         availability: {
           supported_platforms: [
             {
@@ -359,6 +361,7 @@ enum WellKnownCommandType {
         name: "file_name"
         type: STRING
         description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        optional: true
         availability: {
           supported_platforms: [
             {
@@ -413,6 +416,7 @@ enum WellKnownCommandType {
         name: "file_name"
         type: STRING
         description: "Desired shared preferences file, equivalent to `Context.getSharedPreferences(file_name)`"
+        optional: true
         availability: {
           supported_platforms: [
             {
