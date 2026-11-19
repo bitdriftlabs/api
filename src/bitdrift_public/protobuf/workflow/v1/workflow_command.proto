@@ -558,11 +558,19 @@ enum WellKnownCommandType {
   // On Apple platforms the attachment is a `bitdrift_public.protobuf.memory.v1.MemoryDump` with MIME
   // type `application/vnd.bitdrift.ios-memory-dump`: the kernel's memory counters, the VM map by
   // tag and image, and, unless disabled, a census of the malloc heap.
+  // On Android the attachment is a Perfetto ART heap retention graph with MIME type
+  // `application/vnd.bitdrift.perfetto-trace`. It can expose class and reference structure and is
+  // not log-redacted. Android uses a 64 MiB profiling buffer, not a limit on the output file.
   MEMORY_DUMP = 12 [(well_known_command_options) = {
     key: "memory_dump"
-    description: "Captures a snapshot of the application's memory."
+    description: "Captures an iOS memory snapshot or an Android Perfetto ART heap graph. Android heap graphs can expose class and reference structure and are not log-redacted."
     availability: {
       supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "15"
+          min_config_version: 52
+        },
         {
           platform: APPLE
           min_os_version: "15.0"
@@ -574,7 +582,7 @@ enum WellKnownCommandType {
       {
         name: "include_heap"
         type: BOOL
-        description: "Includes a census of the malloc heap, which briefly locks each malloc zone."
+        description: "On iOS, includes a malloc heap census, briefly locking each zone. On Android, must be true because the dump is a heap graph."
         default_value: {bool_data: true}
       }
     ]
@@ -615,6 +623,27 @@ enum WellKnownCommandType {
         type: BOOL
         description: "Records Java heap allocations instead of native ones; a profile records one or the other."
         default_value: {bool_data: true}
+      }
+    ]
+  }];
+  SYSTEM_TRACE = 14 [(well_known_command_options) = {
+    key: "system_trace"
+    description: "Captures an Android platform-redacted Perfetto system timeline."
+    availability: {
+      supported_platforms: [
+        {
+          platform: ANDROID
+          min_os_version: "15"
+          min_config_version: 52
+        }
+      ]
+    }
+    argument_definitions: [
+      {
+        name: "duration_ms"
+        type: INT64
+        description: "How long to record, in milliseconds. Android clamps the duration to its supported range."
+        default_value: {sint_data: 5000}
       }
     ]
   }];
