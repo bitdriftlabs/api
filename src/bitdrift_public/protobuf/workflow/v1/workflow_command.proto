@@ -108,9 +108,6 @@ extend google.protobuf.EnumValueOptions {
 
 // Commands implemented by the client without application registration.
 enum WellKnownCommandType {
-  reserved 15;
-  reserved "JAVA_HEAP_DUMP";
-
   TYPE_UNSPECIFIED = 0;
   // Requests the device's buffered logs.
   //
