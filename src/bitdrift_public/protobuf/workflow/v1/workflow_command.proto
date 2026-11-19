@@ -587,7 +587,7 @@ enum WellKnownCommandType {
         {
           platform: ANDROID
           min_os_version: "15"
-          min_config_version: 53
+          min_config_version: 52
         }
       ]
     }
