@@ -111,7 +111,7 @@ message SendDeviceCommandResponse {
   }
 }
 
-// Requests a device command's status, optionally waiting for execution and upload to complete.
+// Requests a device command's status, optionally waiting for execution, upload, and processing.
 message GetDeviceCommandRequest {
   // The opaque identifier returned by SendDeviceCommand.
   string command_id = 1 [(validate.rules).string = {
@@ -120,16 +120,14 @@ message GetDeviceCommandRequest {
   }];
 
   // Maximum readiness wait in seconds, from 0 to 30. Omitted or zero returns immediately.
-  // Returns on success, failure, or expiry; a deadline returns the latest observed `pending`
-  // snapshot. Success confirms finalized original upload, not optional attachment processing.
+  // Returns on success, failure, or expiry. A wait timeout can return `pending` or `processing`.
   // Set the transport timeout above this wait plus ordinary response latency.
   optional uint32 wait_seconds = 2 [(validate.rules).uint32.lte = 30];
 }
 
 // Returns a snapshot of command state, upload progress, and terminal context, never attachment bytes.
 //
-// Poll while `pending`; stop on `succeeded`, `failed`, or `expired`. A successful command's declared
-// attachment upload is complete, but optional server-side processing can still be pending.
+// Poll while `pending` or `processing`; stop on `succeeded`, `failed`, or `expired`.
 message GetDeviceCommandResponse {
   // The command is awaiting execution, executing, or uploading its result. No partial attachment
   // can be downloaded, even when progress reports persisted bytes.
@@ -138,11 +136,18 @@ message GetDeviceCommandResponse {
     .google.protobuf.Timestamp updated_at = 1 [(validate.rules).message.required = true];
   }
 
+  // Execution and upload have completed; required server-side processing is queued or running.
+  message Processing {
+    // The time of the latest execution or processing update.
+    .google.protobuf.Timestamp updated_at = 1 [(validate.rules).message.required = true];
+  }
+
   // Describes a command that completed successfully.
   //
   // Success confirms that any declared attachment is fully uploaded and persisted, whether uploaded
   // in one transfer or progressively. Its original logical contents are final and will not grow on
-  // later retrievals. If `attachment` is omitted, the command completed without an attachment; do
+  // later retrievals, and any required processing is complete. If `attachment` is omitted, the
+  // command completed without an attachment; do
   // not keep polling for one. `GetDeviceCommand` never returns attachment bytes.
   //
   // When `attachment` is present, download it with
@@ -154,7 +159,9 @@ message GetDeviceCommandResponse {
   // bytes. Set the transport timeout above this wait plus download time.
   //
   // Append `?variant=raw` for the finalized original attachment, or assembled log JSON. This skips
-  // optional processing, not the command-success requirement. Omit `variant` for the default
+  // processing but requires a finalized upload and successful device execution. Raw remains
+  // downloadable while processing, after processing failure, and after processing expiry, subject
+  // to retention. Omit `variant` for the default
   // representation: an attachment without processing returns its original contents; an attachment
   // with processing returns the processed result when ready. Processing still pending returns
   // HTTP 409 with `Retry-After: 2` and a JSON `processing_state`. Failed processing returns a
@@ -173,8 +180,8 @@ message GetDeviceCommandResponse {
   // Download HTTP 409 without a processing response means the command is still pending; poll
   // `GetDeviceCommand` within a caller-chosen deadline. HTTP 404 can mean an unknown or unretained
   // command, failed or expired execution, no attachment, or attachment bytes no longer retained.
-  // Status reads return HTTP 404 for unknown, unretained, failed, or expired commands; successful
-  // commands without attachments instead return HTTP 200 with `raw_available: false`.
+  // Command status reads return HTTP 404 for unknown or unretained commands. For the attachment
+  // status route, inspect `raw_available` and `processed_available` independently.
   // HTTP 400 means an invalid UUID or download variant; correct the request. HTTP 401 requires
   // authentication and HTTP 403 requires permission. These plain HTTP routes do not promise a
   // uniform JSON error body.
@@ -187,8 +194,8 @@ message GetDeviceCommandResponse {
   // Default, raw, and processed representations can differ. Finalized original contents are stable
   // while retained, but identical HTTP serialization, compression, or headers are not guaranteed.
   message Succeeded {
-    // Metadata for a fully uploaded, finalized original attachment, not its bytes. Optional
-    // processing can still be pending. Historical bytes may expire independently of this metadata.
+    // Metadata for a finalized original attachment, not its bytes. Historical bytes may expire
+    // independently of this metadata.
     message Attachment {
       // The MIME type of the original attachment. The download's Content-Type identifies the
       // selected representation, which can differ after processing or a failure fallback.
@@ -206,7 +213,6 @@ message GetDeviceCommandResponse {
     .bitdrift_public.protobuf.client.v1.DeviceCommandResultContext context = 3;
 
     // The finalized attachment metadata. Omission means no attachment, not an upload still pending.
-    // Presence confirms completed upload, not completed processing or indefinite storage retention.
     // Downloading bytes no longer retained returns HTTP 404.
     .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Succeeded.Attachment attachment = 4;
   }
@@ -223,7 +229,7 @@ message GetDeviceCommandResponse {
     optional string failure_message = 3 [(validate.rules).string.max_bytes = 4096];
   }
 
-  // The execution deadline passed without a persisted terminal outcome.
+  // The command deadline passed before execution, upload, or required processing completed.
   message Expired {
     .google.protobuf.Timestamp expired_at = 1 [(validate.rules).message.required = true];
   }
@@ -244,9 +250,11 @@ message GetDeviceCommandResponse {
     // The command could not be completed.
     .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Failed failed = 5;
 
-    // Execution or upload expired. Recorded progress remains visible throughout history retention,
-    // but incomplete attachment contents cannot be downloaded.
+    // Execution, upload, or processing expired. Incomplete uploads cannot be downloaded.
     .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Expired expired = 6;
+
+    // The original upload is finalized; required processing has not finished.
+    .bitdrift.public.unary.device_debug.v1.GetDeviceCommandResponse.Processing processing = 7;
   }
 }
 
@@ -465,14 +473,11 @@ service DebugService {
   // Retrieves the state and available results of a device command.
   //
   // Omit `wait_seconds` or use zero for an immediate snapshot. A positive value waits up to 30
-  // seconds for success, failure, or expiry; timeout returns the latest observed `pending` snapshot.
-  // Retry pending reads within a caller-chosen deadline. `failed` and `expired` are terminal.
-  // When `succeeded.attachment` is present, its original upload is complete and finalized; fetch
-  // bytes with `GET /v1/device-commands/{command_id}/attachment?variant=raw`, substituting
-  // `device_command.command_id`. No further upload polling is needed. Optional processing is a
-  // separate stage: inspect `GET /v1/device-commands/{command_id}/attachment/status`, or add
-  // `wait_seconds=1` through `wait_seconds=30` to the download to wait for its representation.
-  // A download wait timeout preserves HTTP 409; status-route reads remain immediate.
+  // seconds for success, failure, or expiry; a timeout can return `pending` or `processing`.
+  // Retry either state within a caller-chosen deadline. `failed` and `expired` are terminal.
+  // Fetch a finalized original with `GET /v1/device-commands/{command_id}/attachment?variant=raw`
+  // even when processing fails or expires. The attachment status route reports which variants
+  // are available. A download wait timeout preserves HTTP 409.
   // See `GetDeviceCommandResponse.Succeeded`
   // for variants, download headers, and HTTP 4xx meanings. Success without `attachment` means there
   // is nothing to download. This method never includes attachment bytes or tracks workflow commands.
