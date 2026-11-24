@@ -10,16 +10,13 @@ syntax = "proto3";
 package bitdrift_public.protobuf.state.v1;
 
 enum StateScope {
+  // Global state, custom log fields and SDK-owned log fields were never stored as client state.
+  reserved 2, 4, 5;
+  reserved "GLOBAL_STATE", "CUSTOM_FIELDS", "OOTB_FIELDS";
+
   UNSPECIFIED = 0;
   FEATURE_FLAG = 1;
-  GLOBAL_STATE = 2;
 
   // Used for internal state management, not driven by user-facing APIs.
   SYSTEM = 3;
-
-  // Persistent custom log fields set through the SDK's addField API.
-  CUSTOM_FIELDS = 4;
-
-  // Persistent SDK-owned log fields that take precedence over custom fields.
-  OOTB_FIELDS = 5;
 }
