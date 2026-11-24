@@ -429,31 +429,30 @@ enum ArtifactPayloadEncoding {
 }
 
 // Uploads an artifact either as one whole-file request or as a resumable sequence of chunks.
-// Chunked uploads require configuration version >= 52 and runtime admission to be enabled.
 //
-// File artifacts use this protocol even when their compressed bytes fit in a single chunk. Begin
-// also negotiates upload intent; do not send a separate artifact_intent or any payload before the
-// server admits the upload.
+// Client reports, state snapshots, workflow attachments and crash profiles use the chunked flow
+// even when the payload fits in one chunk. Begin replaces the separate artifact_intent request
+// for chunked uploads. Chunked direct-command uploads retain their existing configuration
+// version (>= 52) and runtime admission requirements.
 //
-// A file upload has two operations:
-// 1. Begin/resume: omit chunk_index and contents, and send the complete immutable metadata, logical
-//    file size/checksum, encoded size and ordered fragment descriptors. Repeating Begin reconciles
-//    progress after a disconnect or retry; it must describe the same artifact as the original
-//    Begin. The first accepted Begin binds its metadata. Resume state_metadata may be re-scrubbed
-//    under current client rules and does not replace that accepted metadata. Every Begin checks
-//    current sampling, enablement and suppression before storage access. These policy checks can
-//    Drop an accepted upload without reading or writing its admission.
-// 2. PutChunk: set chunk_index and contents, and send only upload_uuid, artifact_id, command_id (if
-//    applicable) and logical_bytes alongside them. The server uses the admitted descriptor to
-//    verify this fragment of the complete zlib stream. PutChunk does not repeat Begin's sampling
-//    policy checks.
+// 1. Begin/resume: omit chunk_index and contents. Send the artifact type, bounded identity/policy
+//    state_metadata, logical size and digest, encoded size, and ordered chunk descriptors (never
+//    feature_flags). Each Begin checks current upload policy. Wait for approval before sending any
+//    bytes. Repeat Begin after a disconnect or retry with the same artifact ID and payload
+//    manifest. State metadata may be re-scrubbed; changed metadata does not replace an existing
+//    publication or legacy admission.
+// 2. PutChunk: set chunk_index and contents. Intermediate chunks (chunk_index < chunks.len() - 1)
+//    send only upload_uuid, artifact_id, command_id (if applicable) and logical_bytes alongside
+//    them. The final chunk (chunk_index == chunks.len() - 1) also carries any full scrubbed
+//    state_metadata and feature_flags. The V2 writer persists them in the completed artifact
+//    envelope. Use the receipt bitmap to send missing chunks in index order. The final chunk
+//    publishes the artifact without a separate finalize request. An empty registered-command
+//    result can be finalized on Begin and has no PutChunk.
 //
-// Responses identify durably stored chunks with a receipt bitmap. Send missing chunks, retaining
-// all local payloads until STATE_FINALIZED, STATE_DROPPED or STATE_REJECTED. Once all chunks are
-// durable, the server publishes the artifact and any required processing notification without a
-// separate finalize RPC. On retry or unfinished publication, back off and repeat Begin with the
-// original manifest. Finalization does not imply processing success. Stopping uploads does not
-// cancel a command or extend its deadline.
+// Retain all local payloads until STATE_FINALIZED, STATE_DROPPED or STATE_REJECTED. On retry or
+// unfinished publication, back off and repeat Begin with the original payload manifest.
+// Finalization does not imply processing success. Stopping uploads does not cancel a command
+// or extend its deadline.
 message UploadArtifactRequest {
   // Attempt UUID correlating the response. Whole-file uploads also use it for idempotence;
   // chunked identity is authenticated owner + artifact_id, not this per-attempt value.
@@ -477,10 +476,12 @@ message UploadArtifactRequest {
   // Capture timestamp. Required for whole-file uploads and Begin/resume; omitted on PutChunk.
   google.protobuf.Timestamp time = 6;
 
-  // The session ID associated with the artifact if applicable.
+  // The session ID associated with the artifact, if applicable. May be empty when no session ID
+  // applies (for example state snapshots or previous-run reports without a persisted session ID).
   string session_id = 7;
 
-  // The set of feature flags that were active at the time of artifact emission.
+  // The feature flags active at the time of artifact emission. For chunked uploads, send these on
+  // the final PutChunk (never on Begin or intermediate chunks).
   repeated FeatureFlag feature_flags = 8;
 
   // Client workflow continuations that should be evaluated when this report is processed.
@@ -529,12 +530,13 @@ message UploadArtifactResponse {
   enum State {
     // Whole-file ACKs leave state unset. This is never a successful chunked ACK.
     STATE_UNSPECIFIED = 0;
-    // The upload is not finalized. received_chunks describes its durable payloads.
+    // The upload is approved but not finalized. received_chunks may be all zero; only set bits
+    // acknowledge durable payload bytes.
     STATE_RECEIVING = 1;
     // Canonical object, authoritative catalog/receipt and required processing notification are
     // durable. Processing success is separate. Only this state completes a chunked artifact.
     STATE_FINALIZED = 2;
-    // Back off and repeat Begin/resume with the original durable metadata and retained bytes.
+    // Back off and repeat Begin/resume with the original payload manifest and retained bytes.
     STATE_RETRYABLE = 3;
     // Permanent rejection/retirement. The SDK may release retained bytes and report failure.
     STATE_REJECTED = 4;
@@ -554,7 +556,8 @@ message UploadArtifactResponse {
   // Chunked progress only. Whole-file ACK semantics and fields 1-2 are unchanged.
   State state = 3 [(validate.rules).enum.defined_only = true];
   // Exactly ceil(admitted chunk count / 8) bytes, low bit first. Unused high bits are zero.
-  // Bits reflect authoritative durable receipts, not object listings or attempted transmissions.
+  // Set bits acknowledge durable payload bytes, not attempted transmissions. STATE_FINALIZED sets
+  // every chunk's bit, including any chunk stored as part of the completed artifact.
   bytes received_chunks = 4 [(validate.rules).bytes.max_len = 33];
 }
 
