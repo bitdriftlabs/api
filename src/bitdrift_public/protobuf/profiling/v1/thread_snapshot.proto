@@ -1,0 +1,19 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+package bitdrift_public.protobuf.profiling.v1;
+
+import "bitdrift/public/unary/issues/v1/crash.proto";
+
+message ThreadSnapshot {
+  // One stack per thread, leaf-to-root: sampled PC first, then return addresses.
+  // Empty frame lists represent unavailable stacks.
+  .bitdrift.public.unary.issues.v1.Report.ThreadDetails thread_details = 1;
+  // Only images referenced by those frames.
+  repeated .bitdrift.public.unary.issues.v1.Report.BinaryImage binary_images = 2;
+}
