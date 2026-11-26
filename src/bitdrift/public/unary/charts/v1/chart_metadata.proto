@@ -130,6 +130,16 @@ message ChartMetadata {
 
           // Required for histogram-backed exports; counters must leave this unset.
           .bitdrift.public.unary.charts.v1.ChartMetadata.MetricChartMetadata.TimeSeriesMetadata.ConnectorExportConfig.OtlpConnectorExportConfig.HistogramConfiguration histogram_configuration = 6;
+
+          // Optional, counter only, from 1 through 1440 minutes (24 hours). On a successful
+          // query, repeat the cumulative value for previously observed series with no activity.
+          // After this many quiet minutes, send a stale marker and forget the series. If charts
+          // share the same export, the longest configured timeout wins. If all omit it, the
+          // export stays sparse.
+          optional uint32 idle_timeout_minutes = 7 [(validate.rules).uint32 = {
+            gte: 1
+            lte: 1440
+          }];
         }
 
         message CloudwatchConnectorExportConfig {

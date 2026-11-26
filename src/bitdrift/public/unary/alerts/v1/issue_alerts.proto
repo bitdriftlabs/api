@@ -18,6 +18,21 @@ import "validate/validate.proto";
 
 // Defines the issue alert configuration for an issues view.
 message IssuesAlertConfig {
+  // User-facing category, independent of the conditions used to evaluate the alert.
+  enum AlertType {
+    // Omit the optional category when it is unknown. Requests that explicitly supply this value
+    // are rejected.
+    ALERT_TYPE_UNSPECIFIED = 0;
+    // Category for alerts that monitor issue volume against a threshold.
+    ALERT_TYPE_FREQUENT_ERROR = 1;
+    // Category for alerts that monitor increases in issue volume.
+    ALERT_TYPE_TRENDING_ERROR = 2;
+    // Category for rate-limited notifications when a matching issue group first appears.
+    ALERT_TYPE_NEW_ERROR = 3;
+    // Category for rate-limited notifications when a matching issue event occurs.
+    ALERT_TYPE_EVERY_ERROR = 4;
+  }
+
   // Groups multiple issue alert conditions under a logical operator.
   message IssuesAlertConditionList {
     // Conditions combined by the surrounding logical operator.
@@ -106,6 +121,14 @@ message IssuesAlertConfig {
       min_len: 1
       max_len: 255
     }];
+
+    // Client-supplied category, preserved on save and returned unchanged. May be absent on
+    // existing alerts; the server does not infer or populate it from the alert ID or conditions.
+    // Evaluation continues to use the condition, independently of this category.
+    optional .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.AlertType alert_type = 6 [(validate.rules).enum = {
+      defined_only: true
+      not_in: [0]
+    }];
   }
 
   // Rate limited notifications for new issue events within the view.
@@ -116,6 +139,20 @@ message IssuesAlertConfig {
 
   // Alerts for the view.
   repeated .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.IssuesAlert alerts = 3 [(validate.rules).repeated = {max_items: 20}];
+
+  // Client-supplied category for new_issue_event_notification. Preserved unchanged when supplied;
+  // omitted values remain unset so clients can infer the category for existing configurations.
+  optional .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.AlertType new_issue_event_alert_type = 4 [(validate.rules).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
+
+  // Client-supplied category for new_issue_group_notification. Preserved unchanged when supplied;
+  // omitted values remain unset so clients can infer the category for existing configurations.
+  optional .bitdrift.public.unary.alerts.v1.IssuesAlertConfig.AlertType new_issue_group_alert_type = 5 [(validate.rules).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
 }
 
 // Requests the issues alert configuration for a view.
