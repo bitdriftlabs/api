@@ -1,0 +1,45 @@
+// api - bitdrift's client/server API definitions
+// Copyright Bitdrift, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+package bitdrift_public.protobuf.profiling.v1;
+
+import "bitdrift/public/unary/issues/v1/crash.proto";
+
+message StackProfile {
+  // Target sampling interval. Actual observation times are recorded in Samples.timestamp_ns.
+  uint64 interval_ns = 1;
+  // Only referenced images.
+  repeated .bitdrift.public.unary.issues.v1.Report.BinaryImage binary_images = 2;
+  // Frame table indexed by Stack.frame_indices.
+  repeated .bitdrift.public.unary.issues.v1.Frame frames = 3;
+  repeated Stack stacks = 4;
+  repeated ThreadSamples threads = 5;
+}
+
+message Stack {
+  // Zero-based indexes into StackProfile.frames, leaf-to-root. Position 0 is the sampled PC;
+  // later positions are return addresses.
+  // Index 0 is reserved for an empty stack, representing an observation with no usable stack.
+  repeated uint32 frame_indices = 1;
+}
+
+message ThreadSamples {
+  // Thread metadata. Stack data is referenced by samples; thread.frames is empty.
+  .bitdrift.public.unary.issues.v1.Report.ThreadDetails.Thread thread = 1;
+  Samples samples = 2;
+}
+
+message Samples {
+  // One complete timestamp per observation, in nanoseconds since the shared monotonic capture
+  // origin (not Unix time). Preserve exact times.
+  // Entries are nondecreasing and this column has the same length as stack_indices.
+  repeated uint64 timestamp_ns = 1;
+  // One observed stack per timestamp. Index 0 explicitly represents an unavailable observation
+  // so the viewer can show a gap rather than extending the previous stack through it.
+  repeated uint32 stack_indices = 2;
+}
