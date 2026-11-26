@@ -939,6 +939,17 @@ message GetAlertsRequest {
 
   // Pagination parameters for the result set.
   .bitdrift.public.unary.common.v1.Pagination pagination = 5;
+
+  // Applies a saved Alert View visible to the caller. Each field present in `filter` replaces
+  // the matching saved field; unset fields retain the saved value. Messages replace whole
+  // fields, and empty repeated fields do not override saved values. A non-empty `sort` replaces
+  // the saved sort. Pagination always comes from this request. Missing or hidden views return
+  // `NotFound`; views of another type are rejected. Requires view read permission in addition to
+  // alert read permission.
+  optional string view_id = 6 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
 }
 
 // Describes a principal assigned to an alert.

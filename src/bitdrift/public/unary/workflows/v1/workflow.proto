@@ -110,18 +110,6 @@ message GroupBy {
 
 // A workflow definition: its flows, actions, targeting, and deployment state.
 message Workflow {
-  // A tag assigned to a workflow.
-  message WorkflowTag {
-    // The raw value of the tag. This is what gets stored and used for filtering.
-    string value = 1 [(validate.rules).string = {
-      min_len: 1
-      max_len: 100
-    }];
-
-    // The user who created this tag.
-    .bitdrift.public.unary.common.v1.Owner created_by = 2;
-  }
-
   // The deployment state of a workflow.
   enum WorkflowState {
     // The workflow is not currently running and it has not been deployed.
@@ -188,7 +176,7 @@ message Workflow {
 
   // A list of tags that have been assigned to this workflow. These can be used for filtering
   // purposes within a view.
-  repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag tags = 32 [(validate.rules).repeated = {max_items: 100}];
+  repeated .bitdrift.public.unary.common.v1.Tag tags = 32 [(validate.rules).repeated = {max_items: 100}];
 
   // The access permissions currently set for this workflow.
   .bitdrift.public.unary.admin.v1.AccessPermission current_access_permissions = 33;
@@ -5038,7 +5026,7 @@ message UpsertWorkflowTagsRequest {
 // Response containing the workflow's tags after the update.
 message UpsertWorkflowTagsResponse {
   // The tags that are assigned to the workflow after the update completes.
-  repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag tags = 1;
+  repeated .bitdrift.public.unary.common.v1.Tag tags = 1;
 }
 
 // Request to list workflow tags.
@@ -5047,7 +5035,7 @@ message ListTagsRequest {}
 // Response containing workflow tags.
 message ListTagsResponse {
   // The available workflow tags.
-  repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag tags = 1;
+  repeated .bitdrift.public.unary.common.v1.Tag tags = 1;
 }
 
 // Request to delete a workflow.

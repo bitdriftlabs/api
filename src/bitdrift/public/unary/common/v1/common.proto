@@ -13,6 +13,18 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
+// A tag assigned to a resource.
+message Tag {
+  // The raw value of the tag, used for filtering.
+  string value = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The principal who created this tag.
+  .bitdrift.public.unary.common.v1.Owner created_by = 2;
+}
+
 message Owner {
   // The email address of this owner.
   string email = 1 [(validate.rules).string = {max_len: 255}];

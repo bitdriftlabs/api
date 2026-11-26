@@ -360,7 +360,10 @@ message Dashboard {
     }];
 
     // The union of tags associated with the workflows referenced in this dashboard.
-    repeated .bitdrift.public.unary.workflows.v1.Workflow.WorkflowTag workflow_tags = 11 [(validate.rules).repeated = {max_items: 100}];
+    repeated .bitdrift.public.unary.common.v1.Tag workflow_tags = 11 [(validate.rules).repeated = {max_items: 100}];
+
+    // Tags assigned directly to this dashboard, independently of `workflow_tags`.
+    repeated .bitdrift.public.unary.common.v1.Tag tags = 12 [(validate.rules).repeated = {max_items: 100}];
   }
 
   oneof type {
@@ -1140,6 +1143,48 @@ message UpsertCustomDashboardRequest {
   repeated .bitdrift.public.unary.workflows.v1.GroupBy.Value dashboard_variables = 5 [(validate.rules).repeated = {max_items: 10}];
 }
 
+message UpsertCustomDashboardTagsRequest {
+  // The ID of the custom dashboard to update.
+  string dashboard_id = 1 [(validate.rules).string = {
+    min_len: 1
+    max_len: 100
+  }];
+
+  // The complete set of direct dashboard tags. An empty set removes all direct tags.
+  // Values use the same tag catalog as workflows. Workflow assignments are unchanged.
+  repeated string tags = 2 [(validate.rules).repeated = {
+    max_items: 100
+    items: {
+      string: {
+        min_len: 1
+        max_len: 100
+      }
+    }
+  }];
+}
+
+message UpsertCustomDashboardTagsResponse {
+  // The direct dashboard tags after the update.
+  repeated .bitdrift.public.unary.common.v1.Tag tags = 1;
+}
+
+message ListDashboardTagOptionsRequest {
+  // When true, returns only tag values directly assigned to at least one dashboard.
+  // Otherwise, returns the shared dashboard and workflow tag catalog.
+  bool explicit_only = 1;
+
+  // Pagination for tag values in alphabetical order. The default page size is 100.
+  .bitdrift.public.unary.common.v1.TokenPagination pagination = 2;
+}
+
+message ListDashboardTagOptionsResponse {
+  // The tag options in the requested scope, from the shared catalog.
+  repeated .bitdrift.public.unary.common.v1.Tag tags = 1 [(validate.rules).repeated.max_items = 100];
+
+  // Continues listing tag values. Absent when no more values are available.
+  optional string next_page_token = 2 [(validate.rules).string.max_len = 4096];
+}
+
 // Response for `UpsertCustomDashboard`.
 message UpsertCustomDashboardResponse {
   // The saved dashboard.
@@ -1257,6 +1302,15 @@ service DashboardService {
   // current workflow metadata. The legacy chart_metadata field retains incremental update
   // semantics for compatibility with older clients.
   rpc UpsertCustomDashboard(.bitdrift.public.unary.dashboards.v1.UpsertCustomDashboardRequest) returns (.bitdrift.public.unary.dashboards.v1.UpsertCustomDashboardResponse);
+
+  // Replaces the tags assigned directly to a custom dashboard.
+  //
+  // Requires dashboard write permission and edit access. An empty tag set removes all direct
+  // tags. Tags inherited from workflows and the workflows themselves are unchanged.
+  rpc UpsertCustomDashboardTags(.bitdrift.public.unary.dashboards.v1.UpsertCustomDashboardTagsRequest) returns (.bitdrift.public.unary.dashboards.v1.UpsertCustomDashboardTagsResponse);
+
+  // Lists tag options from the shared dashboard and workflow catalog.
+  rpc ListDashboardTagOptions(.bitdrift.public.unary.dashboards.v1.ListDashboardTagOptionsRequest) returns (.bitdrift.public.unary.dashboards.v1.ListDashboardTagOptionsResponse);
 
   // Deletes a custom dashboard.
   rpc DeleteCustomDashboard(.bitdrift.public.unary.dashboards.v1.DeleteCustomDashboardRequest) returns (.bitdrift.public.unary.dashboards.v1.DeleteCustomDashboardResponse);

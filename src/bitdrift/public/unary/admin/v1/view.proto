@@ -10,6 +10,7 @@ syntax = "proto3";
 package bitdrift.public.unary.admin.v1;
 
 import "bitdrift/public/unary/admin/v1/access.proto";
+import "bitdrift/public/unary/alerts/v1/alerts.proto";
 import "bitdrift/public/unary/common/v1/common.proto";
 import "bitdrift/public/unary/issues/v1/issues.proto";
 import "bitdrift/public/unary/workflows/v1/workflow.proto";
@@ -30,6 +31,11 @@ message ViewFilters {
     .bitdrift.public.unary.workflows.v1.WorkflowListQuery workflow_query = 1;
   }
 
+  message AlertList {
+    // The filters saved for the unified Alerts list.
+    .bitdrift.public.unary.alerts.v1.AlertFilter filter = 1;
+  }
+
   // Selects the saved criteria for one supported view type.
   oneof type {
     option (validate.required) = true;
@@ -38,6 +44,9 @@ message ViewFilters {
 
     // The saved criteria for a workflow view.
     .bitdrift.public.unary.admin.v1.ViewFilters.WorkflowList workflow_list = 3;
+
+    // The saved criteria for an Alert View.
+    .bitdrift.public.unary.admin.v1.ViewFilters.AlertList alert_list = 5;
   }
 }
 
@@ -50,6 +59,9 @@ message ViewSort {
 
     // Orders workflow views using workflow list sort criteria.
     .bitdrift.public.unary.workflows.v1.ListWorkflowsRequest.Sort workflow = 2;
+
+    // Orders Alert Views using unified alert list sort criteria.
+    .bitdrift.public.unary.alerts.v1.GetAlertsRequest.Sort alert = 3;
   }
 }
 
@@ -121,7 +133,7 @@ message UpsertViewRequest {
     // The saved filters for the new view.
     .bitdrift.public.unary.admin.v1.ViewFilters view_filters = 3 [(validate.rules).message = {required: true}];
 
-    // The default sort order for the new view.
+    // The default sort order for the new view. Alert Views support up to 8 sort criteria.
     .bitdrift.public.unary.admin.v1.ViewSortList default_sort = 5;
 
     // An optional icon to display for the new view.
@@ -142,10 +154,11 @@ message UpsertViewRequest {
     // An optional replacement description for the view.
     optional string description = 3 [(validate.rules).string = {max_len: 1000}];
 
-    // Optional replacement filters for the view.
+    // Optional replacement filters for the view. Updates cannot convert a view to or from an
+    // Alert View.
     optional .bitdrift.public.unary.admin.v1.ViewFilters view_filters = 4;
 
-    // Optional replacement default sort criteria.
+    // Optional replacement default sort criteria. Alert Views support up to 8 sort criteria.
     .bitdrift.public.unary.admin.v1.ViewSortList default_sort = 6;
 
     // Optional replacement icon for the view.
@@ -220,6 +233,8 @@ message ListViewsRequest {
     ISSUE_GROUP = 1;
     // Returns workflow views.
     WORKFLOWS = 2;
+    // Returns Alert Views.
+    ALERTS = 3;
   }
 
   // Selects which service's views to return.
